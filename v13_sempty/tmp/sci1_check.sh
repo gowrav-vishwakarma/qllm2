@@ -7,7 +7,7 @@ cd "$(dirname "$0")/../.." || exit 1
 B=$1; n=$2; PY=.venv/bin/python; X="symbolic\|Warning\|warn"; mkdir -p logs/diag logs/learning_probes logs/memory_probes logs/sci1
 echo "=== CHECK $n ($B) $(date -u +%FT%TZ)"
 LP=logs/learning_probes/v13_sempty_${n}_spread_s7000_t400.json
-[ -f $LP ] || $PY scripts/run_learning_probe.py --model-type v13_sempty --checkpoint $B --output $LP --suite b2 --tasks shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000 --spread 0,2048,4096 2>&1 | grep -E "per task|free \(A7|saved"
+[ -f $LP ] || $PY scripts/run_learning_probe.py --model-type v13_sempty --checkpoint $B --output $LP --suite b2 --tasks shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000 --spread 0,2048,4096,8192 2>&1 | grep -E "per task|free \(A7|saved"
 S=logs/diag/v13_sempty_skillpack_${n}.jsonl
 [ -s $S ] || $PY scripts/run_skillpack_probe.py --checkpoint $B --variants skillpack,contrast --alphas 0,4 --lengths 0,2048,4096,8192 --docs 100 --mem_frac ${MEM_FRAC:-0.12} --out $S 2>&1 | grep -v "$X" | tail -1
 D=logs/diag/v13_sempty_clk2_echo_${n}.jsonl
@@ -18,7 +18,7 @@ M=logs/sci1/v13_sempty_mc_${n}.json
 [ -f $M ] || $PY scripts/mc_eval.py --ckpt $B --out $M 2>&1 | grep -E '^(hellaswag|arc|piqa)'
 # think_eval back for cont4 (the `worked` keep rule: '<think>' leak in OFF answers < 5 %; OFF accuracy = GSM8K test, 200 items)
 K=logs/sci1/v13_sempty_think_${n}.json
-[ -f $K ] || $PY scripts/think_eval.py --ckpt $B --n 200 --out $K 2>&1 | grep -E "^think_eval"
+# dropped 2026-11-12 (not in the .checked gate; ~8 min): [ -f $K ] || $PY scripts/think_eval.py --ckpt $B --n 200 --out $K 2>&1 | grep -E "^think_eval"
 # Reach curve past the trained SEQ 4096 (Lead + Mind step back 11-04):
 D2=logs/diag/v13_sempty_clk2_echo_long_${n}.jsonl
 [ -s $D2 ] || $PY scripts/run_skillpack_probe.py --checkpoint $B --variants dilate --dilations 1,8 --dilate_where echo --lengths 16384,32768 --docs 25 --seed 8700 --mem_frac ${MEM_FRAC:-0.12} --out $D2 2>&1 | grep -v "$X" | tail -1
