@@ -34,6 +34,7 @@ done
 n=sci1_${m}_${RUN##*_}; miss=""   # touch .checked ONLY when every probe output exists (M10 2026-11-06: an OOM'd CHECK flagged itself done)
 for f in logs/learning_probes/v13_sempty_${n}_spread_s7000_t400.json logs/memory_probes/v13_sempty_${n}_t40_behavioral.json \
          logs/memory_probes/v13_sempty_${n}_t40_long_behavioral.json logs/sci1/v13_sempty_mc_${n}.json logs/diag/v13_sempty_skillpack_${n}.jsonl; do
-  [ -s $W/$f ] || miss+=" $f"; done
+  case $f in *skillpack*) need=1600;; *clk2*) need=100;; *) need=0;; esac
+  if [ ! -s $W/$f ]; then miss+=" $f"; elif [ $need -gt 0 ] && [ "$(wc -l < $W/$f)" -lt $need ]; then miss+=" $f(partial)"; fi; done
 if [ -n "$miss" ]; then echo "=== local CHECK $m INCOMPLETE (no .checked):$miss $(date -u +%FT%TZ)"; exit 1; fi
 touch $LD/.checked_$m; echo "=== local CHECK $m DONE $(date -u +%FT%TZ)"
