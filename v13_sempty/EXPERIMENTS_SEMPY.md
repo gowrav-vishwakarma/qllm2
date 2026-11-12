@@ -6105,6 +6105,21 @@ window (no state carries across windows) and its per-gap distance (~1,170 tokens
 jitter on the thesis cells so far -> segment 3 continues from 28B (final after told 8k). The fineweb loss (from 347k) shows mostly in
 the web holdout loss, little in the thesis cells.
 
+**far block RESULT, part 1b: single-gap reach cells (12:30 IST 2026-11-12; outside reviewer read, Mind verified from the diag jsonls):**
+
+| point | skill pack @8k bare (n 200) | clk2 @8k 1x / 8x+c4 (n 100) | clk2 @16k 1x / 8x+c4 (n 50) | clk2 @32k 1x / 8x+c4 (n 50) |
+|---|---|---|---|---|
+| M11 | 0.095 | 0.10 / 0.77 | 0.08 / 0.20 | 0.00 / 0.02 |
+| 344k (with fineweb) | **0.715** | 0.61 / 1.00 | 0.18 / **0.92** | 0.14 / **0.20** |
+| 26B (no fineweb since 347k) | 0.515 | 0.49 / 0.97 | 0.10 / 0.68 | 0.02 / 0.00 |
+| 27B | 0.540 | 0.52 / 0.98 | (re-run queued: partial file) | |
+
+The far block lifted single-gap reach strongly (M11 -> 344k), and **the dry stretch (fineweb gone from 347k) cost part of it beyond the
+jitter on two cells**: skill @8k −0.20 (~4 sigma at n 200), clk2 @16k 8x+c4 −0.24 (~3.5 sigma at n 50), while s8 @8k stayed flat. Lead's
+rollback rule named s8 @8k, t40 8k / 16k and told 8k, not these cells: roll back to 344k only if told 8k ALSO favours 344k clearly;
+otherwise continue from 28B and record this as a measured cost of the dry stretch, expected to recover with fineweb-edu (checked at the
+next two milestones).
+
 ## far block: distance-supervised rule data in the long run (PRE-REGISTERED 01:46 IST 2026-11-07, before any number; Lead GO for option (b) + Library's proto_far)
 
 **Why:** "FINDING: the far rule margin is the decay's first casualty": nothing trains the far carry (b2s: 0 / 600 prompts reach 2k;
