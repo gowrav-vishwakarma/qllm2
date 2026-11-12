@@ -5,7 +5,7 @@
 #   bash v13_sempty/tmp/sci1_check_local.sh [step_XXXXXX]
 set -e
 RUN=${RUN:-sci1_main_59c3cf5}   # the segment dir (cont1: RUN=sci1_cont1_<hash>)
-R=ubuntu@34.131.203.207; RD=Development/qllm_sci1/checkpoints_v13_sempty/$RUN
+R=ubuntu@34.131.203.207; RD=Development/${REMOTE_WT:-qllm_sci1}/checkpoints_v13_sempty/$RUN
 LD=/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/$RUN; mkdir -p $LD
 W=/home/gowrav/Development/qllm_sci1check; export PATH=/usr/local/cuda/bin:$PATH
 m=${1:-}

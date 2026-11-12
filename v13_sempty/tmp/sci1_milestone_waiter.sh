@@ -9,10 +9,12 @@ for m in "$@"; do
   L=/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/$RUN
   [ -f $L/.checked_$m ] && { echo "$RUN $m already checked"; continue; }
   echo "waiting for $RUN/$m.pt on the 6000 $(TZ=Asia/Kolkata date)"
-  until ssh -o ConnectTimeout=20 ubuntu@34.131.203.207 "ls ~/Development/qllm_sci1/checkpoints_v13_sempty/$RUN/$m.pt" >/dev/null 2>&1; do sleep 300; done
+  until ssh -o ConnectTimeout=20 ubuntu@34.131.203.207 "ls ~/Development/${REMOTE_WT:-qllm_sci1}/checkpoints_v13_sempty/$RUN/$m.pt" >/dev/null 2>&1; do sleep 300; done
   sleep 180
   # free the 4090 first (2026-11-06: the M10 CHECK OOM'd beside cx_m2): pause cx_m2, wait for >= 20 GB free, resume it after
   CX=/home/gowrav/Development/qllm_cx/checkpoints_v13_sempty/cx_m2_main_c17775a; cxp=0
+  # WAIT_CX=1: let the cx chain finish (main + decay + readouts) instead of pausing it
+  if [ "${WAIT_CX:-0}" = 1 ]; then while tmux has-session -t mindcxm2 2>/dev/null; do sleep 120; done; echo "cx chain ended $(TZ=Asia/Kolkata date)"; fi
   if tmux has-session -t "=mindcxm2" 2>/dev/null; then cxp=1; touch $CX/.PAUSED; tmux kill-session -t "=mindcxm2"; sleep 5
     P=$(pgrep -f "v13_sempty.train .*--checkpoint_dir checkpoints_v13_sempty/cx_m2_main_c17775a( |$)" | head -1)
     [ -n "$P" ] && { kill -TERM $P; sleep 30; kill -KILL $P 2>/dev/null; }; fi
