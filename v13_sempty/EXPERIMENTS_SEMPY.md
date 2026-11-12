@@ -6105,6 +6105,20 @@ window (no state carries across windows) and its per-gap distance (~1,170 tokens
 jitter on the thesis cells so far -> segment 3 continues from 28B (final after told 8k). The fineweb loss (from 347k) shows mostly in
 the web holdout loss, little in the thesis cells.
 
+## far block result part 2: told rule (FAR-TOLD, Library's jsonls) and the rollback decision (13:36 IST 2026-11-12)
+
+| ckpt | told train 8k | told train 2k | a26 2k |
+|---|---|---|---|
+| M11 | 0.10 | 0.67 | 0.20 |
+| 344k | 0.53 | 0.85 | 0.31 |
+| 26B | 0.03 | 0.58 | 0.20 |
+| 27B | 0.45 | 0.79 | 0.22 |
+
+- 344k vs 27B on told 8k: +0.08 at n 100 (~1.6 sigma), within jitter; 26B's 0.03 shows single-checkpoint noise.
+- Pre-stated rule: roll back only if told 8k ALSO favours 344k clearly. It does not, so **FROM = 28B** (step 427,252). Segment 3 switch armed on the 6000 at 13:36 IST (tmux sci1s3, log v13_sempty_sci1_seg3switch_91bdc49_20261112_0806.log).
+- Honest record: every far cell leans to 344k (reach cells 3.5-4 sigma, told cells +0.06-0.09). The dry stretch most likely cost them.
+- **Check at segment 3's next two milestones:** skill @8k, clk2 @16k, told 8k / 2k must recover toward 344k. If not, revisit the rollback (344k kept on d_drive).
+
 ## segment 3: fineweb-edu streaming + the chat ramp (PRE-REGISTERED 12:31 IST 2026-11-12, before any number; Lead's decisions, Library's R5 audit 26630a1)
 
 **Start point:** segment 2's 28B milestone (step 427,252) or, by Lead's rollback rule, its best_model = step 344,000 (22.5B, before
