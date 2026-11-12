@@ -6085,6 +6085,26 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## far block RESULT, part 1 (s8 / needles / benchmarks; 12:22 IST 2026-11-12; told 8k pending from Library's FAR-TOLD)
+
+Run `sci1_long2_4a97ca7` (segment 2, far block ramped in from M11 over 2B; ran unattended Nov 7-12). CHECKs at the CHECK's code; s8 =
+mean of shift_wide_new / affine_map_new (400 trials each, seed 7000), mean target margin in brackets.
+
+| point | s8 @2k | s8 @4k | **s8 @8k (untrained)** | t40 8k / 16k | HS / ARC-e / PIQA |
+|---|---|---|---|---|---|
+| M11 (11.0B, pre-ramp) | 0.849 (+1.9) | 0.529 (+0.0) | **0.186 (−1.1)** | 0.894 / 0.836 | 0.336 / 0.539 / 0.625 |
+| 344k = best_model (22.5B, before fineweb ran dry) | 0.999 (+14.5) | 0.991 (+12.3) | **0.979 (+8.5)** | 0.931 / 0.886 | 0.352 / 0.566 / 0.635 |
+| 26B (396,734) | 0.995 (+14.1) | 0.994 (+11.9) | **0.974 (+8.0)** | 0.919 / 0.833 | 0.357 / 0.557 / 0.621 |
+| 27B (411,993) | 0.991 (+14.9) | 0.989 (+12.6) | **0.964 (+7.9)** | 0.919 / 0.831 | 0.355 / 0.554 / 0.630 |
+
+**Headline (pre-registered cell): s8 @8k 0.186 -> 0.964-0.979 (3-point mean 0.972), margin −1.1 -> +8.** 8k is beyond the 4096 training
+window (no state carries across windows) and its per-gap distance (~1,170 tokens at 8 shots) is beyond b2s_far's trained per-gap range
+(<= ~800): training rule carry at 1.8-3.2k generalised to 8k. 2k / 4k are trained distance (labelled). Keep rule part 1 (s8 @8k
+>= +0.05 over M11) MET by +0.79; told 8k (part 2) pending. Needles and benchmarks also up (more data too: 11B -> 27B).
+**Rollback test (Lead's rule):** 344k vs 27B: s8 @8k +0.015 (within jitter), t40 16k +0.055 (< ~0.1), ARC-e +0.012: not more than the
+jitter on the thesis cells so far -> segment 3 continues from 28B (final after told 8k). The fineweb loss (from 347k) shows mostly in
+the web holdout loss, little in the thesis cells.
+
 ## far block: distance-supervised rule data in the long run (PRE-REGISTERED 01:46 IST 2026-11-07, before any number; Lead GO for option (b) + Library's proto_far)
 
 **Why:** "FINDING: the far rule margin is the decay's first casualty": nothing trains the far carry (b2s: 0 / 600 prompts reach 2k;

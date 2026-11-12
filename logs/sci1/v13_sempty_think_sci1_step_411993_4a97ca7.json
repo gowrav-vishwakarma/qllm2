@@ -1,0 +1,3212 @@
+{
+ "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_long2_4a97ca7/.mind_step_411993.pt",
+ "summary": {
+  "n": 200,
+  "acc_on": 0.0,
+  "acc_off": 0.0,
+  "trace_rate_on": 0.0,
+  "leak_rate_off": 0.0
+ },
+ "rows": [
+  {
+   "mode": "on",
+   "gold": "18",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Janet's ducks are 16, so her total income is \\(16 \\times 2 = 32\\). She sells the remaining 3 for \\(3 \\times 3 = 9\\). The total amount she earns is \\(16 \\times 9 = 96\\).\n\n\\boxed{96}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "18",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the amount of ducks she sells at the farmers' market be x.\n\nLet the amount of ducks she sells at the farmers' market be y.\n\nLet the amount of ducks she sells at the farmers' market be z.\n\nLet the amount of ducks she sells at the farmers' market be x.\n\nLet the amount of ducks she sells at the farmers' market be y.\n\nLet the amount of ducks she sells at the farmers' market be z.\n\nLet the amount o"
+  },
+  {
+   "mode": "on",
+   "gold": "3",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{2}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "3",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's break down the problem step by step:\n\n1. **Blue Fiber**: Blue fiber has 2 bolts of blue fiber.\n2. **White Fiber**: White fiber has half of the fiber.\n\nThe total fiber is 2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x2x"
+  },
+  {
+   "mode": "on",
+   "gold": "70000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{150}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "70000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To calculate the profit, we need to subtract the cost of repairs from the total cost of the house. \n\nLet the cost of repairs be $x. \nThe total cost of repairs is $x + $50,000. \nThe total cost of repairs for the house is $x + $50,000. \nThe total cost of repairs for the house is $x + $50,000. \nThe total profit is the difference between the total cost of repairs and the total cost of repairs:\n$x - $5"
+  },
+  {
+   "mode": "on",
+   "gold": "540",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total distance covered by James is \\(60 \\times 3 = 180 \\, \\text{m}\\) in one week.  \n\n\\boxed{180}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "540",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the total distance covered by James is equal to the distance covered by the runners in the previous week. \n\nLet's calculate the total distance covered by James in the previous week:\n\n(60 + 60) x 3 = 180 meters\n\nSo, the total distance James has covered in the week is 180 meters.\n\nTo find the total distance covered by James in the week, we need to subtract the distance covered by t"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The chickens' feed size is 20 cups, and Wendi's chickens are 15 chickens. \n\n1. **Calculate the total amount of feed Wendi needs:**\n   - Total chickens: 15 + 20 = 25\n   - Total feed size: 15 x 20 = 150\n   - Total amount of feed: \\(15 \\times 150 = 15 \\times 100 = 500 \\text{ cups}\\)\n\n2. **Calculate the total amount of feed Wendi needs:**\n   - Total amount of feed: \\(500 + 500 = 1000 \\text{ cups}\\)\n  "
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the size of Wendi's flock be 20 chickens. \n\nFirst, we need to calculate the total amount of feed Wendi gives her chickens. \n\n- The chickens are 20 chickens, so the total amount of feed Wendi gives is 20 * 15 = 500.\n- The chickens are 20 chickens, so the total amount of feed Wendi gives is 20 * 25 = 500.\n\nNext, we need to calculate the amount of feed Wendi gives her chickens in the final meal o"
+  },
+  {
+   "mode": "on",
+   "gold": "64",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Kylar needs 16 glasses to buy 16 glasses of glasses. The cost of 16 glasses is \\(16 \\times 60 = 320\\). The cost of one glass is \\(5 \\times 60 = 150\\). \n\nTo find the amount of glasses he needs to buy, we divide the total cost by the cost of one glass:\n\\[\n\\frac{320}{16} = 60\n\\]\n\n\\boxed{60}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "64",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Kylar's new apartment costs $5, so the cost of one glass is $5 x 60% of the price of one glass. This simplifies to $60/16 = 15/4.\n\nKylar's new apartment costs $60, so the cost of one glass is $60 x 60/15 = $2400.\n\nKylar's new apartment costs $2400, so the cost of one glass is $2400 x 60/24 = $2400.\n\nKylar's new apartment costs $2400, so the cost of one glass is $2400 x 60/24 = $2400.\n\nKylar's new "
+  },
+  {
+   "mode": "on",
+   "gold": "260",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{20}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "260",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's denote the number of sheep as x.\n\nLet y be the number of sheep.\n\nWe know that:\n\n- Toulouse has twice as many sheep as Charleston.\n- Charleston has 4 times as many sheep as Seattle.\n\nWe can write:\n\n- Toulouse has x sheep\n- Charleston has y sheep\n- Seattle has x + y sheep\n\nWe also know that:\n\n- Toulouse has 20 sheep\n- Charleston has 4 times as many sheep as Seattle\n- Seattle has x sheep\n\nWe ca"
+  },
+  {
+   "mode": "on",
+   "gold": "160",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Carla has to download the file from the beginning, which takes 20 minutes. The total time it takes to download the file is:\n\n\\[\n\\frac{20}{200} = \\frac{1}{2}\n\\]\n\n\\boxed{\\dfrac{1}{2}}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "160",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To find the load time of the file, we can use the following formula:\n\nload time = (download time / (download time + restart time))\n\nwhere:\n\n- download time is the time it takes to download the file\n- download time + restart time is the time it takes to restart the download from the beginning\n\nUsing this formula, we can calculate the load time of the file as follows:\n\nload time = (download time / ("
+  },
+  {
+   "mode": "on",
+   "gold": "45",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves John driving for 3 hours at a speed of 60 mph, then turns around because he realizes he forgot something very important. \n\n1. **Calculate the time he spends driving at 60 mph**:\n   - 60 mph: \\( 60 \\times 60 = 3,600 \\)\n   - 30 mph: \\( 30 \\times 60 = 3,600 \\)\n   - 80 mph: \\( 80 \\times 60 = 4,400 \\)\n   - 20 mph: \\( 20 \\times 60 = 600 \\)\n   - 40 mph: \\( 40 \\times 60 = 24,000 \\)\n  "
+  },
+  {
+   "mode": "off",
+   "gold": "45",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the time of the first 2 hours be t1 and the time of the remaining 2 hours be t2. \n\nThe time of the first 2 hours is given by:\n\n$$\nt1 = 2t2\n$$\n\nThe time of the remaining 2 hours is given by:\n\n$$\nt2 = 2t1 + t2\n$$\n\nSubstituting the given values:\n\n$$\nt2 = 2(t1 + t2)\n$$\n\nSimplifying:\n\n$$\nt2 = 2t1 + 2t2\n$$\n\nMultiplying both sides by 2:\n\n$$\nt2 = 2t1 + 2t2\n$$\n\nSubstituting t2 into the equation:\n\n$$\nt2"
+  },
+  {
+   "mode": "on",
+   "gold": "460",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Eliza's rate per hour for the first 40 hours is \\(10 \\times 40 = 400\\). She receives an overtime pay of 1.2 times her regular rate per hour, which is \\(400 \\times 1.2 = 1.8\\). \n\nTo find the total earnings for the week, we calculate the total number of hours worked:\n\\[\n40 + 400 = 800\n\\]\n\nThe total earnings for the week are the sum of the earnings for the week and the earnings for the week:\n\\[\n800 +"
+  },
+  {
+   "mode": "off",
+   "gold": "460",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of hours Eliza worked per week be $x.\nThen, the number of hours she worked per week is $x/40.\nThe rate per hour for the first 40 hours is $10/40 x x.\nThe rate per hour for the first 40 hours is $10/40 x x.\nThe rate per hour for the first 40 hours is $10/40 x x.\nThe rate per hour for the first 40 hours is $10/40 x x.\nThe rate per hour for the first 40 hours is $10/40 x x.\nThe rate pe"
+  },
+  {
+   "mode": "on",
+   "gold": "366",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The program had 60 downloads in the first month, 30 downloads in the second month, and 60 downloads in the third month. The total number of downloads over the three months is:\n\n\\[\n60 \\times 3 = 180\n\\]\n\nThe program's total downloads over the three months is:\n\n\\[\n60 \\times 3 = 180\n\\]\n\nThe program's total downloads over the three months is:\n\n\\[\n180 - 60 = 30\n\\]\n\nThe program's total downloads over the"
+  },
+  {
+   "mode": "off",
+   "gold": "366",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of downloads in the first month be x. Then, the number of downloads in the second month is (x/60) x (x/30) = x/2 x x/60 = x/3.\nThe number of downloads in the third month is (x/3) x (x/30) = x/2 x x/3 = x/6.\nThe total number of downloads in the third month is (x/6) x (x/2) = x/12.\nThe total number of downloads in the first month is (x/60) x (x/2) = x/3 x x/2 = x/6.\nThe total number o"
+  },
+  {
+   "mode": "on",
+   "gold": "694",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total cost of the pastries is calculated by considering the total cost of the pastries plus the cost of the donuts and mini cupcakes. \n\n1. **Total Cost**:\n   - The total cost of the pastries is \\(68 \\times 3 = 162\\).\n   - The total cost of the donuts and mini cupcakes is \\(80 \\times 2 = 160\\).\n   - The total cost of the donuts and mini cupcakes is \\(68 \\times 3 = 162\\).\n\n2. **Number of donuts "
+  },
+  {
+   "mode": "off",
+   "gold": "694",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total cost of the pastries be $x.\n\nThe total cost of the pastries is $x + 2x + 6x + 3x + 2x + 6x = $55.\n\nThe total cost of the mini cupcakes is $x + 2x + 6x + 3x + 2x + 6x = $55.\n\nThe total cost of the donuts is $x + 2x + 6x + 3x + 2x + 6x = $55.\n\nThe total cost of the mini cupcakes is $x + 2x + 6x + 3x + 2x + 6x = $55.\n\nThe total cost of the donuts is $55 - $x - 2x - 6x = $55 - $x.\n\nThe t"
+  },
+  {
+   "mode": "on",
+   "gold": "13",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The tree costs $90 to plant and $3 a year to water. The tree will cost $90 to grow 7 lemons, which he can sell for $1.5 each. The total cost of the tree is $90 + $3.5 = $95.5. The total cost of the lemon tree is $95.5 - $90 = $60.5. The total cost of the lemon tree is $60.5 + $60.5 = $95.5.\n\n\\boxed{95.5}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "13",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of the lemon tree be $x.\nThe cost of the tree is $90, so the cost of the lemon tree is $90/x.\nThe cost of the water is $1.5x, so the cost of the water is $1.5x/x.\nThe cost of the water is $1.5x/x, so the cost of the water is $1.5x/x.\nThe cost of the water is $1.5x/x, so the cost of the water is $1.5x/x.\nThe cost of the water is $1.5x/x, so the cost of the water is $1.5x/x.\nThe total c"
+  },
+  {
+   "mode": "on",
+   "gold": "18",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Melanie sold a third of the vacuum cleaners at the green house, leaving 2 more to the red house, and half of the orange house. The total amount of vacuum cleaners sold is:\n\n\\[\n\\frac{5}{2} \\times 2 = 5 \\times 1 = 5\n\\]\n\nMelanie sold 2 more vacuum cleaners, leaving 1 more. The total amount of vacuum cleaners sold is:\n\n\\[\n5 + 1 = 6\n\\]\n\nMelanie sold 2 more vacuum cleaners, leaving 1 more. The total amo"
+  },
+  {
+   "mode": "off",
+   "gold": "18",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the green house has a total of 5 vacuum cleaners. Let the number of vacuum cleaners at the green house be \\( N \\). The orange house has 2 more vacuum cleaners, so the total number of vacuum cleaners at the orange house is \\( N + 2 \\).\n\nThe green house has 2 more vacuum cleaners, so the total number of vacuum cleaners at the green house is \\( N + 2 \\). The orange house has 2 more "
+  },
+  {
+   "mode": "on",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The percentage of students enrolled in hip-hop dance is calculated by dividing the number of students in jazz dance by the total number of students in the entire class. \n\n\\[\n\\frac{20}{20} = \\frac{1}{2}\n\\]\n\n\\boxed{\\dfrac{1}{2}}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To find the percentage of the entire students enrolled in hip-hop dance, we need to calculate the percentage of the entire students who enrolled in jazz dance, which is 20% of the total students.\n\nFirst, we need to calculate the percentage of the entire students who enrolled in jazz dance. This is given by:\n\n(20% of 20) + (25% of 25) = 20%\n\nNext, we need to calculate the percentage of the entire s"
+  },
+  {
+   "mode": "on",
+   "gold": "125",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The merchant's financial advisor needs to determine the optimal purchase plan that maximizes the profit. The profit function is:\n\n\\[\nP(t) = \\frac{1}{2} \\left( \\frac{1}{2} \\times 5,000,000 + \\frac{1}{2} \\times 8,000,000 \\right) + \\frac{1}{2} \\times (1 - 2.5) \\times (1 - 2.5)\n\\]\n\nCalculating the derivatives:\n\n\\[\nP(t) = \\frac{1}{2} \\left( \\frac{1}{2} \\times 5,000,000 + \\frac{1}{2} \\times 8,000,000 \\r"
+  },
+  {
+   "mode": "off",
+   "gold": "125",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To calculate the profit, we need to consider the total revenue and total cost of the purchase plans.\n\nThe total revenue from the purchase plans is $5,000, and the total cost of the purchase plans is $8,000.\n\nThe total cost of the electronic gadgets market is $8,000, and the total cost of the jewelry market is $8,000.\n\nThe total cost of the purchase plans is $8,000 + $8,000 = $16,000.\n\nThe total co"
+  },
+  {
+   "mode": "on",
+   "gold": "230",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The trains start from San Rafael at the same time, traveling westward, and travel for 80 miles. The distance traveled by each train is calculated by dividing their speeds:\n\n- The speed of the first train: \\( \\frac{80}{1} = 80 \\) miles per hour.\n- The speed of the second train: \\( \\frac{80}{2} = 40 \\) miles per hour.\n\nThe distance traveled by each train is the sum of their speeds:\n\n\\[\n\\text{Distanc"
+  },
+  {
+   "mode": "off",
+   "gold": "230",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume the distance between the two trains is \\( D \\) miles.\n\n1. **First train**:\n   - The distance traveled by the first train is \\( D \\times (80 - D) = 80D \\).\n   - The distance traveled by the second train is \\( 80D - D \\).\n   - Total distance covered by the two trains: \\( 80D + D \\times (80 - D) = 150D \\).\n\n2. **Second train**:\n   - The distance traveled by the second train is \\( 80D - D"
+  },
+  {
+   "mode": "on",
+   "gold": "57500",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{15000}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "57500",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the given information to calculate her annual salary:\n\n- **Salary per hour**:\n  - \\( 50 \\times 0.5 = 25 \\)\n  - \\( 35 \\times 0.5 = 15 \\)\n  - \\( 15 \\times 0.5 = 15 \\)\n  - \\( 15 \\times 0.5 = 15 \\)\n  - \\( 15 \\times 0.5 = 15 \\)\n\n- **Number of hours per week**:\n  - \\( 50 \\times 0.5 = 20 \\)\n  - \\( 35 \\times 0.5 = 15 \\)\n  - \\( 15 \\times 0.5 = 15 \\)\n  - \\( 15 \\times 0.5 = 15 \\)\n  - \\( 15 \\times 0"
+  },
+  {
+   "mode": "on",
+   "gold": "7",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Claire makes a 3 egg omelet every morning for breakfast. \n\n1. **Calculate the number of omelets she eats in 4 weeks**:  \n   - Let \\( N \\) be the number of omelets she eats in 4 weeks.  \n   - The number of omelets she eats in 4 weeks is \\( N \\times (N - 1) \\).  \n   - The total number of omelets she eats in 4 weeks is \\( N \\times (N - 1) \\).  \n   - Therefore, the number of omelets she eats in 4 week"
+  },
+  {
+   "mode": "off",
+   "gold": "7",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the total number of eggs consumed by Claire is 4. \n\nFirst, we can calculate the number of omelets she eats in 4 weeks:\n\n- She eats 3 omelets in 4 weeks: \n  - She eats 3 omelets in 4 weeks: \n    - She eats 3 omelets in 4 weeks: \n      - She eats 3 omelets in 4 weeks: \n        - She eats 3 omelets in 4 weeks: \n          - She eats 3 omelets in 4 weeks: \n              - She eats 3 o"
+  },
+  {
+   "mode": "on",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Marissa needs to walk the remaining distance of 4 miles in 4 hours, which is \\( 4 \\times 4 = 16 \\) miles. The average speed for 4 miles per hour is \\( 4 \\times \\frac{1}{4} = 1 \\) mph. \n\nTo find the speed of the remaining distance, we use the formula for the average speed of a single-stage process:\n\\[\n\\text{Average speed} = \\frac{1}{\\text{Total distance}} \\times \\text{Sum of the speeds of the two p"
+  },
+  {
+   "mode": "off",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the speed of the first 4 miles be x miles per hour.\n\nThe total distance walked by the first 4 miles is:\n\n(x + 1) miles\n\nThe total distance walked by the remaining distance is:\n\n(x - 4) miles\n\nThe total distance walked by the remaining 4 miles is:\n\n(x - 4) miles\n\nThe speed of the first 4 miles is:\n\n(x - 4) miles/hour\n\nThe speed of the remaining 4 miles is:\n\n(x - 4) miles/hour\n\nThe speed of the "
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{24}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the orange drink is a standard water bottle. \n\n1. Let the orange drink be a standard water bottle.\n2. Let the pineapple drink be a standard water bottle.\n3. Let the pineapple drink be a standard water bottle.\n\nWe have:\n\n1. The orange drink is two-thirds water.\n2. The pineapple drink is three-fifths water.\n\nWe can use the following equations to solve for the amount of water in the"
+  },
+  {
+   "mode": "on",
+   "gold": "14",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{7}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "14",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the years of Raymond's son's life be x. Then,\n\nx + 6 = 23\n\nx = 23 - 6\n\nx = 7\n\nThe son's age is now:\n\nx + 6 = 23 + 7\n\nx = 24\n\nThe son's age is now:\n\nx + 6 = 24 + 7\n\nx = 25\n\nThe son's age is now:\n\nx + 6 = 25 + 7\n\nx = 26\n\nThe son's age is now:\n\nx + 6 = 26 + 7\n\nx = 27\n\nThe son's age is now:\n\nx + 6 = 27 + 7\n\nx = 28\n\nThe son's age is now:\n\nx + 6 = 28 + 7\n\nx = 29\n\nThe son's age is now:\n\nx + 6 = 29 + "
+  },
+  {
+   "mode": "on",
+   "gold": "7",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Billy sold 8 DVDs on Tuesday. His first 3 customers buy one DVD each. His next 2 customers buy 2 DVDs each. \n\nLet \\( x \\) be the number of customers on Tuesday. The remaining customers (1, 2, 3, 4, 5, 6, 7, 8) are \\( 8 - x \\). \n\nThe total number of customers on Tuesday is \\( 8 \\times (1 + 2 + 3 + 4 + 5 + 6 + 7) = 8 \\times 3 = 24 \\).\n\nThe total number of customers on Wednesday is \\( 8 \\times (1 + 2"
+  },
+  {
+   "mode": "off",
+   "gold": "7",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that Billy sells 8 DVDs on Tuesday. \n\nFirst, we need to calculate the total number of customers on Tuesday. \n\nThe total number of customers on Tuesday is 8 * 3 = 24. \n\nNext, we need to calculate the number of customers on Tuesday. \n\nThe total number of customers on Tuesday is 24. \n\nWe can calculate the number of customers on Tuesday by subtracting the number of customers on Wednesday "
+  },
+  {
+   "mode": "on",
+   "gold": "8",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The candle's temperature is constant, so the temperature of the candle at 1:00 PM is the same as the temperature of the candle at 5:00 PM. The candle's temperature is \\( T_1 = T_2 + T_1 \\), where \\( T_1 \\) is the temperature of the candle at 1:00 PM and \\( T_2 \\) is the temperature of the candle at 5:00 PM. \n\nThe candle's temperature is \\( T_2 - T_1 = (T_1 - T_2) + (T_1 - T_2) = (T_1 - T_2) + (T_1"
+  },
+  {
+   "mode": "off",
+   "gold": "8",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the relationship between the candle's temperature and the candle's temperature to solve this problem.\n\nFirst, we calculate the time it takes for the candle to heat up from 1:00 PM to 5:00 PM. This is given by the formula:\n\n\\[\nt = \\frac{2 \\times 5}{1} = 10 \\, \\text{min}\n\\]\n\nNext, we calculate the time it takes for the candle to heat up from 1:00 PM to 5:00 PM. This is given by the formula"
+  },
+  {
+   "mode": "on",
+   "gold": "26",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{19.50}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "26",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the formula for the discounted price of a product:\n\nP(original price) = P(original price) x (1 - discount%)\n\nwhere P(original price) is the original price of the book, and P(original price) is the original price of the book.\n\nFirst, we calculate the discount percentage:\n\n(1 - discount%) x (original price of the book) = (0.25 x (1 - 0.19))\n\n= 0.25 x (1 - 0.19)\n\n= 0.25 x 0.19\n\n= 0.0225\n\nTh"
+  },
+  {
+   "mode": "on",
+   "gold": "2",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{8}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "2",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of boxes of pizza be \\( P \\). The total cost of the chicken, milk, and apples is \\( C \\). The total cost of the pizza is \\( P \\times C \\). The total cost of the chicken, milk, and apples is \\( 2P \\). The total cost of the pizza is \\( P \\times (C + 2P) \\).\n\nWe have the following equations:\n1. \\( C + 2P = 50 \\)\n2. \\( 2P + (C + 2P) = 50 \\)\n\nFrom equation 1, we can express \\( C \\) in te"
+  },
+  {
+   "mode": "on",
+   "gold": "243",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{16.50}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "243",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total cost of the clothing items be $x.\n\nThe total cost of the clothing items is $x + $22.50 = $42.50.\n\nThe total cost of the shoes is $x + $42.50 = $x + $42.50.\n\nThe total cost of the pants is $x + $42.50 = $x + $42.50.\n\nThe total cost of the shoes is $x + $42.50 = $x + $42.50.\n\nThe total cost of the clothing items is $x + $42.50 = $x + $42.50.\n\nThe total cost of the shoes is $x + $42.50 "
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Cynthia eats one serving of ice cream every night.  \n\n1. **Calculate the total amount of ice cream consumed**:  \n   - The cost of one serving of ice cream is $4.00.  \n   - Total amount of ice cream consumed:  \n     - Cost of ice cream: $4.00  \n     - Total amount of ice cream consumed: $4.00 + $4.00 = $8.00  \n\n2. **Calculate the total amount of ice cream consumed**:  \n   - Total amount of ice crea"
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the cost of ice cream is $x. \n\nThe total cost of the ice cream is the sum of the cost of each carton of ice cream and the cost of the ice cream. \n\nThe total cost of the ice cream is the sum of the cost of each carton of ice cream and the cost of the ice cream. \n\nThe total cost of the ice cream is the sum of the cost of each carton of ice cream and the cost of the ice cream. \n\nThe"
+  },
+  {
+   "mode": "on",
+   "gold": "25",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Henry's total distance traveled is \\(2 \\times 60 = 120 \\, \\text{ miles}\\). The distance he traveled between his first and second stops is \\(120 - 20 = 60 \\, \\text{miles}\\).\n\n\\boxed{60}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "25",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the distance between the two stops be x miles.\n\nThe total distance covered by Henry is:\n\n(x + 20) miles\n\nThe total distance covered by Henry is:\n\n(x + 20) miles\n\nThe total distance covered by Henry is:\n\n(x + 20) miles\n\nThe distance between the two stops is:\n\n(x - 20) miles\n\nThe distance between the two stops is:\n\n(x - 20) miles\n\nThe distance between the two stops is:\n\n(x - 20) miles\n\nThe total"
+  },
+  {
+   "mode": "on",
+   "gold": "104",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The shoe budget is $33, so the total cost of the shoes is $1,000. The pair of high heels costs $33, so the total cost is $1,000. The pair of high heels costs twice as much as the boots, so the total cost is $2,000. The pair of high heels costs twice as much as the boots, so the total cost is $2,000.\n\n\\boxed{2,000}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "104",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of the boots be $x.\n\nThe cost of the boots is $x, so the cost of the shoes is $x + $x = $x + $x = $2x.\n\nThe cost of the boots is $x + $x = $2x.\n\nThe total cost of the boots is $2x + $x = $4x.\n\nThe total cost of the shoes is $4x + $4x = $8x.\n\nThe total cost of the boots is $8x + $8x = $16x.\n\nThe total cost of the boots is $16x + $16x = $32x.\n\nThe total cost of the boots is $32x + $32x "
+  },
+  {
+   "mode": "on",
+   "gold": "109",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{11}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "109",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that Allen's age is x years old.\nLet the total age of Allen's age be y.\nThe ratio of their ages is:\n(x + y) / (x + y) = 7:11\nSimplifying this equation, we get:\n(x + y) / (x + y) = 7\nMultiplying both sides by (x + y), we get:\nx + y = (x + y) (x + y)\nSimplifying, we get:\nx^2 + y^2 = x^2 + 2xy + y^2\nSimplifying, we get:\n(x - y)^2 = x^2 - 2xy + y^2\nMultiplying both sides by (x - y), we ge"
+  },
+  {
+   "mode": "on",
+   "gold": "80",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The average of the three numbers is calculated by adding the three numbers together and dividing by the total number of people. \n\n1. **Total number of people**:  \n   \\( \\frac{1}{2} \\times (1 + 2 + 3) = \\frac{3}{2} \\times 4 = 6 \\)\n\n2. **Sum of the three numbers**:  \n   \\( 1 + 2 + 3 = 5 \\)\n\n3. **Average of the three numbers**:  \n   \\( \\frac{5}{6} = \\frac{5}{2} \\)\n\n\\boxed{5}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "80",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume the jar is filled with jelly beans. Let the number of jelly beans in the jar be x.\nThen, the total number of jelly beans in the jar is:\nx + 20 = x + 25\nSimplifying this equation, we get:\nx + 20 = x + 25\nSimplifying, we get:\n2x = 2x + 25\nMultiplying both sides by 2, we get:\n2x^2 + 20x = 2x + 25\nSimplifying, we get:\n2x^2 - 2x - 25 = 0\nMultiplying by 2, we get:\n2x^2 - 2x - 25 = 0\nMultipl"
+  },
+  {
+   "mode": "on",
+   "gold": "35",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves John taking care of 10 dogs, each taking 5 hours a day. \n\n1. **Calculate the time taken by John to take care of 10 dogs**:\n   \\[\n   \\frac{10}{5} = 2 \\text{ hours}\n   \\]\n\n2. **Calculate the time taken by John to take care of each dog**:\n   \\[\n   \\frac{10}{5} = 2 \\text{ hours}\n   \\]\n\n3. **Calculate the time taken by John to take care of each dog**:\n   \\[\n   2 \\times 2 = 4 \\text{"
+  },
+  {
+   "mode": "off",
+   "gold": "35",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of dogs take care of be x. \nThe time taken by John takes care of the dogs is given as x hours. \nThe time taken by John takes care of the dogs takes care of the business is given as y hours. \nThe time taken by John takes care of the dogs takes care of the business is given as y hours. \nThe time taken by John takes care of the dogs takes care of the business is given as y hours. \nThe "
+  },
+  {
+   "mode": "on",
+   "gold": "70",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Gretchen has 110 coins. The total number of coins is the sum of the two numbers: \\( \\frac{110}{2} = 55 \\).\n\n\\boxed{55}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "70",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of gold coins be x. Then, the number of silver coins is 30 - x.\n\nThe total number of coins is:\n\nx + 30 - x = 110\n\nSimplifying this equation:\n\nx + 30 = 110\n\nSimplifying:\n\nx = 40\n\nSince there are 30 gold coins, we can use the formula for the number of gold coins:\n\nx = (40 - x) * 30\n\nSimplifying:\n\nx = 60\n\nTherefore, the number of gold coins is 60.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "23",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{40}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "23",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of jewels Siobhan has be x.\n\n1. The number of jewels Aaron has is given by:\n   \\[\n   x = 2x + 5\n   \\]\n2. The number of jewels Raymond has is given by:\n   \\[\n   x = 2x + 5\n   \\]\n\nSubstitute the given values into the first equation:\n   \\[\n   x = 2x + 5(2x + 5)\n   \\]\n   Simplify:\n   \\[\n   x = 6x + 10\n   \\]\n   Solve for x:\n   \\[\n   x = \\frac{10}{6} = \\frac{5}{3}\n   \\]\n\nThus, Siobhan has"
+  },
+  {
+   "mode": "on",
+   "gold": "9",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{40}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "9",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of minutes he played ping pong be x. \n\nThe first 20 minutes:\n- The time he played ping pong is given by:\n  \\[\n  \\frac{x}{40} = \\frac{x}{20} + \\frac{x}{40}\n  \\]\n- The time he played ping pong is given by:\n  \\[\n  \\frac{x}{40} = \\frac{x}{20} + \\frac{x}{40}\n  \\]\n- The time he played ping pong is given by:\n  \\[\n  \\frac{x}{40} = \\frac{x}{20} + \\frac{x}{40}\n  \\]\n- The total time he played "
+  },
+  {
+   "mode": "on",
+   "gold": "75",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{2.5}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "75",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the cost of yogurt is $1.50 per serving. \n\nLet's assume that the cost of yogurt is $1.50 per serving. \n\nLet's assume that the cost of yogurt is $1.50 per serving. \n\nLet's assume that the cost of yogurt is $1.50 per serving. \n\nLet's assume that the cost of yogurt is $1.50 per serving. \n\nLet's assume that the cost of yogurt is $1.50 per serving. \n\nLet's assume that the cost of yogu"
+  },
+  {
+   "mode": "on",
+   "gold": "2",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves John selling toys and using the money to buy video games. Let \\( x \\) be the number of toys John still has. The total money he has is \\( x + 5x = 13 \\). The total money he has is \\( 13x \\).\n\nThe total money John has is \\( 13x \\). The total money he has is \\( 13x + 5x = 20x \\).\n\nThe total money John has is \\( 20x \\). The total money he has is \\( 20x + 5x = 25x \\).\n\nThe equation"
+  },
+  {
+   "mode": "off",
+   "gold": "2",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of lego sets he still has be $x.\nThen, the total amount of money he has is $15x + $20x = $30x.\nSince he has 13 lego sets, he has $15x = $30x.\nSince he has 13 lego sets, he has $15x = $30x.\nSince he has 13 lego sets, he has $15x = $30x.\nSince he has 13 lego sets, he has $15x = $30x.\nSince he has 13 lego sets, he has $15x = $30x.\nSince he has 13 lego sets, he has $15x = $30x.\nSince he"
+  },
+  {
+   "mode": "on",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "John runs 60 miles a week. \n\n1. **Calculate the time it takes him to run 60 miles:**\n   - 60 miles = \\(60 \\times 60 = 12000\\) miles.\n   - 3 hours: \\(3 \\times 60 = 180 \\times 3 = 690 \\times 2 = 690 \\times 1 = 690 \\times 2 = 12000 \\times 2 = 12000 \\times 4 = 12000 \\times 8 = 12000 \\times 16 = 12000 \\times 32 = 12000 \\times 64 = 12000 \\times 128 = 12000 \\times 256 = 12000 \\times 512 = 12000 \\times 10"
+  },
+  {
+   "mode": "off",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the formula for the time it takes to run a distance of x miles:\n\nt = distance / (2 * x)\n\nwhere t is the time it takes to run a distance of x miles.\n\nSubstituting the given values, we get:\n\nt = 60 / (3 * x)\n\nSimplifying this equation, we get:\n\nt = 60 / 3\n\nt = 20\n\nTherefore, John runs 20 miles in 20 hours.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "18",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Dana can run at a rate of speed four times faster than she can walk, so her speed is \\(4 \\times speed\\). The time she spends running is \\(4 \\times speed\\). The time she spends walking is \\(2 \\times speed\\). The time she spends running is \\(2 \\times speed\\). The total time she spends is \\(4 \\times speed\\).\n\nThe time she spends on her two-thirds of the time is \\(2 \\times speed\\). The time she spends"
+  },
+  {
+   "mode": "off",
+   "gold": "18",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that she can run at speed x miles per hour. We can write the equations for the two equations:\n\n1. Speed x = speed x (1/2)\n2. Speed x (1/2) = speed x (1/2)\n\nSubstitute the first equation into the second equation:\n\n(1/2) x (1/2) = (1/2) x (1/2)\n\nSimplify the left side:\n\n1/2 x x = 1/2 x x\n\nMultiply both sides by 2:\n\n1/2 x x = 1/2 x x\n\nSimplify:\n\n1/2 x = 1/2 x\n\nMultiply both sides by 2:\n\n"
+  },
+  {
+   "mode": "on",
+   "gold": "8",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{1}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "8",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the two iPhone models are A and B. We can use the given information to calculate the age of the two iPhone models:\n\n- The older iPhone is A + B = 2 + 1 = 3\n- The older iPhone is B + 2 = 3 + 2 = 5\n- The older iPhone is A + 1 = 5 + 1 = 6\n\nSince the iPhone is two times older than the iPhone, we can set up the following equation:\n\n3 = 5 + 2\n\nSolving for the value of '3', we get:\n\n3 ="
+  },
+  {
+   "mode": "on",
+   "gold": "200",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining the distance the dragon's flames could have been able to reach, given that the dragon's flames could be hit with the gold javelin three times. \n\n1. **Polly's Distance Calculation**:\n   - The distance from the dragon's flames to the point of the gold javelin is given by:\n     \\[\n     d = \\frac{2 \\times 400}{3} = 800 \\, \\text{m}\n     \\]\n   - The distance from the dra"
+  },
+  {
+   "mode": "off",
+   "gold": "200",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To solve this problem, we need to consider the properties of the dragon and the flames. \n\n1. **Flammability of the Gold javelin**: \n   - The dragon's flames are the same as the flames of the gold javelin, which are 400 feet. \n   - The flames of the gold javelin are 400 feet, which is the same as the flames of the dragon's flames. \n   - The flames of the dragon's flames are 400 feet, which is the s"
+  },
+  {
+   "mode": "on",
+   "gold": "26",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining how many pieces of pie were taken by the guests after the fireman's luncheon. \n\n1. **Calculate the number of pie pieces taken by the fireman**:  \n   The fireman's luncheon consists of 8 pieces, so the number of pieces taken by the fireman is 8.  \n\n2. **Calculate the number of pie pieces taken by the guests**:  \n   The guests have 5 pie pieces, so the number of pie "
+  },
+  {
+   "mode": "off",
+   "gold": "26",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of pie pieces taken by the guests be x. \n\nThe total number of pie pieces taken by the guests is 14, so the total number of pie pieces taken by the guests is:\n\nx + 14 = 14\n\nSolving for x:\n\nx = 14 - 14\n\nx = 2\n\nTherefore, the number of pie pieces taken by the guests is:\n\nx + 2 = 14\n\nThe answer is (B).<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "48",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem states that a 300g bag of chips has 250 calories per serving, so the total calories consumed is:\n\n\\[\n250 \\times 2000 = 2000 \\times 250 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 = 2000 \\times 300 ="
+  },
+  {
+   "mode": "off",
+   "gold": "48",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the calories in the 300g bag are equal to the calories in the 250g bag. Therefore, the calories in the 300g bag are:\n\n300g = 2000 - 250 = 2500\n\nThe calories in the 250g bag are:\n\n2500 - 250 = 2000\n\nThe calories in the 300g bag are:\n\n2000 - 300 = 1800\n\nThe calories in the 1800g bag are:\n\n1800 - 250 = 1900\n\nThe calories in the 1800g bag are:\n\n1900 - 1800 = 1900\n\nThe calories in the"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the net profit from selling 20 candles for $2.00 each, given that each candle costs $2.00. \n\n1. **Calculate the total cost of the candles**:  \n   The total cost of the candles is $2.00, which is the sum of the cost of the candles and the cost of the wicks.  \n   \\[\n   2.00 + 0.10 + 0.20 = 2.00 + 0.10 + 0.20 = 2.00\n   \\]\n\n2. **Calculate the total cost of the candles**:  "
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To find the net profit, we need to calculate the total cost of the candles and the total amount of the wicks. \n\nFirst, we calculate the total cost of the candles:\n\n\\[\n\\text{Total Cost} = \\text{Number of Candles} \\times \\text{Cost per candle}\n\\]\n\n\\[\n\\text{Total Cost} = \\text{Number of Candles} \\times \\text{Cost per candle}\n\\]\n\n\\[\n\\text{Total Cost} = \\text{Number of Candles} \\times \\text{Cost per ca"
+  },
+  {
+   "mode": "on",
+   "gold": "104",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Meredith's total hours spent writing articles in the three days is calculated by considering the total hours she spent on each day. Let \\( x \\) be the number of articles she wrote on Monday. The total hours she spent on Monday is \\( x \\times 4 = x \\times 2 = 8 \\). The total hours she spent on Tuesday is \\( x \\times 2 = x \\times 4 = 16 \\). The total hours she spent on Wednesday is \\( x \\times 2 = x"
+  },
+  {
+   "mode": "off",
+   "gold": "104",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the articles are written by the same author, so the total number of articles is the sum of the articles written by each author.\nLet the number of articles written by the author of the article be x.\nLet the number of articles written by the author of the article be y.\nLet the number of articles written by the author of the article be z.\nLet the number of articles written by the au"
+  },
+  {
+   "mode": "on",
+   "gold": "163",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Candice bought 80 Post-it notes.  \n\n\\boxed{80}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "163",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of Post-it notes in the package be \\( N \\).  \nThe total number of Post-it notes in the package is \\( N \\times (N + 1) \\).  \nThe total number of Post-it notes in the coffee shop is \\( N \\times (N + 1) \\).  \nThe total number of Post-it notes in the coffee shop is \\( N \\times (N + 1) \\).  \nThe total number of Post-it notes in the coffee shop is \\( N \\times (N + 1) \\).  \nThe total numbe"
+  },
+  {
+   "mode": "on",
+   "gold": "800",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let \\( x \\) be the number of red ties and \\( y \\) be the number of blue ties. \n\nThe total cost of the ties is \\( x + y \\). The total cost of the blue ties is \\( 50x \\). The total cost of the red ties is \\( 50x + x \\). \n\nThe total cost of the blue ties is \\( 50x + x \\). The total cost of the red ties is \\( 50x + x \\). \n\nSubstituting the total cost of the blue ties into the total cost of the red tie"
+  },
+  {
+   "mode": "off",
+   "gold": "800",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of blue ties be $x. \nThe cost of red ties is $x/2. \nThe cost of blue ties is $x/4. \nThe total cost of the ties is $x + $x/2 + $x/4 = $x + $x/2 + $x/4 = $3x. \nThe total cost of ties is $3x. \nThe total cost of ties is $3x. \nThe total cost of ties is $3x + $3x = $6x. \nThe total cost of ties is $6x. \nThe total cost of ties is $6x + $6x = $12x. \nThe total cost of ties is $12x + $12x = $48x"
+  },
+  {
+   "mode": "on",
+   "gold": "8",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{12}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "8",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the wire is a straight line. We can use the Pythagorean theorem to find the length of the hypotenuse, which is the distance from the center of the circle to the center of the circle.\n\nThe length of the wire is given as 4 feet, so we can set up the equation:\n\nL = sqrt(4^2 + 4^2)\n\nSimplifying this equation, we get:\n\nL = 16\n\nSince we are only interested in the length of the wire, we"
+  },
+  {
+   "mode": "on",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total number of unoccupied units in the building is calculated by considering the number of units occupied by each floor. \n\n1. **Unoccupied units in the building**:\n   - Each floor has 8 units, so the total number of units occupied is \\(8 \\times 8 = 64\\).\n\n2. **Unoccupied units in the building**:\n   - Each floor has 3 units, so the total number of units occupied is \\(3 \\times 8 = 24\\).\n\n3. **U"
+  },
+  {
+   "mode": "off",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the apartment building is a circle with radius 8 units. The total number of units in the building is given by the formula:\n\n(8 units) x (radius) x (area of the circle)\n\nSubstituting the given values:\n\n(8 units) x (radius) x (area of the circle) = 8 units x (3/4) x (radius)\n\nSimplifying the equation:\n\n(8 units) x (3/4) x (radius) = 8 units x (3/4) x (radius)\n\nSimplifying the right"
+  },
+  {
+   "mode": "on",
+   "gold": "294",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Lloyd's chickens produce 252 eggs per day, so his chickens produce \\( 252 \\times 2 = 256 \\) eggs per day. The chickens produce \\( 256 \\times 2 = 128 \\) eggs per week. \n\n\\boxed{128}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "294",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the chickens produce 100 eggs per day. \n\nLet's calculate the total number of eggs produced by the chickens:\n\n- The chickens produce 100 eggs per day, so the total number of eggs produced by the chickens is 100 * 100 = 10000.\n- The chickens produce 252 eggs per day, so the total number of eggs produced by the chickens is 252 * 100 = 12,000.\n\nTherefore, the total number of eggs pro"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves Tom's time to travel back from 1 to 4 PM. \n\n1. **Calculate the time required to travel back**:\n   - The speed of the ship is \\( v = 6 \\, \\text{mph} \\).\n   - The time required to travel back is \\( t = \\frac{v}{v - 6} \\).\n   - The time to travel back is \\( t = \\frac{t}{v} \\).\n\n2. **Calculate the time required to travel back**:\n   - The speed of the ship is \\( v = 6 \\, \\text{mph}"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the formula for the time it takes to travel from 1 to 4 PM:\n\ntime = distance / speed\n\nSubstituting the given values:\n\ntime = (10 miles / 6 mph) * (6 mph)\n\ntime = 1 hour\n\nTherefore, the time it takes for Tom to get back from the ship is:\n\ntime = 1 hour\n\nTherefore, Tom will take a total of 1 hour to get back from the ship.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the number of toys he needs to remove from his bag such that the total weight of the remaining items is minimized. \n\n1. Let the total weight of the remaining items be \\( x \\).\n2. The total weight of the remaining items is \\( 2x \\).\n3. The total weight of the remaining items is \\( 2x + 15 \\).\n4. The total weight of the remaining items is \\( 2x + 30 \\).\n5. The total weig"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the total weight of the comic books is x pounds.\nLet the weight of the comic books be x pounds.\nLet the weight of the toys be y pounds.\nLet the total weight of the comic books be x + y.\nThe total weight of the comic books is x + y.\nThe total weight of the toys is x + y.\nThe total weight of the comic books is x + (x + y).\nThe total weight of the comic books is x + (x + y).\nThe tot"
+  },
+  {
+   "mode": "on",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The mechanic's revenue on the day with higher repair rates is calculated by considering the total revenue from the repair of the repaired tires and the total revenue from the car tires. \n\n1. **Total repaired tires**:  \n   The repair of 6 truck tires and 4 car tires results in 6 * 4 = 24 repaired tires.  \n   Total repaired tires: \\( 6 + 24 = 24 \\)  \n\n2. **Total repaired cars**:  \n   The car tires a"
+  },
+  {
+   "mode": "off",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total revenue on the day with higher revenue be $x.  \n\nThe mechanic's charge on the $60 truck tires is $60 x 0.5 = $60.  \n\nThe mechanic's charge on the $40 car tires is $40 x 0.5 = $20.  \n\nThe mechanic's charge on the $12 car tires is $12 x 0.5 = $6.  \n\nThe total revenue on the $60 truck tires is $60 + $20 + $6 = $120.  \n\nThe total revenue on the $40 car tires is $120 + $20 + $6 = $140.  \n"
+  },
+  {
+   "mode": "on",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The Doubtfire family has 7 cats, and the mother has 7 kittens. Let \\( x \\) be the number of kittens Patchy has. The total number of kittens is \\( 7x + 2 \\). The total number of kittens Patchy has is \\( 7x + 2 \\).\n\nThe total number of kittens Patchy has is \\( 7x + 2 \\). The total number of kittens Patchy has is \\( 7x + 2 \\).\n\nThe total number of kittens Patchy has is \\( 7x + 2 \\).\n\nThe total number"
+  },
+  {
+   "mode": "off",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of kittens in the family be \\( N \\).\n\n1. The first cat had \\( N \\) kittens, so the number of kittens in the family is \\( N - 1 \\).\n2. The second cat had \\( N - 2 \\) kittens, so the number of kittens in the family is \\( N - 2 \\).\n3. The third cat had \\( N - 3 \\) kittens, so the number of kittens in the family is \\( N - 3 \\).\n4. The fourth cat had \\( N - 4 \\) kittens, so the number of"
+  },
+  {
+   "mode": "on",
+   "gold": "14",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Jean has 30 lollipops, and Jean eats 2 of them. Let \\( x \\) be the number of bags Jean can fill. The total number of bags is \\( 30 + x \\).\n\n1. Let \\( y \\) be the number of bags Jean can fill.\n2. Let \\( x \\) be the number of bags Jean can fill.\n3. Let \\( y + x \\) be the total number of bags Jean can fill.\n4. The equation becomes:\n   \\[\n   y + x = 30\n   \\]\n5. Solving for \\( y \\):\n   \\[\n   y = 30 - x"
+  },
+  {
+   "mode": "off",
+   "gold": "14",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that Jean has a total of 30 lollipops. Let's denote the number of lollipops Jean has as x.\n\nLet's calculate the number of bags Jean can fill:\n\n1. Jean has 30 lollipops, so she can pack 2 lollipops in 2 bags.\n2. Jean has 30 lollipops, so she can pack 2 lollipops in 2 bags.\n\nThe total number of bags Jean can fill is:\n\n(30 + 2) x 2 = 60\n\nTherefore, Jean can fill 2 bags of lollipops in 2x"
+  },
+  {
+   "mode": "on",
+   "gold": "3",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Peter has 42 dollars for the week, so he needs to spend 42 times as much as he does on the week. This means he needs to spend \\( 42 \\times 42 = 772 \\) dollars.\n\n\\boxed{772}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "3",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the principle of linearity of thinking to solve this problem. We can represent the amount of money Peter has for the week as a variable, say $x. We know that he has 42 dollars for the week, so we can write:\n\n$42x = 7\n\nMultiply both sides by 7:\n\n$42x = 7 \\times 42\n\nSimplify:\n\n$42x = 7 \\times 42 \\implies 42x = 672 \\implies x = \\frac{42}{72} = \\frac{1}{2}\n\nTherefore, Peter can go to the mov"
+  },
+  {
+   "mode": "on",
+   "gold": "83",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The maximum number of boxes that can be loaded onto the truck is determined by considering the total weight of the truck and the weight of the empty truck. \n\n1. **Total Weight of the truck**:  \n   The total weight of the truck is \\( 3755 \\times 15 = 3,600,000 \\) pounds.  \n\n2. **Total weight of the empty truck**:  \n   The empty truck's weight is \\( 3755 \\times 15 = 3,600,000 \\) pounds.  \n\n3. **Tota"
+  },
+  {
+   "mode": "off",
+   "gold": "83",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The maximum number of boxes that can be loaded onto the truck is given by the formula:\n\n\\[\n\\text{Total weight} = \\text{Total weight} \\times \\text{Box size}\n\\]\n\nSubstituting the given values:\n\n\\[\n\\text{Total weight} = 5000 \\times 15 = 5000 \\times 375 = 50000 \\times 375 = 50000\n\\]\n\nThe maximum number of boxes that can be loaded onto the truck is:\n\n\\[\n\\text{Total weight} = 5000 \\times 50000 = 50000 \\"
+  },
+  {
+   "mode": "on",
+   "gold": "57",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The final price of Stephen's groceries is calculated by finding the total cost of the delivery and adding the tip. \n\n1. **Total Cost**:  \n   The total cost of delivery is \\(40.00 + 3.00 + 4.00 = \\$40.00\\).  \n   The tip is \\(3.00 - \\$4.00 = \\$1.00\\).  \n\n2. **Total Cost of Goods**:  \n   The total cost of delivery is \\(40.00 + 3.00 + 4.00 = \\$41.00\\).  \n\n3. **Final Total Cost**:  \n   The final total "
+  },
+  {
+   "mode": "off",
+   "gold": "57",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the final price of Stephen's groceries be $x. \n\nFirst, we need to find the value of x. \n\nFirst, we calculate the total amount of the order:\n\n$40.00 + $3.00 + $4.00 + $4.00 = $40.00\n\nThen, we calculate the total amount of the delivery fees:\n\n$3.00 + $4.00 + $4.00 + $4.00 = $40.00\n\nThen, we calculate the final price of the groceries:\n\n$40.00 - $3.00 = $40.00\n\nFinally, we divide the final price o"
+  },
+  {
+   "mode": "on",
+   "gold": "187",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total number of fruits in the bush is given as 6 clusters of 20 fruit each. The number of fruit per cluster is \\( \\frac{6}{20} = \\frac{3}{4} \\). The total number of fruits is \\( 6 \\times \\frac{3}{4} = \\frac{9}{4} \\).\n\n\\boxed{\\dfrac{9}{4}}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "187",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of raspberries be \\( x \\). The total number of fruit is \\( 6 \\times x \\).\n\nThe number of fruit clusters is \\( 6 \\times x = 12x \\).\n\nThe total number of fruit is \\( 6 \\times (12x) = 6 \\times 12x \\).\n\nThe total number of fruit clusters is \\( 6 \\times (12x) = 6 \\times 12x \\).\n\nThe total number of fruit is \\( 6 \\times (12x) = 6 \\times 12x \\).\n\nThe total number of fruit clusters is \\( 6 "
+  },
+  {
+   "mode": "on",
+   "gold": "17",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{25}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "17",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of oranges be \\( n \\). The total number of oranges is \\( n \\times (1 - \\frac{1}{2}) = n \\times (1 - \\frac{1}{2}) = n \\times 1 = n \\).\n\nThe total number of oranges is \\( n \\times (1 - \\frac{1}{2}) = n \\times (1 - \\frac{1}{2}) = n \\times (1 - \\frac{1}{2}) = n \\times (1 - \\frac{1}{2}) = n \\times 1 - n \\times \\frac{1}{2} = n \\times 1 - n \\times \\frac{1}{2} = n \\times 1 - n \\times \\frac{"
+  },
+  {
+   "mode": "on",
+   "gold": "1430",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Janet pays $500 for the material to make it and then another $800 for the jeweler to construct it.  \n\n1. **Calculate the total amount of money:**  \n   - The total amount of money she pays for the material is:  \n     \\[\n     500 \\times 0.1 = 50 \\, \\text{cents}\n     \\]\n   - The total amount of money she pays for the jeweler is:  \n     \\[\n     800 \\times 0.1 = 8.5 \\, \\text{cents}\n     \\]\n\n2. **Calcul"
+  },
+  {
+   "mode": "off",
+   "gold": "1430",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the brooch is worth $1,000 and the jeweler is worth $1,200. \n\nLet's assume that the brooch is worth $1,000. \n\nLet's assume that the jeweler pays 10% of the original amount. \n\nLet's assume that the brooch is worth $1,200. \n\nLet's assume that the brooch is worth $1,200. \n\nLet's assume that the brooch is worth $1,200. \n\nLet's assume that the brooch is worth $1,200. \n\nLet's assume th"
+  },
+  {
+   "mode": "on",
+   "gold": "25000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{50}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "25000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the annual pension be $P.\n\nThe pension after 30 years is given by:\n\n$P = P(1 + 0.5P) = P(1 + 0.5P)\n\n$P = P(1 + 0.5P)\n\n$P = P(1 + 0.5P)\n\n$P = P(1 + 0.5P)\n\n$P = P(1 + 0.5P)\n\n$P = P(1 + 0.5P)\n\n$P = P(1 + 0.5)$\n\n$P = P(1 + 0.5)$\n\n$P = P(1 + 0.5)$\n\n$P = P(1 + 0.5)$\n\n$P = P(1 + 0.5)$\n\n$P = P(1 + 0.5)$\n\n$P = P(1 + 0.5)$\n\n$P = P(1 + 0.5)$\n\n$P = P(1 + 0.5)$\n\n$P = P(1 + 0.5)$\n\n$"
+  },
+  {
+   "mode": "on",
+   "gold": "1596",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total amount paid by Aleena for the streaming service is calculated by considering the initial amount and the amount charged by the streaming service. \n\n1. **Initial amount**:  \n   - \\( \\frac{140}{140} = \\frac{1}{2} \\) of the initial amount.  \n   - \\( \\frac{140}{10} = \\frac{1}{2} \\) of the initial amount.  \n   - Total amount paid: \\( \\frac{1}{2} + \\frac{1}{2} = \\frac{1}{2} + \\frac{1}{2} = 1 \\)"
+  },
+  {
+   "mode": "off",
+   "gold": "1596",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the streaming service charges her $140 per month. \n\nFirst, we can calculate the total amount paid by the streaming service by adding the initial amount of money paid by the streaming service and the amount paid by the streaming service. \n\n$140 + $10 = $120\n\nThen, we can calculate the total amount paid by the streaming service by adding the initial amount of money paid by the stre"
+  },
+  {
+   "mode": "on",
+   "gold": "300",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The car's tank holds 12 gallons of gas, so the car's capacity is \\(12 \\times 12 = 144 \\, \\text{gallons}\\). The car's tank holds 4 gallons of gas, so the total capacity is \\(4 \\times 12 = 48 \\, \\text{gallons}\\).\n\n\\boxed{48}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "300",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the car's tank holds 12 gallons of gas. \n\nFirst, we calculate the total amount of gas that the car can hold:\n\n- The car's tank holds 12 gallons of gas.\n- The car's tank holds 4 gallons of gas.\n\nThe total amount of gas that the car can hold is:\n\n- The car's tank holds 12 gallons of gas.\n- The car's tank holds 4 gallons of gas.\n\nThe total amount of gas that the car can hold is:\n\n- "
+  },
+  {
+   "mode": "on",
+   "gold": "36",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let \\( t \\) be the number of hours Jim spends on TV and reading in 4 weeks. \n\n1. **Total time**:  \n   The total time is \\( t \\times 2 \\times 3 = 6t \\).  \n2. **Number of hours**:  \n   The number of hours Jim spends on TV is \\( t \\times 2 \\).  \n3. **Number of hours he spends on reading**:  \n   The number of hours he reads in 4 weeks is \\( t \\times 3 \\).  \n\nThe total time is the sum of the hours spen"
+  },
+  {
+   "mode": "off",
+   "gold": "36",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's denote the number of hours he spends on TV as t. \n\nThe total time spent on TV is:\n\n2t + 3t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + 2t + t + "
+  },
+  {
+   "mode": "on",
+   "gold": "48",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total number of people in the tournament is \\( \\frac{4 \\times 5}{2} = 10 \\).\n\n\\boxed{10}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "48",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of schools sent be \\( S \\). The number of girls\u2019 basketball teams sent is \\( S - 1 \\). The number of boys\u2019 basketball teams sent is \\( S - 2 \\). The number of boys\u2019 basketball teams sent is \\( S - 3 \\). The number of boys\u2019 basketball teams sent is \\( S - 4 \\).\n\nThe total number of people sent is:\n\\[\nS + S - (S - 2) + S - (S - 3) = S + S - S - S - S - S - S - S - S - S - S - S - S - "
+  },
+  {
+   "mode": "on",
+   "gold": "595",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the number of gems in the chest, given that 175 diamonds, 35 fewer fewer fewer fewer than fewer than twice the number of diamonds, and twice the number of emeralds. \n\n1. **Number of Diamonds**:  \n   The number of diamonds is 175, so the number of gems is 175 - 175 = 0.\n\n2. **Number of Diamonds**:  \n   The number of gems is 175 - 175 = 0.\n\n3. **Number of Diamonds**:  \n "
+  },
+  {
+   "mode": "off",
+   "gold": "595",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of gems in the chest be \\( N \\).  \nThe number of diamonds is \\( N - 2 \\) and the number of fewer fewer fewer gems is \\( N - 1 \\).  \nThe gems in the chest are \\( N - 2 \\) and \\( N - 1 \\) and the gems in the chest are \\( N - 1 \\) and \\( N - 2 \\).  \nThe gems in the chest are \\( N - 2 \\) and \\( N - 1 \\) and the gems in the chest are \\( N - 1 \\) and \\( N - 2 \\).  \nThe gems in the chest a"
+  },
+  {
+   "mode": "on",
+   "gold": "36",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{60}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "36",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of boys be \\( x \\). The number of girls is \\( y \\). The number of teachers is \\( 2x \\).\n\nThe total number of students is \\( x + y \\). The total number of teachers is \\( 2x \\).\n\nThe total number of students is \\( x + y \\).\n\nThe ratio of the number of boys to the total number of teachers is:\n\\[\n\\frac{x + y}{x + y} = \\frac{2x}{x + y}\n\\]\n\nMultiplying both sides by \\( x + y \\):\n\\[\nx(2x +"
+  },
+  {
+   "mode": "on",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{100}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the amount of money Bailey started with be $x. Then, the total amount of money she received in 8 weeks would be:\n\n$x + (5x + 8) = $100\n\nSimplifying this equation, we get:\n\n$x + (5x + 8) = 100\n\nSimplifying, we get:\n\n$x + 5x + 8 = 100\n\nSimplifying, we get:\n\n$x = 100 - 5x\n\nSubstituting $x = 100 - 5x into the equation, we get:\n\n$100 - 5(100 - 5x) = 8\n\nSimplifying, we get:\n\n$100 - 5x = 8(100 - 5x)\n"
+  },
+  {
+   "mode": "on",
+   "gold": "7425",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining how much moneyJudy makes in 1 week, given that each class has 15 students and she charges $15.00 per student. \n\n1. **Calculate the total amount of money:**\n   - Total amount of money: \\(15 \\times 15 = 225\\).\n\n2. **Calculate the amount of money each class charges:**\n   - Each class charges \\(15 \\times 15 = 225\\) dollars.\n\n3. **Calculate the total amount of money eac"
+  },
+  {
+   "mode": "off",
+   "gold": "7425",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of students in each class be \\( x \\). \n\nThe total cost of the week is \\( 15x + 5x = 30x \\). \n\nThe total cost of the week is \\( 15x + 5x = 30x \\). \n\nThe total cost of the week is \\( 30x + 15x = 60x \\). \n\nThe total cost of the week is \\( 60x + 30x = 120x \\). \n\nThe total cost of the week is \\( 120x + 60x = 240x \\). \n\nThe total cost of the week is \\( 240x + 120x = 300x \\). \n\nThe total c"
+  },
+  {
+   "mode": "on",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Kelian has two recipes, each with 20 instructions. The first recipe has 20 instructions, and the second recipe has twice as many instructions as the first one. \n\nTo determine how many instructions Kelian needs to read to prepare the two dishes, we consider the total number of instructions in both recipes. Let \\( x \\) be the number of instructions in the first recipe. Then, the total number of inst"
+  },
+  {
+   "mode": "off",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the instructions for the first recipe are \"1. Cook 2 cups of water in a large pot. 2. Add 1 cup of flour and stir well. 3. Add 1 cup of vegetable oil and stir well. 4. Add 1 cup of water and stir well. 5. Bring to a boil. 6. Reduce heat and simmer for 2 minutes. 7. Drain the soup. 8. Serve with salt and pepper.\"\n\nHere are the instructions for the second recipe:\n\n1. Cook 2 cups of"
+  },
+  {
+   "mode": "on",
+   "gold": "221",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Tommy's total sales are 43 brownies and 23 slices of cheesecake, so the total amount of money raised is:\n\n\\[\n43 \\times 3 + 23 \\times 4 = 81 + 23 = 91\n\\]\n\n\\boxed{91}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "221",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Tommy's total sales are $43, so the total amount of money he raised is $43 x 3 = $81.\n\nTo find the amount of money Tommy raised, we need to subtract the amount of money Tommy raised from the amount of money he raised from the amount of money he raised from the amount of money he raised from the total amount of money he raised.\n\nLet's assume that the amount of money Tommy raised from the total amou"
+  },
+  {
+   "mode": "on",
+   "gold": "255",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Shiela bought five cell phones for $150 each for 3 months. The interest rate is $0.05 per month, and the total amount is $150. \n\nTo find the total amount paid, we calculate the total amount of money paid by the sum of the three individual contributions:\n\n\\[\n\\text{Total amount paid} = 150 \\times 0.05 + 150 \\times 0.1 + 150 \\times 0.05 = 150 \\times 0.1 + 150 \\times 0.05 + 150 \\times 0.1 = 150 \\times"
+  },
+  {
+   "mode": "off",
+   "gold": "255",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To calculate the total cost of the month, we need to calculate the total amount of money spent on the month. \n\nLet's assume that the month is a 3-month period. \n\nThe total amount of money spent on the month is:\n\n$150 x 3 = $300\n\nThe total amount of money spent on the month is:\n\n$300 x 5 = $400\n\nThe total amount of money spent on the month is:\n\n$400 x 5 = $450\n\nThe total amount of money spent on th"
+  },
+  {
+   "mode": "on",
+   "gold": "88",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Artie has a total of 12 pots of marigolds, 9 pots of petunias, 17 pots of begonias, and 17 pots of artias. The total amount of money he has is:\n\n\\[\n\\text{Total} = 12 \\times 9 \\times 17 \\times 2 = 12 \\times 9 \\times 17 \\times 2 = 12 \\times 9 \\times 17 \\times 2 = 12 \\times 9 \\times 17 \\times 2 = 12 \\times 9 \\times 17 \\times 2 = 12 \\times 9 \\times 17 \\times 2 = 12 \\times 9 \\times 17 \\times 2 = 12 \\ti"
+  },
+  {
+   "mode": "off",
+   "gold": "88",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total amount of money Artie has to spend be $x.\n\nThe total amount of money Artie has to spend is $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + $x + "
+  },
+  {
+   "mode": "on",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The average square footage of a 4 leveled sandcastle is calculated by considering the total area of the sandcastle and subtracting the area of the base from the height. \n\n1. **Total Area of the Base**:  \n   The base of a 4-level sandcastle is \\(4 \\times 16 = 64\\) square feet.  \n\n2. **Base Area of a Level**:  \n   The base of a 4-level sandcastle is \\(4 \\times 16 = 64\\) square feet.  \n\n3. **Average "
+  },
+  {
+   "mode": "off",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the sandcastle is a square with a side length of 4 feet. \n\nThe height of the sandcastle is 4 feet, so the height of the sandcastle is:\n\n$$\n\\text{height} = \\frac{4}{2} \\times 4 = 8\n$$\n\nThe area of the sandcastle is:\n\n$$\n\\text{Area} = \\frac{1}{2} \\times 4 \\times 4 = 16 \\times 4 = 32\n$$\n\nThe area of the sandcastle is:\n\n$$\n\\text{Area} = \\frac{1}{2} \\times 4 \\times 4 = 16 \\times 4 = 3"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The dog food is a mixture of dog food and water. Let the dog food's weight be \\( w \\). The dog food's weight is \\( 2w \\). The dog food's water content is \\( 1 - w \\). The total water content is \\( 2w \\). The total amount of water in the dog food is \\( 2w \\). The total amount of water in the dog food is \\( 2w \\).\n\nThe total amount of water in the dog food is \\( 2w \\). The total amount of water in t"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the dog food in bag 1 contains 110 cups of dog food.\nLet the dog food in bag 1 be x.\nThen, the dog food in bag 2 is 2x.\nThe dog food in bag 3 is 2x + 1.\nThe dog food in bag 4 is 2x + 2.\nThe dog food in bag 5 is 2x + 3.\nThe dog food in bag 6 is 2x + 4.\nThe dog food in bag 7 is 2x + 5.\nThe dog food in bag 8 is 2x + 6.\nThe dog food in bag 9 is 2x + 7.\nThe dog food in bag 10 is 2x + "
+  },
+  {
+   "mode": "on",
+   "gold": "100",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{400 - 4}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "100",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the amount of laundry Raymond and David do is equal to the amount of laundry Sarah does.\nLet's denote the amount of laundry Raymond and David do as X and Y, respectively.\nLet's denote the amount of laundry Raymond and David do as Z.\nLet's denote the amount of laundry Sarah and David do as Y.\nThe total amount of laundry is:\nX + Y = Z\nSince the amount of laundry is the same for bot"
+  },
+  {
+   "mode": "on",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Vincent can buy 18 flowers at the better price of $2.50 or in packages of 3 for $1.50. The total cost of buying 18 flowers is:\n\n\\[\n18 \\times 2.50 = 54.50\n\\]\n\nThe cost of buying 18 flowers is:\n\n\\[\n\\text{Cost of buying 18 flowers} = 18 \\times \\frac{2.50}{18.50} = \\frac{2.50}{18.50} = \\frac{1}{3}\n\\]\n\nThe total cost of buying 18 flowers is:\n\n\\[\n\\text{Total cost} = 54 \\times \\frac{1}{3} = \\frac{54}{3}\n"
+  },
+  {
+   "mode": "off",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To find the amount of money he saves by buying 18 flowers at the better price, we need to calculate the total cost of the flowers and the amount of money he has saved.\n\nLet the cost of the flowers be $x.\nThe cost of the flowers is $2x.\nThe cost of the flowers is $1.50x.\nThe total cost of the flowers is $2x + $1.50x = $3x.\n\nThe amount of money he has saved by buying 18 flowers is:\n$3x - $2x = $3x\n\n"
+  },
+  {
+   "mode": "on",
+   "gold": "70",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The cost of the grooming is the sum of the cost of the dog and the discount. \n\n\\[\n\\text{Cost} = 100 \\times \\frac{100}{100} = \\frac{100}{50} = \\frac{1}{5}\n\\]\n\n\\boxed{\\dfrac{1}{5}}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "70",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of the grooming be $x.  Then, the cost of the new customer is $100 - x.  The cost of the groomer is $100 - x.  The cost of the new customer is $100 - (100 - x) = $100 - x.  \nThe cost of the groomer is $100 - (100 - x) = $100 - x.                                                                                                                                                              "
+  },
+  {
+   "mode": "on",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{3}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the original amount of water be x liters.\n\nLet the original amount of water be y liters.\n\nLet the original amount of water be x liters.\n\nThe total amount of water is:\n\nx + y = 24 liters\n\nThe total amount of water is:\n\nx + y = 6 liters\n\nThe total amount of water is:\n\nx + y = 6 liters\n\nThe total amount of water is:\n\nx + y = 6 liters\n\nThe total amount of water is:\n\nx + y = 6 liters\n\nThe total amo"
+  },
+  {
+   "mode": "on",
+   "gold": "17",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{28}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "17",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of stickers Charlie has left be x. Then,\n\nx + 21 = 9\n\nx + 28 = 9\n\nx = 9 - 28\n\nx = -7\n\nTherefore, Charlie has -7 stickers left.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "623",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Grace weighs 125 pounds, and Alex weighs 2 pounds less than 4 times what Grace weighs. \n\nLet Grace's weight be \\( w \\). Then,\n\\[\n125 = 2w + 2\n\\]\nSubstitute \\( w = 125 - 2 \\) into the equation:\n\\[\n125 = 2(125 - 2) + 2\n\\]\n\\[\n125 = 100 + 2\n\\]\n\\[\n100 = 2(w)\n\\]\n\\[\nw = 100\n\\]\n\nThe weight of Grace is \\( 100 - 2w \\). The weight of Alex is \\( 2w \\). The combined weight of Grace and Alex is:\n\\[\n(100 - 2w) +"
+  },
+  {
+   "mode": "off",
+   "gold": "623",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the information provided to solve this problem.\n\nLet's assume that Grace weighs 125 pounds, and Alex weighs 2 pounds less than 4 times what Grace weighs.\n\nLet's use the first equation to find the weight of Grace:\n\n125 = 2x + 4\n\nSubstitute the given values into the second equation:\n\n2x + 4 = 2(2x + 4)\n\nSimplify:\n\n2x + 4 = 8x + 16\n\nDivide both sides by 2:\n\n2x + 4 = 8x + 16\n\nSimplify:\n\n2x ="
+  },
+  {
+   "mode": "on",
+   "gold": "600",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{8}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "600",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of rose bushes be \\( n \\). The total number of roses is \\( n \\times (n + 1) \\). The total number of thorns is given by the sum of the thorns from each rose:\n\n\\[\n\\sum_{k=1}^{n} (k + 1) \\times (k + 1) = n \\times (n + 1)\n\\]\n\nSimplifying the right-hand side:\n\n\\[\nn \\times (n + 1) + (n + 1) \\times (n + 1) = n \\times (n + 1) + n \\times (n + 1)\n\\]\n\nFactoring out the common term:\n\n\\[\nn \\time"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{8}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the team lost 8 games.\n\nFirst, we need to calculate the total number of games they won:\n\n8 + 8 = 16\n\nNext, we need to calculate the total number of games they won:\n\n16 - 8 = 8\n\nThen, we need to calculate the total number of games they won:\n\n8 + 8 = 16\n\nFinally, we need to calculate the total number of games they won:\n\n16 - 8 = 8\n\nTherefore, the team lost 8 games.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "44",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total number of blocks in the quilt is the sum of the blocks from each vacation. Since each block is a block from a different vacation, the total number of blocks is the sum of the blocks from each vacation. \n\nThe total number of blocks in the quilt is the sum of the blocks from each vacation. This is given by the sum of the blocks from each vacation multiplied by the number of blocks in the c"
+  },
+  {
+   "mode": "off",
+   "gold": "44",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of years he has been on the four vacations be \\( y \\). The total number of years he has been on the four vacations is \\( y + 2 \\times y \\).\n\nThe total number of blocks he has been on is \\( y + 2 \\times y \\).\n\nThe total number of blocks he has been on is \\( y + 2 \\times y \\).\n\nThe total number of blocks he has been on is \\( y + 2 \\times y \\).\n\nThe total number of blocks he has been o"
+  },
+  {
+   "mode": "on",
+   "gold": "22",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The alarm's ring time is the sum of the three times it went off, which is \\(3 + 2 + 1 = 6\\) times. The second time it went off, it rang for three times as long as the first time. The third time it went off, it rang for half as long as the second time. \n\nThe total time is \\(6 + 3 + 2 = 11\\) times. The second time it went off, it rang for three times as long as the first time. The third time it went"
+  },
+  {
+   "mode": "off",
+   "gold": "22",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of times the alarm ring in the first three times be \\( x \\), the number of times the alarm ring in the second three times be \\( y \\), and the number of times the alarm ring in the first two times be \\( z \\).\n\n1. **Calculate the number of times the alarm ring in the first three times**:\n   - The alarm ring in the first three times is \\( x + y + z = 3x + y + z \\).\n   - The alarm ring "
+  },
+  {
+   "mode": "on",
+   "gold": "9360",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The company pays $600 in a month, and each of its employees has a 10% annual salary. Let the initial salary of Sylvie is $x. The company's new salary is $600 + (1 - x) * 5 = $600 + $x * 5 = $900.\n\nThe company's new salary after three more years is $900 + (1 - x) * 5 = $900 + $x * 5 = $900 + $x * 5 = $900 + $x * 5 = $900 + $x * 5 = $900 + $x * 5 = $900 + $x * 5 = $900 + $x * 5 = $900 + $x * 5 = $90"
+  },
+  {
+   "mode": "off",
+   "gold": "9360",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the initial salary of Sylvie be $x.\nThen, the company's annual salary after three more years is given by:\n\n$600x + $10x + $1.5x = $1,000\n\nSylie's salary after three more years is given by:\n\n$600x + $1.5x = $1,200\n\nSylie's salary after three more years is given by:\n\n$600x + $1.5x = $1,400\n\nSylie's salary after three more years is given by:\n\n$600x + $1.5x = $1,200\n\nSylie's salary after three mor"
+  },
+  {
+   "mode": "on",
+   "gold": "8000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{8}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "8000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the number of copies sold by Harald is x, and the number of copies sold by Harald is y. We have:\n\nx + y = 88,000\n\nWe also know that:\n\nx + y = 100,000\n\nWe can use these equations to solve for x and y:\n\nx + y = 100,000\n\nx = 100,000 - y\n\nSubstitute x into the first equation:\n\n100,000 - y = 100,000\n\nSimplify:\n\ny = 100,000\n\nSubstitute y into the second equation:\n\n100,000 - (100,000 - "
+  },
+  {
+   "mode": "on",
+   "gold": "24",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Christina has 16 friends, and each friend has a gift bag of 2. Therefore, the total amount of gift bags she needs is 16 \u00d7 2 = 32.\n\n\\boxed{32}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "24",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the total number of guests is 16. Let's assume that the gift bags are $2 each.\n\nThe total amount of money that she has is:\n\n$2x + $2y = 16\n\nwhere x and y are the number of friends and the total amount of money she has.\n\nWe can set up the following equations based on the given information:\n\n1. $2x + $2y = 16\n2. $2x + $2y = 16\n3. $2x + $2y = 16\n\nFrom equation 1, we can solve for x:"
+  },
+  {
+   "mode": "on",
+   "gold": "225",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining how many pounds of potato salad Ted needs to bring to the picnic if he hopes to have enough to feed everyone. \n\n1. **Calculate the total amount of potato salad**:  \n   The total amount of potato salad is \\(10 \\times 20 = 400\\).  \n\n2. **Calculate the amount of children and adults**:  \n   The number of children is \\(10 \\times 5 = 50\\).  \n   The number of adults is \\("
+  },
+  {
+   "mode": "off",
+   "gold": "225",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the adult and child will eat the same amount of potato salad. \nLet the adult's weight be x pounds, and the child's weight be y pounds. \nThe adult's weight is x + y, and the child's weight is x + y. \nThe total amount of potato salad that the adult will eat is:\n(x + y) + (x + y) = 20\nSimplifying this equation:\nx + y = 20\nSubstituting x = 20 - y into the equation:\n(20 - y) + y = 20\n"
+  },
+  {
+   "mode": "on",
+   "gold": "28",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{3}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "28",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of pets of Jan, Marcia, and Cindy be \\( N \\).\n\n1. **Calculate the number of pets of Jan**:\n   - Jan has \\( N \\) pets, so the number of pets of Jan is \\( N - 1 \\).\n   - Marcia has two more pets than Cindy, so the number of pets of Marcia is \\( N - 2 \\).\n   - Marcia has two more pets than Cindy, so the number of pets of Marcia is \\( N - 3 \\).\n   - The total number of pets of Jan is \\("
+  },
+  {
+   "mode": "on",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{10}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the information provided to solve this problem.\n\nLet's assume that the ages of the four kids are:\n\n- Amy: 5 years old\n- Jackson: 2 years old\n- Corey: 4 years old\n- James: 10 years old\n\nWe can use the given information to calculate the ages of the four kids:\n\n- Amy: 5 years old\n- Jackson: 2 years old\n- Corey: 4 years old\n- James: 10 years old\n\nWe can use the formula for the sum of the age"
+  },
+  {
+   "mode": "on",
+   "gold": "36",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that Gerald's diet improved by 10% each time he ran the 400-meter hurdles. \n\n1. **Calculate the time it takes for Gerald to run the 400-meter hurdles**:\n   - The time it takes for Gerald to run the 400-meter hurdles is given by the formula:\n     \\[\n     t = \\frac{2 \\times 400}{10} = 40 \\, \\text{seconds}\n     \\]\n   - The time it takes for Gerald to run the 400-meter hurdles is given by"
+  },
+  {
+   "mode": "off",
+   "gold": "36",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the speed of Gerald is x. \n\nThe speed of the 400-meter hurdles is given by:\n\n(400 x x) + (400 x (x + 2)) = 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x x + 400 x"
+  },
+  {
+   "mode": "on",
+   "gold": "348",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem states that the number of pets in the neighborhood is twelve less than the combined number of pet dogs and cats. Let the pet dogs be \\(x\\) and the pet cats be \\(y\\). The relationship between the pet dogs and cats is:\n\n\\[\n\\begin{align*}\nx &= y + 12 \\\\\nx &= y + 60\n\\end{align*}\n\\]\n\nSubstituting \\(x = y + 12\\) into the pet dogs equation:\n\n\\[\ny + 12 = y + 60\n\\]\n\nRearranging:\n\n\\[\ny = y + 12 "
+  },
+  {
+   "mode": "off",
+   "gold": "348",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of pets in the neighborhood be x. Then, the number of dogs is 60 - x, and the number of cats is 60 - x.\n\nThe number of pets in the neighborhood is given by:\n\n(60 - x) + (60 - x) = 12\n\nSimplifying this equation:\n\n60 - x + x = 12\n\nSimplifying:\n\n60 - x = 12\n\nSimplifying:\n\n60 = 12\n\nSolving for x:\n\nx = 12\n\nSubstitute x = 12 into the equation of the pets:\n\n60 - x = 12\n\nSimplify:\n\n60 = 12\n"
+  },
+  {
+   "mode": "on",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{0}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of boys in the girl scout be \\( x \\). The number of girls in the girl scout is \\( 2x \\). Therefore, the number of boys in the girl scout is \\( 2x - 2x = 2x - 2 \\).\n\nThe total number of boys in the girl scout is \\( 2x - 2x = 2x - 2 \\).\n\nThe total number of girls in the girl scout is \\( 2x - 2x = 2x - 2 \\).\n\nThe total number of boys in the girl scout is \\( 2x - 2x = 2x - 2 \\).\n\nThe to"
+  },
+  {
+   "mode": "on",
+   "gold": "3",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{3}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "3",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that James slept 2/3 of what Harry slept.\nLet's assume that James slept 2/3 of what Harry slept.\nSince James slept 2/3 of what Harry slept, we can write:\n2/3 * (2/3) = 2/3\n2/3 * (3/2) = 3/2\n3/2 * (4/3) = 4/3\n4/3 * (5/2) = 5/2\n5/2 * (6/3) = 6/2\n6/3 * (7/2) = 7\n7/2 * (8/3) = 8\n8/3 * (9/2) = 9\n9/2 * (10/3) = 10\n10/2 * (11/2) = 11\n11/2 * (12/3) = 12\n12/2 * (13/2) = 13\n13/2 * (14/2) = 15\n1"
+  },
+  {
+   "mode": "on",
+   "gold": "12",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": " Freda's last batch of tomato sauce contains 32 ounces of tomato sauce. The volume of tomato sauce is \\( \\frac{1}{3} \\) of the original volume of tomato sauce. The volume of tomato sauce is \\( \\frac{1}{3} \\times 32 = 16 \\) ounces. The volume of tomato sauce is \\( 16 \\times 16 = 128 \\) ounces. \n\nThe volume of tomato sauce is \\( \\frac{1}{3} \\times 128 = 64 \\) ounces. Freda's last batch of tomato sau"
+  },
+  {
+   "mode": "off",
+   "gold": "12",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": " Freda's last batch of tomato sauce made 32 ounces of sauce. Let the volume of tomato sauce used by Freda be x.\nThe volume of tomato sauce used by Freda is 32 ounces.\n Freda's last batch of tomato sauce made 32 ounces of sauce.\n Freda's last batch of tomato sauce made 32 ounces of sauce.\n Freda's last batch of tomato sauce made 32 ounces of sauce.\n Freda's last batch of tomato sauce made 32 ounces"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining how many cars drove through the traffic jam in the first 15 minutes, given that the remaining 30 cars were on the motorway. \n\n1. **Total cars on the motorway**:  \n   The total number of cars on the motorway is \\( \\frac{30}{15} = 6 \\) cars.\n\n2. **Number of cars on the motorway**:  \n   The remaining 30 cars were on the motorway. The remaining 15 cars were on the line"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of cars on the motorway be \\( N \\). The total number of cars on the motorway is \\( N \\times (N + 1) \\). The total number of cars on the line is \\( N \\times (N + 1) \\).\n\nThe total number of cars on the line is \\( N \\times (N + 1) \\). The total number of cars on the line is \\( N \\times (N + 1) \\).\n\nThe total number of cars on the line is \\( N \\times (N + 1) \\).\n\nThe total number of ca"
+  },
+  {
+   "mode": "on",
+   "gold": "58",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Mary has 18 new potted plants, each with a 40-hour window. She has 2 potted plants on each ledge, so the total number of potted plants is \\(2 \\times 40 = 80\\).\n\nTo find the number of potted plants Mary will give to friends and family, we consider the following steps:\n\n1. **Calculate the number of potted plants on each ledge**:\n   - Each ledge has 40 potted plants, so the number of potted plants on"
+  },
+  {
+   "mode": "off",
+   "gold": "58",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the potted plants are labeled as 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90"
+  },
+  {
+   "mode": "on",
+   "gold": "175",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining the number of doorbell ringsJerome made on the 4th day. Let the doorbell rings be \\( D \\), \\( E \\), \\( F \\), and \\( G \\) respectively. The key steps are as follows:\n\n1. **Calculate the sum of the doorbell rings**:\n   - The doorbell rings are \\( D \\), \\( E \\), \\( F \\), and \\( G \\).\n   - The sum of the doorbell rings is \\( D + E + F + G = 4D + E + F + G \\).\n\n2. **Set"
+  },
+  {
+   "mode": "off",
+   "gold": "175",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the doorbell rings be \\( D \\) times. \n\n1. Let the doorbell rings be \\( D \\) times.\n2. Let the doorbell rings be \\( 2D \\) times.\n3. Let the doorbell rings be \\( 2D \\) times.\n4. Let the doorbell rings be \\( D \\) times.\n\nThe given information:\n- The first friend pressed on the doorbell 60 times.\n- The second friend pressed on the doorbell 60 times.\n- The third friend pressed on the doorbell 60 ti"
+  },
+  {
+   "mode": "on",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total number of pages the two students read on Monday is \\(4 \\times 15 = 60\\). The total number of pages the Social Studies textbook covers on Monday is \\(20 \\times 7 = 140\\). The Social Studies textbook covers 7 pages on Monday, so the total number of pages the two students read on Monday is \\(60 + 140 = 180\\).\n\nThe total number of pages the two students read on Tuesday is \\(7 \\times 8 = 56\\)"
+  },
+  {
+   "mode": "off",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of pages he read on Monday be \\( P \\). The total number of pages he read on Monday is \\( P \\times (1 - P) \\). The total number of pages he read on Tuesday is \\( (1 - P) \\times (1 - P) = P \\times (1 - P) \\). The total number of pages he read on Wednesday is \\( (1 - P) \\times (1 - P) = P \\times (1 - P) \\). The total number of pages he read on Thursday is \\( (1 - P) \\times (1 - P) = P "
+  },
+  {
+   "mode": "on",
+   "gold": "26",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves John having a glass of water with breakfast, lunch, and dinner on the weekends, and a soda with dinner on the weekends. \n\n1. **Calculate the total amount of water John needs to drink in a week:**\n   - John has a total of \\(2 \\times 3 = 6\\) glasses of water.\n   - The amount of water John needs to drink in a week is \\(6 - 2 = 3\\) glasses of water.\n   - The total amount of water "
+  },
+  {
+   "mode": "off",
+   "gold": "26",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume John has a total of 5 glasses of water in a week. \n\n1. John has 5 glasses of water in a week, so the total amount of water consumed is 5 * 5 = 25 glasses.\n2. John has a glass of water in a week, so the total amount of water consumed is 5 * 5 = 25 glasses.\n3. John has a glass of water in a week, so the total amount of water consumed is 5 * 5 = 25 glasses.\n\nWe can represent this as:\n\n- "
+  },
+  {
+   "mode": "on",
+   "gold": "140",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The fog bank covers the city in a single minute. The distance covered by the fog bank is the sum of the distances covered by the ocean and the city. The distance between the ocean and the city is \\(10 - 42 = 3\\) miles, and the city is 42 miles from the ocean. The time it takes for the fog bank to cover the city is the time it takes for the ocean to cover the city, which is \\(3\\) minutes.\n\n\\boxed{3"
+  },
+  {
+   "mode": "off",
+   "gold": "140",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the speed of the fog bank be \\( v \\). The time it takes for the fog bank to cover the city is given by the formula:\n\n\\[\nt = \\frac{v}{v + 10}\n\\]\n\nSubstituting the given values:\n\n\\[\nt = \\frac{v}{v + 10} = \\frac{v}{v + (10 + 10)} = \\frac{v}{v + 20}\n\\]\n\nSimplifying the equation:\n\n\\[\nt = \\frac{v}{v + 20}\n\\]\n\nSolving for \\( t \\):\n\n\\[\nt = \\frac{v}{v + 20}\n\\]\n\nSubstituting \\( t = \\frac{v}{v + 20} \\) i"
+  },
+  {
+   "mode": "on",
+   "gold": "500",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Poppy has a 1000-piece jigsaw puzzle, where her mom places a quarter of the pieces on the board, and her mom places a third of the remaining pieces. This results in a total of \\( \\frac{1000}{2} = 500 \\) pieces. Since she places a quarter of the remaining pieces, she has \\( \\frac{500}{2} = 125 \\) pieces.\n\n\\boxed{125}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "500",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the puzzle is a jigsaw puzzle with a quarter of the pieces placed on the board. The total number of pieces is \\( \\frac{1000}{2} = 500 \\).\n\nWe need to find the number of pieces that must be placed on the board to fit all the pieces. This is a linear equation, so we can use the fact that the number of pieces is the same for each row and column.\n\nThe number of pieces that must be pl"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Cody eats three times as many cookies as Amir. Let \\( x \\) be the number of cookies Cody eats. Then,\n\n\\[\nx + 5 = 3 \\times x\n\\]\n\nSolving for \\( x \\):\n\n\\[\nx = 3 - 5x\n\\]\n\nSubstitute \\( x = 3 - 5x \\) into the equation for Cody:\n\n\\[\n3 - 5(3 - 5x) = 3 - 5(3 - 5x)\n\\]\n\nSimplify:\n\n\\[\n3 - 5x = 3 - 5x + 5x\n\\]\n\n\\[\n-5x = -5x + 5x\n\\]\n\n\\[\n-5x = -5x + 5\n\\]\n\n\\[\n-5x = -5x + 5\n\\]\n\n\\[\n-5x = -5x + 5\n\\]\n\n\\[\n-5x = -5x +"
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the number of cookies Cody eats is equal to the number of cookies Amir eats.\n\nCody eats 5 cookies, so the number of cookies Cody eats is 5x5 = 25.\n\nLet the number of cookies Cody eats is x.\n\nThen, the number of cookies Cody eats is 5x + x.\n\nLet the number of cookies Amir eats is y.\n\nThen, the number of cookies Cody eats is y + x.\n\nLet the number of cookies Amir eats is z.\n\nThen, "
+  },
+  {
+   "mode": "on",
+   "gold": "72",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total inner volume of all 3 boxes is calculated by considering the total volume of the three boxes. \n\n1. **Total inner volume of all 3 boxes**:  \n   The total volume of all 3 boxes is \\(3 \\times 6 \\times 4 = 216 \\, \\text{inches}^3\\).\n\n2. **Total inner volume of the 5 boxes**:  \n   The total volume of the 5 boxes is \\(5 \\times 6 \\times 4 = 150 \\, \\text{inches}^3\\).\n\n3. **Total inner volume of a"
+  },
+  {
+   "mode": "off",
+   "gold": "72",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the inner volume of the box be \\( V \\). \n\nThe total inner volume of the box is the sum of the volumes of the three boxes:\n\\[\nV = 3V + V + V = 3(5) + 3(6) + 3(4) = 15 + 12 + 6 = 45\n\\]\n\nTo find the total inner volume of the box, we consider the total volume of the box and the volume of the remaining outer volume. \n\nThe total inner volume of the box is the sum of the volumes of the three boxes:\n\\"
+  },
+  {
+   "mode": "on",
+   "gold": "3",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Frankie watches TV in all three days. Let \\( x \\) be the number of hours he watched TV in all three days. We have the equations:\n\n1. \\( x + 2x + x = 7 \\)\n2. \\( 2x + x + x = 30 \\)\n\nFrom equation 1, we have \\( x = 7 \\). Substituting \\( x = 7 \\) into equation 2:\n\n\\[\n7 + 2(7) + 7 = 7 + 7 + 7 = 30\n\\]\n\nThis matches option A.\n\nTo find the number of 30-minute episodes, we consider the total number of hour"
+  },
+  {
+   "mode": "off",
+   "gold": "3",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of hours he watched TV in the first hour be \\( h \\).\n\n1. **Total hours he watched**:\n   - The total time he watched TV in the first hour is \\( h \\times (1 - h) \\).\n   - Total time he watched TV in the first 30 minutes: \\( \\frac{1}{2} h \\times (1 - h) = \\frac{1}{2} h \\times (1 - h) = h \\times (1 - h) \\).\n\n2. **Number of 30-minute episodes he watched**:\n   - The total time he watched "
+  },
+  {
+   "mode": "on",
+   "gold": "50",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Henry's original cookies were \\(15 \\times 2 = 30\\) and his new cookies were \\(2 \\times 5 = 10\\). The total number of cookies he had is \\(15 + 10 = 20\\). The new total number of cookies is \\(20 + 10 = 30\\). The difference between the two total numbers is \\(30 - 20 = 10\\).\n\n\\boxed{10}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "50",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of cookies Henry baked last year be x. Then, the number of cookies he baked last year is given by:\n\nx + (x + 15) = 110\n\nSimplifying this equation, we get:\n\nx + x + 15 = 110\n\nSimplifying, we get:\n\n2x = 110\n\nMultiplying both sides by 2:\n\n2x = 40\n\nDivide both sides by 2:\n\nx = 20\n\nTherefore, Henry baked 20 cookies last year.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "28",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The cashback rewards are $.20 per gallon. \n\n1. **Calculate the amount of gas**:  \n   \\[\n   \\text{Total gas} = \\frac{10}{3} \\times \\frac{3}{2} = \\frac{15}{3}\n   \\]\n\n2. **Calculate the amount of gas after the cashback rewards**:  \n   \\[\n   \\text{Total gas after the cashback rewards} = \\frac{15}{3} - \\frac{15}{3} = \\frac{10}{3}\n   \\]\n\n3. **Calculate the amount of gas after the cashback rewards**:  \n "
+  },
+  {
+   "mode": "off",
+   "gold": "28",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the amount of gas sold be $x. \nThe cashback rewards offer $.20 per gallon of gas. \nThe cashback rewards are $.20 x 3 = $.30 per gallon. \nThe cashback rewards are $.20 x 10 = $.50 per gallon. \nThe cashback rewards are $.30 x 3 = $.60 per gallon. \nThe total amount of gas sold is $.30 + $.50 + $.60 = $.70. \nThe cashback rewards are $.20 x 3 = $.30 per gallon. \nThe total amount of gas sold is $.70"
+  },
+  {
+   "mode": "on",
+   "gold": "45",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Marcell's average height is \\( \\frac{1}{2} \\times (1 + 2) = 1.5 \\) inches, and Beatrice's average height is \\( \\frac{1}{2} \\times (1 + 3) = 1.5 \\) inches. The difference between their heights is \\( 1.5 - 1.5 = 0.5 \\). Since they ate the same amount of fruit roll-ups, their total height is \\( 1.5 \\times 0.5 = 0.75 \\).\n\n\\boxed{0.75}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "45",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that Marcell ate the entire amount of fruit roll-ups, so the total amount of fruit was \\( \\frac{1}{2} \\times (2 + 3) = \\frac{3}{2} \\times (4 + 5) = 6 \\times 4 = 24 \\).\n\nThe total amount of fruit eaten by Marcell was \\( 6 \\times (4 + 5) = 24 \\times 6 = 144 \\).\n\nThe total amount of fruit eaten by Beatrice was \\( 6 \\times (4 + 5) = 24 \\times 6 = 144 \\).\n\nThe total amount of fruit eaten b"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{64}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the time taken by the boat to row back towards shore be t.\n\nLet the time taken by the boat to row back towards shore be t1.\n\nThe boat's speed is given by:\n\n$v = v_1 + v_2$\n\nwhere:\n\n$v_1 = v_2 = v_1 + v_2$\n\n$v_2 = v_1 + v_2$\n\n$v_1 = t_1$\n\n$v_2 = t_2$\n\n$t_1 = t_2 + t_1$\n\n$t_1 = t_2 + t_1$\n\n$t_1 = t_2 + t_1$\n\n$t_1 = t_2 + t_1$\n\n$t_1 = t_2 + t_1$\n\n$t_1 = t_2 + t_1$\n\n$t_1 = t_2 + t_1$\n\n$t_1 = t_2 +"
+  },
+  {
+   "mode": "on",
+   "gold": "24",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The whiteboard is cleaned 3 times per lesson, so the total number of times it is cleaned is \\(3 \\times 3 = 9\\).\n\n\\boxed{9}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "24",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The whiteboard is cleaned 3 times per lesson, so the total number of times it is cleaned is 3 x 3 = 9. \n\n\\boxed{9}<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "25",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{5}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "25",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of flowers he has been growing on the day before be x.\nLet the number of flowers he has been growing on the day before be y.\nThen,\nx + y = 2\nx + y = 5\nx + y = 6\nx = 6 - y\nx = 2\ny = 2\nTherefore, the number of flowers he has been growing on the day before is 2.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Jamal's phone can hold 6 times more photographs than Brittany's phone. \n\n1. **Calculate the maximum number of birds in Jamal's photograph**:\n   - The maximum number of birds in Jamal's photograph is 50.\n   - The maximum number of birds in Brittany's photograph is 6 times the maximum number of birds in Jamal's photograph.\n   - The ratio of the maximum number of birds to the maximum number of birds "
+  },
+  {
+   "mode": "off",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of birds in Jamal's photograph of ducks be x. \nThe maximum number of birds in Jamal's photograph of ducks is 50, so the maximum number of birds in Jamal's photograph of ducks is 50 * x. \nThe maximum number of birds in Jamal's photograph of ducks is 50 * (x + 1). \nSince the maximum number of birds in Jamal's photograph of ducks is 50, we have:\n50 * (x + 1) = 50 * (x + (x + 1))\nSimpli"
+  },
+  {
+   "mode": "on",
+   "gold": "90",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Sasha has leftover ten 2 x 4 x 10 boards that cost $10 each. She has leftovers for five 4 x 4 x 10 boards, so she has $50 left over. The total amount she has left over is $50 + $10 = $100. She has $100 left over, so she has $100 - $50 = $10 left over.\n\n\\boxed{10}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "90",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total cost of the lumber be $x. The total cost of the lumber is $x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $10x + $16x + $"
+  },
+  {
+   "mode": "on",
+   "gold": "42",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{120}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "42",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of teaspoons of sugar used by Katy be x.\nThen, the number of teaspoons of sugar used by her in the ratio of 7:13 is given by:\nx = (x + 7) / (x + 7)\nSimplifying this equation, we get:\nx = (x + 7) / (x + 7)\nSimplifying this equation, we get:\nx = (x + 7) / (x + 7)\nSimplifying this equation, we get:\nx = (x + 7) / (x + 7)\nSimplifying this equation, we get:\nx = (x + 7) / (x + 7)\nSimplifyi"
+  },
+  {
+   "mode": "on",
+   "gold": "360",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{120}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "360",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of the shoes be $x. \n\nThe total cost of the shoes is the sum of the costs of the three children:\n\n$60 + $x + $x + $x = $60\n\n$60 + $x = $60\n\n$x = 60 - $x\n\n$x = 30\n\nTherefore, John paid $60 for the shoes.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{30}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of containers imported on the second day be \\( x \\). The total number of vehicles at the port on the second day is \\( 2x \\).\n\nThe total number of vehicles at the port on the third day is \\( 2x + 5 \\).\n\nThe total number of vehicles at the port on the fourth day is \\( 2x + 5 \\).\n\nThe total number of vehicles at the port on the fifth day is \\( 2x + 5 \\).\n\nThe total number of vehicles a"
+  },
+  {
+   "mode": "on",
+   "gold": "95200",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Adrien's total salary is given by:\n\n\\[\n\\text{Total salary} = 40000 + (40000 - 40000) = 40000 + 40000 = 60000\n\\]\n\n\\boxed{60000}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "95200",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total salary of Adrien's and Lylah's were $x and $y respectively.\n\nThe given information:\n- Adrien's salary increased by $40000 four years ago, so the new salary is $40000 + $40000 = $80000\n- Lylah's salary increased by $40000 four years ago, so the new salary is $40000 + $40000 = $120000\n\nWe can set up the following equations:\n1. $x + y = 120000\n2. $40000 + 40000 = 120000\n\nSolving the fir"
+  },
+  {
+   "mode": "on",
+   "gold": "240",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Miguel uses 2 pads of paper a week for drawing. Let the number of sheets of paper used by him be \\( N \\). The total number of sheets of paper used by him is \\( N \\times 2 = 4N \\).\n\nThe total number of sheets of paper used by him is \\( 4N \\). The total number of sheets of paper used by him is \\( 4N \\times 4 = 16N \\).\n\nThe total number of sheets of paper used by him is \\( 4N \\times 16N = 64N \\).\n\nTh"
+  },
+  {
+   "mode": "off",
+   "gold": "240",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of sheets of paper be x.\n\nThe total number of sheets of paper is 30x, so the total number of sheets of paper is:\n\nx + 30x = 60\n\nSolving for x:\n\nx = 60 - 30x\n\nx = 12\n\nTherefore, the number of sheets of paper that must be used every month is:\n\nx = 12\n\nThe number of sheets of paper that must be used every month is:\n\nx + 12 = 60\n\nSolving for x:\n\nx = 60 - 12\n\nx = 24\n\nTherefore, the numbe"
+  },
+  {
+   "mode": "on",
+   "gold": "27",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{2}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "27",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total number of fruits be \\( x \\).\n\n1. **Total apples**:\n   - The total amount of apples is \\( x \\).\n   - The total amount of oranges is \\( 2x \\).\n   - The total amount of apples is \\( x + 2x = x + 2x \\).\n   - Therefore, the total amount of apples is \\( x + 2x = x + 2x \\).\n\n2. **Oranges**:\n   - The total amount of oranges is \\( 2x \\).\n   - The total amount of apples is \\( x + 2x = x + 2x \\"
+  },
+  {
+   "mode": "on",
+   "gold": "48",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of hours she slept on Monday be \\( x \\). The number of hours she slept on the next two days is \\( 2x - 2 \\). The total number of hours she slept on the weekdays is \\( x + 2 \\).\n\nThe total number of hours she slept on the weekdays is \\( x + 2 \\). The total number of hours she slept on the weekends is \\( x - 2 \\).\n\nThe total number of hours she slept on the weekdays is \\( x + 2 \\). Th"
+  },
+  {
+   "mode": "off",
+   "gold": "48",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total number of hours she slept in total throughout the week be \\( t \\).\n\nFirst, we calculate the total number of hours she slept in total throughout the week:\n\\[\nt + 2t + 2t + 2t + 2t = 8\n\\]\n\nNext, we need to find the number of hours she slept in total throughout the week. We can use the equation \\( t + 2t + 2t + 2t = 8 \\) to express the total number of hours she slept in terms of the num"
+  },
+  {
+   "mode": "on",
+   "gold": "50",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the time she runs in hours be \\( h \\).\n\n1. **Calculate the time she runs in 3 hours**:\n   \\[\n   \\frac{3}{2} \\times (10 + 5) = \\frac{3}{2} \\times 20 = 15\n   \\]\n\n2. **Calculate the time she runs in 7 hours**:\n   \\[\n   \\frac{7}{2} \\times (10 + 5) = \\frac{7}{2} \\times 20 = 35\n   \\]\n\n3. **Calculate the time she runs in 7 hours**:\n   \\[\n   \\frac{7}{2} \\times (10 + 5) = \\frac{7}{2} \\times 20 = 35\n   "
+  },
+  {
+   "mode": "off",
+   "gold": "50",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the speed of Rosie be x miles per hour.\n\nThe time it takes Rosie to run 5 miles is:\n\n(5x) / (3x) = 5\n\nSimplifying this equation, we get:\n\n(x + 5) / 3 = 5\n\nMultiply both sides by 3:\n\nx + 5 = 15\n\nSubtract 5 from both sides:\n\nx = 12\n\nTherefore, Rosie can run 12 miles in 12 hours.\n\n\\boxed{12}<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{60}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of letters in the pile of letters be \\( x \\). The total number of letters in the pile of letters is \\( \\frac{x}{2} \\).\n\nThe total number of letters in the pile of letters is \\( \\frac{x}{2} \\times \\frac{60}{2} = 60 \\times x \\).\n\nThe total number of letters in the pile of letters is \\( \\frac{60}{2} = 60 \\).\n\nThe total number of letters in the pile of letters is \\( \\frac{60}{2} = 60 \\)"
+  },
+  {
+   "mode": "on",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{12}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the spoons in the package are labeled as \"1\", \"2\", and \"3\", and the spoons in the package are labeled as \"2\", \"3\", and \"4\", respectively. \n\nLet the spoons in the package be labeled as \"1\", \"2\", and \"3\", and the spoons in the package be labeled as \"2\", \"3\", and \"4\", respectively. \n\nWe know that the spoons in the package are the same as the spoons in the package. \n\nLet the spoons i"
+  },
+  {
+   "mode": "on",
+   "gold": "82",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Dylan bought 38 chicken sausages and 6 more fish sausages, making a total of 38 chicken sausages. The number of chicken sausages is 38 - 6 = 26, and the number of fish sausages is 6 - 26 = 0. Thus, the total number of sausages is:\n\n\\boxed{26}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "82",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the given information to calculate the total number of sausages and the number of sausages and fish.\n\nFirst, we can use the given information to calculate the total number of sausages and sausages:\n\n- Total number of sausages: 38\n- Total number of sausages and fish: 6\n\nWe can use the formula:\n\nTotal sausages = (Number of sausages x (Number of sausages x (Number of sausages x (Number of s"
+  },
+  {
+   "mode": "on",
+   "gold": "120",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{50}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "120",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the given information to solve this problem.\n\nLet's assume that Amy and Lily have a total of 50 friends.\n\nLet's calculate the number of friends Amy and Lily have together:\n\nLet's calculate the number of friends Amy and Lily have together:\n\nLet's calculate the number of friends Amy and Lily have together:\n\nLet's calculate the number of friends Amy and Lily have together:\n\nLet's calculate "
+  },
+  {
+   "mode": "on",
+   "gold": "880",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{15}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "880",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of each pepper be \\( c \\). The total cost of all the fruits is \\( c \\times (1 - c) \\).\n\nThe total cost of all the fruits is:\n\\[\n\\text{Total Cost} = c \\times (1 - c) \\times (1 - c) = c \\times (1 - c) \\times (1 - c)\n\\]\n\nThe total cost of all the fruits is:\n\\[\n\\text{Total Cost} = c \\times (1 - c) \\times (1 - c) = c \\times (1 - c) \\times (1 - c)\n\\]\n\nThe total cost of all the fruits is:\n\\["
+  },
+  {
+   "mode": "on",
+   "gold": "10000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The hospital's profit is calculated by finding the total profit from the visits and subtracting the cost of the hospital's charges. \n\n1. **Total visits**:  \n   The hospital's charge for each patient is $150.  \n   Total visits:  \n   $150 + $200 = $300.  \n\n2. **Cost of the hospital's charges**:  \n   The hospital charges $200 for each patient.  \n   Total cost of the hospital's charges:  \n   $300 + $2"
+  },
+  {
+   "mode": "off",
+   "gold": "10000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of patients seen in the hospital be represented by the variable $x. \n\nThe total cost of the hospital visit is the sum of the costs of the patients and the hospital visit:\n\n$200 + $150 + $200 + $150 = $300\n\nThe total cost of the hospital visit is the sum of the costs of the patients and the hospital visit:\n\n$300 + $200 + $150 + $200 = $300\n\nThe total profit from the hospital visit is"
+  },
+  {
+   "mode": "on",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the number of elves left after 10 kids quit, given that 60% of the remaining kids quit, and the remaining kids quit after children vomit. \n\n1. **Calculate the remaining kids**:\n   - The remaining kids are 60% of the total number of kids, so:\n     \\[\n     \\frac{60}{100} = \\frac{3}{5}\n     \\]\n\n2. **Calculate the number of kids who quit after children vomit**:\n   - The re"
+  },
+  {
+   "mode": "off",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of elves quit be \\( N \\). The remaining elves quit after children vomit, so the number of remaining elves is \\( N - 10 \\).\n\nThe problem states that the number of elves quit after children vomit is \\( N - 10 \\). This implies that the remaining elves are \\( N - 10 \\) and the remaining children are \\( N - 10 \\).\n\nThe number of children vomit is \\( N - 10 \\). The remaining children are "
+  },
+  {
+   "mode": "on",
+   "gold": "940",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total expenditure for Joseph in May was $500, and for June, it was $60 less. This can be expressed as:\n\n\\[\n\\text{Total expenditure} = 500 - 60 = \\$300\n\\]\n\n\\boxed{300}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "940",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that Joseph's total expenditure for those two months is $x.\nIn June, Joseph's expenditure was $500.\nIn June, Joseph's expenditure for those two months was $60.\nWe can set up the equation:\n$x + (x - x) = 500\n$60 = 500 - x\n$60 = x\nx = 60\nTherefore, Joseph's total expenditure for those two months was $60.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let \\( x \\) be the number of tickets Pam rode and \\( y \\) be the number of tickets Fred rode. We have the following equations:\n\n1. \\( x + y = 6 \\)\n2. \\( 2x + y = 4 \\)\n\nFrom equation 1, we have \\( x = y + 2 \\). Substituting \\( y = 2x + 4 \\) into the second equation:\n\n\\[\n(2x + 4) + 2x = 4(2x + 4) + 4\n\\]\n\nSimplifying:\n\n\\[\n2x + 8 = 8x + 16 \\implies 2x = 16 \\implies x = 4\n\\]\n\nSubstituting \\( x = 4 \\) i"
+  },
+  {
+   "mode": "off",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of the luge be \\( C \\). The cost of the roller coaster is \\( C \\times 6 \\). The cost of the luge is \\( C \\times 2 \\). The total cost of the luge and the roller coaster is \\( C + 6C \\).\n\nWe have the following equations:\n1. \\( C + 6C = 6C \\)\n2. \\( C + 2C = 4C \\)\n\nFrom equation 1, we can express \\( C \\) in terms of \\( C \\):\n\\[ C = C + 6C \\]\n\nSubstitute \\( C = C + 6C \\) into equation 2:\n\\"
+  },
+  {
+   "mode": "on",
+   "gold": "13",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "On Monday, Walt walked 4 miles. Tuesday, he walked 6 miles. Wednesday, he walked 6 miles. \n\nLet \\( x \\) be the number of miles Walt walked on Monday. The total mileage on Monday is \\( 4x \\). The total mileage on Wednesday is \\( 6x \\). The total mileage on Wednesday is \\( 6x + 6x = 12x \\).\n\nWe need to find the number of miles Walt walked on Wednesday. Let \\( y \\) be the number of miles Walt walked "
+  },
+  {
+   "mode": "off",
+   "gold": "13",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total mileage on Monday be \\( x \\). The total mileage on Wednesday is \\( 2x + 6 \\). The total mileage on Wednesday is \\( 2x + 6 \\).\n\nWe have the equations:\n1. \\( x + 6 = 2x + 6 \\)\n2. \\( 2x + 6 = 2x + 6 \\)\n\nFrom the first equation, we can solve for \\( x \\):\n\\[ x = 2x + 6 \\]\n\nSubstitute \\( x = 2x + 6 \\) into the second equation:\n\\[ 2(2x + 6) + 6 = 2(2x + 6) + 6 \\]\n\\[ 2x + 12 = 2x + 12 \\]\n\\[ "
+  },
+  {
+   "mode": "on",
+   "gold": "720",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Tom's car wash costs $15 per month. \n\nTo find the total cost of 4 car washes, we calculate the total cost of 4 car washes:\n\n\\[\n4 \\times 15 = 60\n\\]\n\n\\boxed{60}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "720",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of a car wash be $x. \nThen, the total cost of the car wash is $x + $15x = $x + $15x = $x + $15x. \nThe total cost of the car wash is $x + $15x = $x + $15x. \nThe total cost of the car wash is $x + $15x = $x + $15x. \nThe total cost of the car wash is $x + $15x = $x + $15x. \nThe total cost of the car wash is $x + $15x = $x + $15x. \nThe total cost of the car wash is $x + $15x = $x + $15x. "
+  },
+  {
+   "mode": "on",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{20}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of video games Brian has been missing be \\( x \\). \n\nFirst, we calculate the number of games Brian has been missing:\n\\[\nx = 5 - 3 = 2\n\\]\n\nNext, we calculate the number of games Brian has been missing:\n\\[\nx = 5 - 2 = 3\n\\]\n\nThen, we calculate the number of games Brian has been missing:\n\\[\nx = 3 - 3 = 0\n\\]\n\nSince Brian has been missing 2 games, we can use the relationship between the nu"
+  },
+  {
+   "mode": "on",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{3}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's denote the number of female Scottish unicorns as \"x\". \n\nWe know that:\n- The number of female Scottish unicorns is 27.\n- The number of female Scottish unicorns is 2x.\n\nWe also know that:\n- The number of female Scottish unicorns is x.\n- The number of female Scottish unicorns is 2x.\n\nWe can set up the following equations based on the information provided:\n1. The number of female Scottish unicor"
+  },
+  {
+   "mode": "on",
+   "gold": "29",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total cost of delivery is $7.50 + $5.00 + $1.50 = $12.50. \n\nTo find the delivery fee, we calculate the total cost of delivery:\n\\[\n12.50 + 2.50 + 2.50 = \\$12.50\n\\]\n\nThe delivery fee is the same as the delivery fee plus the tip:\n\\[\n12.50 + 2.50 = \\$12.50\n\\]\n\nRory's delivery fee is $12.50, and the tip is $1.50. Therefore, the delivery fee is:\n\\[\n12.50 + 2.50 = \\$12.50\n\\]\n\nThe delivery fee is the "
+  },
+  {
+   "mode": "off",
+   "gold": "29",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To find the cost of delivery, we need to calculate the total cost of delivery and then add the tip. \n\nTotal Cost:\nTotal Cost = 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x + 2x "
+  },
+  {
+   "mode": "on",
+   "gold": "105",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{5}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "105",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of hours he took to complete the first test be x.\nThe number of hours he took to complete the second test is given by:\n(100 x 5) + (100 x 8) = 100x + 400\nSimplifying this equation:\n(100x + 400) = 100x + 400\nSimplifying:\n(100x + 400) = 100x + 400\nMultiply both sides by 100:\n100x + 400 = 100x + 400\nSimplify:\n100x = 100x + 400\nDivide both sides by 100:\nx = 100\nTherefore, the number of "
+  },
+  {
+   "mode": "on",
+   "gold": "70",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining the number of pink gumballs in a candy machine, given that there are 22 more than four times the number of pink gumballs. \n\n1. Let \\( N \\) be the number of pink gumballs.\n2. The equation for the number of pink gumballs is \\( N = 22 \\times (N + 4) \\).\n3. Substitute \\( N \\) into the equation:\n   \\[\n   N = 22 \\times (N + 4)\n   \\]\n4. Simplify the equation:\n   \\[\n   N ="
+  },
+  {
+   "mode": "off",
+   "gold": "70",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of pink gumballs be \\( P \\).\n\nThe total number of gumballs is \\( P + 2P = 12 \\).\n\nThe total number of gumballs is \\( P + (P + 2P) = 12 \\).\n\nWe need to find the number of pink gumballs.\n\nLet \\( P = x \\) be the number of pink gumballs.\n\nThe total gumballs are \\( x + 2P = 12 \\).\n\nWe have the following equations:\n1. \\( x + 2P = 12 \\)\n2. \\( x + (x + 2P) = 12 \\)\n\nFrom equation 1, we can e"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining the percentage of semi-automatic cars in the 20 available cars. semi-automatic cars have a 75% chance of being automatic, while manual cars have a 50% chance of being automatic. \n\n1. **Total semi-automatic cars**:  \n   Total semi-automatic cars = 20 + 12 = 28.  \n\n2. **Number of manual cars**:  \n   The number of manual cars is the total number of semi-automatic cars"
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To find the percentage of the cars that are semi-automatic, we need to calculate the total number of cars in the pool and divide it by the total number of cars in the pool.\n\nTotal number of cars:\n- 20 cars\n- 12 cars\n\nTotal number of cars in manual:\n- 4 cars\n- 4 cars\n\nTotal number of cars in semi-automatic:\n- 4 semi-automatic\n- 4 semi-automatic\n\nTotal semi-automatic cars:\n- 4 semi-automatic cars\n- "
+  },
+  {
+   "mode": "on",
+   "gold": "400",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem states that there are 700 bees in a hive, and twice as many worker bees. This means the total number of worker bees is \\(2 \\times 700 = 800\\). \n\nThe number of worker bees is \\(800 - 700 = 400\\). \n\nThe number of baby bees is \\(400 - 700 = 100\\). \n\nThe total number of worker bees is \\(400 \\times 100 = 800\\). \n\nThe total number of worker bees is \\(800 \\times 800 = 1,000,000\\). \n\nThe total"
+  },
+  {
+   "mode": "off",
+   "gold": "400",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of worker bees be \\( x \\). The number of baby bees is \\( y \\). The total number of bees in the hive is \\( x + y = 700 \\).\n\nThe number of worker bees is \\( x \\) and the number of baby bees is \\( y \\). The total number of bees is \\( x + y = 700 \\).\n\nWe have the following equations:\n1. \\( x + y = 700 \\)\n2. \\( x + y = 2 \\times 700 = 2 \\times 700 \\)\n\nFrom equation 1, we can write \\( x = "
+  },
+  {
+   "mode": "on",
+   "gold": "140",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Jordan earns $10 an hour in one week. The time spent on video games is \\(2 \\times \\frac{10}{60} = \\frac{10}{60} = \\frac{1}{3}\\) of the time spent on video games. Since he earns \\(1.5 \\times \\frac{1}{3} = \\frac{1}{3}\\) of the time spent on video games, he earns \\(1.5 \\times \\frac{1}{3} = \\frac{1}{3}\\) of the time spent on video games.\n\n\\boxed{\\dfrac{1}{3}}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "140",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the time spent on video games is 2 hours per day. \nLet the amount spent on video games be x. \nThe time spent on video games is 2x hours. \nThe amount spent on video games is x * 2 hours = 4x hours. \nThe total amount spent on video games is 4x + 2x = 8x hours. \nThe total amount spent on video games is 8x + 4x = 16x hours. \nThe total amount spent on video games is 16x + 8x = 32x hou"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total cost of buying milk, eggs, light bulbs, cups, and roach traps is:\n\n\\[\n\\text{Total Cost} = \\text{Number of Items} \\times \\text{Price per Item}\n\\]\n\n\\[\n\\text{Total Cost} = \\text{Number of Items} \\times \\text{Price per Item}\n\\]\n\n\\[\n\\text{Total Cost} = \\text{Number of Items} \\times \\text{Price per Item}\n\\]\n\n\\[\n\\text{Total Cost} = \\text{Number of Items} \\times \\text{Price per Item}\n\\]\n\n\\[\n\\tex"
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of nonfood items be x.\nThe tax is given by:\n(x - 2) x (1/x)\nSubstitute the given values:\n(x - 2) x (1/x)\nSimplify:\n(x - 2) x (1/x)\nMultiply both sides by (x - 2):\n(x - 2) x (1/x)\nSimplify:\n(x - 2) x (1/x)\nMultiply both sides by (x - 2):\n(x - 2) x (1/x)\nSimplify:\n(x - 2) x (1/x)\nMultiply both sides by (x - 2):\n(x - 2) x (1/x)\nSimplify:\n(x - 2) x (1/x)\nMultiply both sides by (x - 2):\n(x"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{3}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To calculate the profit, we need to consider the total income and expenses. Let the total income be $x.\nThe total expenses are the sum of the costs of the clients and the cost of the bleach. The cost of the bleach is $2, the cost of the cloths is $5, and the cost of the bleach is $2. Therefore, the total cost of the bleach is $2x + $5x = $8x.\nThe total income is the sum of the total expenses and t"
+  },
+  {
+   "mode": "on",
+   "gold": "4000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "John has 10 hectares of pineapple, so the total area of the field is \\(10 \\times 10 = 100 \\, \\text{m}^2\\). John can harvest pineapples every 3 months. The pineapples on the field can be divided into three parts:\n\n1. **Pineapples on the first 3 months**:\n   - John can harvest \\(3 \\times 3 = 9 \\, \\text{m}\\) pineapples.\n\n2. **Pineapples on the second 3 months**:\n   - John can harvest \\(2 \\times 2 = 4"
+  },
+  {
+   "mode": "off",
+   "gold": "4000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that John has a 50% probability of harvesting pineapples each year. The probability of John harvesting pineapples each year is:\n\n(100% probability of pineapples) / (10% probability of pineapples per hectare)\n\nCalculating this:\n\n(100% probability of pineapples) / (10% probability of pineapples per hectare)\n\nCalculating the values:\n\n(50% probability of pineapples) / (10% probability of "
+  },
+  {
+   "mode": "on",
+   "gold": "2125",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{1}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "2125",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of legos be \\( L \\). \n\nThe total number of pieces is \\( L \\times 3 \\). \n\nThe total number of legos is \\( L \\times (L + 3) \\). \n\nThe total number of legos is \\( L \\times (L + 1) \\). \n\nThe total number of legos is \\( L \\times (L + 2) \\). \n\nThe equation for the total number of legos is:\n\\[\nL \\times (L + 2) = L \\times (L + 3)\n\\]\n\nSimplifying the right-hand side:\n\\[\nL \\times (L + 2) = L "
+  },
+  {
+   "mode": "on",
+   "gold": "75",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Debra sees 30 bees return to the hive in the first 6 hours, and she sees 1/2 that many return to the hive in the next 6 hours. \n\n1. **First 6 hours**:  \n   - The bees return to the hive in 6 hours.  \n   - The bees return to the hive in 6 hours.  \n   - Total bees return to the hive in 6 hours: \\( 6 \\times 6 = 24 \\)  \n   - Total bees return to the hive in 6 hours: \\( 24 \\times 6 = 54 \\)  \n   - Total"
+  },
+  {
+   "mode": "off",
+   "gold": "75",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of bees in the hive in the first 6 hours be \\( N \\).\n\n1. Let \\( N \\) be the number of bees in the hive in the first 6 hours.\n2. Let \\( S \\) be the number of bees in the hive in the first 6 hours.\n3. Let \\( T \\) be the number of bees in the hive in the first 6 hours.\n4. Let \\( P \\) be the number of bees in the hive in the first 6 hours.\n5. Let \\( Q \\) be the number of bees in the hiv"
+  },
+  {
+   "mode": "on",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The cashier gave the cashier $8 in change, which is equivalent to $8 per adult ticket. The cashier gave the cashier $12 in change, which is equivalent to $4 per adult ticket. Therefore, the cashier gave the cashier $8 in change, which is equivalent to $4 per adult ticket.\n\n\\boxed{4}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of admission be $x.\n\nThe cashier gives the cashier money for 1 adult ticket and 1 adult ticket. The cashier gives the cashier money for 1 adult ticket and 1 adult ticket. The cashier gives the cashier money for 1 adult ticket and 1 adult ticket. The cashier gives the cashier money for 1 adult ticket and 1 adult ticket.\n\nThe cashier gives the cashier money for 1 adult ticket and 1 adul"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Charlie has 12 friends on Facebook, and James has four times as many friends on Facebook as Dorothy. \n\n1. Let \\( x \\) be the number of Facebook friends Charlie has.\n2. Let \\( y \\) be the number of Facebook friends James has.\n3. Let \\( z \\) be the number of Facebook friends Dorothy has.\n4. Let \\( w \\) be the number of Facebook friends Charlie has.\n\nThe total number of friends Charlie has is:\n\\[\nx +"
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of Facebook friends of Charlie be x.\n\nThe number of Facebook friends of Dorothy is given by:\n\n(x + 1) * (x + 2) * (x + 3) = 12\n\nSimplifying this equation:\n\nx^3 + x^2 + x + 6 = 12x + 12\n\nSimplifying:\n\nx^3 + x^2 + x + 6 = 12x + 12\n\nSimplifying:\n\nx^3 + x^2 + x + 6 = 12x + 12\n\nSimplifying:\n\nx^3 + x^2 + x + 6 = 12x + 12\n\nSimplifying:\n\nx^3 + x^2 + x + 6 = 12x + 12\n\nSimplifying:\n\nx^3 + x^2"
+  },
+  {
+   "mode": "on",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining the time Tim will wait before the winner finishes the race. Let the time Tim can wait before the winner finishes the race be \\( t \\). The time Tim can take to reach the school is given by the equation \\( t = \\frac{2t}{\\text{speed}} \\).\n\n1. **Calculate the time Tim can take to reach the school**:\n   - The speed of the school is \\( \\frac{2t}{\\text{speed}} \\).\n   - Ti"
+  },
+  {
+   "mode": "off",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the time it takes for the winner to be at the school before the loser finishes the race be t.\n\nLet the time it takes for the winner to be at the school before the loser finishes the race be t1.\n\nThe time it takes for the winner to be at the school before the loser finishes the race is given by:\n\nt1 = t2 / (t1 + t2)\n\nwhere:\n\nt1 = time it takes for the winner to be at the school before the loser"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the total cost of the tire inflation service, given that each person on a bike is paid for each tire inflated. Let \\( C \\) be the total cost of the tire inflation service. The total cost of the tire inflation service is \\( C \\times (1 - C) \\).\n\n1. **Total Cost of the tire inflation service**:\n   - The tire inflation service costs \\( C \\times (1 - C) \\).\n   - The tire i"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of people on bicycles be \\( B \\). The total cost of the bicycles is \\( B \\times (B + 1) \\). The total cost of the tire inflateers is \\( B \\times (B + 1) \\). The total cost of the tire inflateers is \\( B \\times (B + 1) \\).\n\nThe total cost of the tire inflateers is \\( B \\times (B + 1) \\). The total cost of the tire inflateers is \\( B \\times (B + 1) \\).\n\nThe total cost of the tire infl"
+  },
+  {
+   "mode": "on",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Carl buys ten packs of cookies, each with six cookies inside. Each pack of cookies has six cookies inside, so the total amount of cookies is \\(6 \\times 10 = 30\\). The total amount of change is \\(30 - 6 = 30\\).\n\n\\boxed{30}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the amount of change Carl receives be $x.\n\nThe total amount of change Carl receives is $10x.\n\nThe total amount of change Carl receives is $10x + $10x = $20x.\n\nThe total amount of change Carl receives is $20x + $10x = $40x.\n\nThe total amount of change Carl receives is $40x + $10x = $60x.\n\nThe total amount of change Carl receives is $60x + $10x = $90x.\n\nThe change Carl receives is $90x - $60x = "
+  },
+  {
+   "mode": "on",
+   "gold": "48",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the number of french fries Dave ate when he bought the pack of french fries, given that three pigeons bullied away a final amount of five. \n\n1. Let the number of french fries eaten by Dave be \\( x \\).\n2. The number of french fries eaten by three pigeons is given by the equation \\( x + 3y + 5z = 14 \\).\n3. The number of french fries eaten by the raccoon is given by the e"
+  },
+  {
+   "mode": "off",
+   "gold": "48",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of french fries in the pack be \\( x \\). The problem states that Dave ate fourteen french fries, leaving five behind. Let the number of french fries in the pack be \\( y \\). The remaining five fries are \\( x - y \\). The total amount of french fries is \\( x + y \\).\n\nThe problem states that Dave ate fourteen french fries, leaving five behind. Let the number of french fries in the pack b"
+  },
+  {
+   "mode": "on",
+   "gold": "272",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "On Mondays, Wednesdays, and Fridays, Kimo has three 1-hour classes each day. \n\n1. **Day 1**:\n   - **Day 1**: 2 hours (1 class)\n   - **Day 2**: 2 hours (2 classes)\n   - **Day 3**: 3 hours (3 classes)\n   - Total: \\(1 + 2 + 3 = 6\\) hours\n\n2. **Day 2**:\n   - **Day 1**: 2 hours (2 classes)\n   - **Day 2**: 2 hours (2 classes)\n   - **Day 3**: 3 hours (3 classes)\n   - Total: \\(1 + 2 + 3 = 6\\) hours\n\n3. **"
+  },
+  {
+   "mode": "off",
+   "gold": "272",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To determine how many hours Kimo spends attending classes on Mondays, Wednesdays, and Fridays, we need to consider the total number of hours in each class. \n\n1. **In a 1-hour class**:\n   - The total number of hours is \\(16 \\times 3 = 48\\).\n   - The total number of students is \\(16 \\times 2 = 16\\).\n   - The total number of hours is \\(48 \\times 2 = 96\\).\n   - Therefore, the total number of hours Kim"
+  },
+  {
+   "mode": "on",
+   "gold": "280",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the length of Bill's end-to-end roll, given that each roll is 4 inches long, each croissant is 6 inches long, and each baguette is two feet long. \n\n1. **Calculate the length of the end-to-end roll**:\n   - The total length of the end-to-end roll is \\(4 \\times 6 = 24\\) inches.\n   - The length of the end-to-end roll is \\(24 - 4 = 16\\) inches.\n   - The length of the baguet"
+  },
+  {
+   "mode": "off",
+   "gold": "280",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the length of the bag be x.\n\nThe total length of the bag is the sum of the lengths of the individual bags:\n\n(120 + 60 + 120 + 60) + (120 + 120 + 60 + 60) = 300\n\nSince the total length of the bag is 300 feet, we can set up the equation:\n\n300 + 120 + 60 + 60 + 120 = 300\n\nSimplifying:\n\n300 + 120 + 60 + 120 + 60 = 300\n\nSimplifying:\n\n300 + 120 + 60 + 120 + 60 = 300\n\nSimplifying:\n\n300 + 120 + 60 + 1"
+  },
+  {
+   "mode": "on",
+   "gold": "1400",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The zookeeper needs to order 400 bananas from a local farm every 2 months. The zookeeper can order 400 bananas in 2 months, and the farm can produce 100 bananas in 100 months. \n\n1. **Calculate the number of days required to produce 400 bananas**:\n   - Let \\( t \\) be the number of days.\n   - The number of days required is \\( t \\times \\frac{2}{100} = \\frac{2}{50} \\).\n\n2. **Calculate the number of da"
+  },
+  {
+   "mode": "off",
+   "gold": "1400",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of bananas ordered by the zookeeper be \\( x \\). The zookeeper needs to order \\( x \\) bananas in 2 months, and the gorillas need \\( y \\) bananas in 2 months. The total number of bananas ordered by the zookeeper is \\( x + y = 2x + y \\).\n\nThe zookeeper needs to order \\( x + y \\) bananas in 2 months, and the gorillas need \\( y + x \\) bananas in 2 months. The total number of bananas orde"
+  },
+  {
+   "mode": "on",
+   "gold": "80",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining the winner's running distance, given that Blake runs back and forth 15 times, and Kelly runs back and forth 15 times. \n\n1. **Key Equations**:\n   - Let \\( x \\) be the distance between Blake and Kelly.\n   - Let \\( y \\) be the distance between Blake and Kelly.\n   - The equations are:\n     \\[\n     x + y = 15 \\quad \\text{(1)}\n     \\]\n     \\[\n     x + y = 34 \\quad \\text{"
+  },
+  {
+   "mode": "off",
+   "gold": "80",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the distance between Blake and Kelly be \\( d \\).\n\n1. **Distance between Blake and Kelly**:\n   - Blake runs back and forth 15 times, so the distance between them is \\( \\frac{15}{2} \\times d \\).\n   - The distance between Blake and Kelly is \\( \\frac{15}{2} \\times d \\).\n\n2. **Distance between Blake and Kelly**:\n   - The distance between Blake and Kelly is \\( \\frac{15}{2} \\times d \\).\n   - The dist"
+  },
+  {
+   "mode": "on",
+   "gold": "34",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Raphael bought 4 pens, 2 notebooks, and a rim of bond paper. Let the cost of each item be \\( c \\). The total cost is \\( 4c + 2c + c = 8c \\).\n\nThe total cost of the school supplies is \\( 4c + 2c + c = 8c \\).\n\nThe total cost of the school supplies is \\( 8c \\).\n\nRaphael's total cost is \\( 8c + 8c = 16c \\).\n\nRaphael's total cost is \\( 16c \\).\n\nSubstituting the total cost of the school supplies into th"
+  },
+  {
+   "mode": "off",
+   "gold": "34",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of each item be x. Then,\n\n1. The cost of the pens: $1.5 x 4 = $4\n2. The cost of the notebooks: $4 x 2 = 8\n3. The cost of the rim of bond paper: $20 x 1.5 = $20\n\nThe total cost of all the items is:\n\n$4 + 8 + 20 + 8 = $40\n\nRaphael spent $40 on everything.\n\n\\boxed{40}<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Finn sees 11 tadpoles in the pond. \n\n1. **Understand the problem**: \n   - The tadpoles are 2 of the 6, so the total number of tadpoles is \\(2 \\times 6 = 12\\).\n   - The tadpoles are 2 of the 6, so the total number of tadpoles is \\(2 \\times 6 = 12\\).\n\n2. **Calculate the number of tadpoles in the pond**:\n   - The tadpoles are 2 of the 6, so the total number of tadpoles is \\(2 \\times 6 = 12\\).\n\n3. **C"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of tadpoles in the pond be x. \nThen, the number of tadpoles in the pond is given by:\nx = 2*x + 6\nSubstituting the given values, we get:\nx = 2*(2) + 6\nx = 8\nTherefore, the number of tadpoles in the pond is 8.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{7}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the depth of the water on Tuesday be x.\nOn Wednesday, the depth of the water was 7 feet more than it was on Tuesday.\nOn Wednesday, the depth of the water was 2x.\nOn Wednesday, the depth of the water was 2x + 2x = 4x.\nOn Wednesday, the depth of the water was x + 2x = 6x.\nOn Wednesday, the depth of the water was x + 2x = 8x.\nOn Wednesday, the depth of the water was x + 2x = 12x.\nOn Wednesday, th"
+  },
+  {
+   "mode": "on",
+   "gold": "32",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{5}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "32",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the principle of inclusion-exclusion to solve this.\n\nFirst, let's calculate the total number of fish that Anakin caught. Since Anakin caught 10 starfish, we can use the formula:\n\nTotal number of fish = (Number of Anakin + 1) x (Number of Anakin + 1)\n\nHere, we have:\n\nTotal number of fish = 10 x (3 + 2) = 30\n\nNumber of sea horses = 5 x (2 + 1) = 5\n\nNumber of sea horses = 3 x (1 + 1) = 3\n\nN"
+  },
+  {
+   "mode": "on",
+   "gold": "92",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the cost of a bag of marbles after 36 months, given that the price increases by 20% each two months and the original price remains the same. \n\n1. **Calculate the initial price of the bag**:\n   - Let the original price of the bag be \\( P \\).\n   - The initial price of the marbles is \\( P_0 \\).\n   - The total cost of the bag after 36 months is \\( P_0 + 20P_0 \\).\n\n2. **Cal"
+  },
+  {
+   "mode": "off",
+   "gold": "92",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the original price of the bag of marbles be $x.\nThe new price of the bag of marbles after 36 months is $x + 20% of $x.\nThe new price of the bag of marbles after 36 months is $x + (20% of $x) = $x + 20x.\nThe total cost of the bag of marbles after 36 months is $x + 20x.\nThe total cost of the bag of marbles after 36 months is $x + (20x) = $x + 20x.\nThe total cost of the bag of marbles after 36 mo"
+  },
+  {
+   "mode": "on",
+   "gold": "50",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{5}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "50",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of the doll be $x.\nThen, the cost of the action figure is $5x.\nThe cost of the doll is $3x.\nThe total cost of all toys is $5x + 3x + $4x = $7x.\nSince the doll cost $4, the total cost of all toys is $7x.\nThe total cost of all toys is $7x.\nThe total cost of all toys is $7x.\nThe total cost of all toys is $7x.\nThe total cost of all toys is $7x.\nThe total cost of all toys is $7x.\nThe total"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Jackie's tax rate is $90, so the total tax amount is $90 \u00d7 0.90 = $60. If she hires an accountant, the tax amount is $90 \u00d7 0.90 = $60. The accountant charges $90 more than the accountant, so the accountant's tax amount is $90 - $60 = $60. Therefore, the accountant's tax amount is $60.\n\n\\boxed{60}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the accountant charges a rate of $90 per hour. \n\nLet's assume that the accountant has a 50% chance of hiring a freelance work opportunity. \n\nLet's assume that the accountant has a 50% chance of hiring a freelance work opportunity. \n\nLet's assume that the accountant has a 50% chance of hiring a freelance work opportunity. \n\nLet's assume that the accountant has a 50% chance of hiri"
+  },
+  {
+   "mode": "on",
+   "gold": "77",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of the machine be \\( C \\) and the cost of the screen be \\( S \\). The total cost of the machine is \\( C + S + P = \u20ac1500 \\).\n\nThe total cost of the machine is \\( C + S + P = \u20ac1500 \\).\n\nThe total cost of the screen is \\( S + P = \u20ac7400 \\).\n\nThe total cost of the keyboard is \\( C + S = \u20ac7400 \\).\n\nThe total cost of the printer is \\( C + S + P = \u20ac7400 \\).\n\nThe total cost of the machine is \\("
+  },
+  {
+   "mode": "off",
+   "gold": "77",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the given information to calculate the total cost of the clothing.\n\nFirst, we need to calculate the total cost of the clothing. The cost of a garment is given by the sum of the cost of each item, which is:\n\n\\[\n\\text{Cost of each item} = \\text{Total cost of the clothing} + \\text{Cost of each item}\n\\]\n\nThe total cost of the clothing is the sum of the cost of each item:\n\n\\[\n\\text{Total cost"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Sandra's neighbor gives her 9 eggs every time she babysits their daughter. To find the number of times Sandra needs to babysit 15 Spanish flans, we need to consider the number of ways to choose 9 eggs from the 9 available eggs. This is given by the combination formula \\( \\binom{9}{9} \\), which equals \\( \\frac{9!}{9! \\cdot 9!} = \\frac{720}{3600} = \\frac{720}{3600} = \\frac{1}{2} \\).\n\nThe problem red"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that Sandra has been tasked with making 15 Spanish flans for her school fundraiser. Let's assume that she has been tasked with making 15 Spanish flans for her school fundraiser.\n\nFirst, we need to calculate the total number of eggs that Sandra has to have for the 15 Spanish flans. This is given by the formula:\n\n(15 - 1) x (15 - 1) x (15 - 1) x (15 - 1) x (15 - 1) x (15 - 1) x (15 - 1)"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Seth is twice as old as Brooke. Let the sum of their ages be \\( S \\). Then,\n\n\\[\nS + 2S = 28 \\implies S = \\frac{28}{2} = 12\n\\]\n\nSeth's age is twice the sum of his ages:\n\n\\[\nS = 2S = 2 \\times 12 = 24\n\\]\n\nSeth's age is also twice the sum of his ages:\n\n\\[\nS = 2S = 2 \\times 24 = 48\n\\]\n\nSeth's age is also twice the sum of his ages:\n\n\\[\nS = 2S = 2 \\times 48 = 96\n\\]\n\nSeth's age is also twice the sum of hi"
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the sum of their ages be x.\n\nLet the sum of their ages be y.\n\nThe sum of their ages is given by:\n\n(x + y) + (x + y) = 28\n\nSimplifying:\n\nx + y = 28\n\nSolving for x:\n\nx = 28 - y\n\nSubstitute x into the equation:\n\n(28 - y) + y = 28\n\nSimplify:\n\n28 - y = 28\n\nSimplify:\n\ny = 28\n\nSubstitute y = 28 into the equation:\n\nx + (28 - y) = 28\n\nSimplify:\n\nx = 28\n\nSolving for x:\n\nx = 28 / (28 - y)\n\nSubstitute x i"
+  },
+  {
+   "mode": "on",
+   "gold": "18",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{8}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "18",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that Ethel has $x more than twice the money Ethel has.\nLet's call Ethel's money now.\nLet's call Ethel's money now.\nThen, Ethel has $x + 2x = 8x.\nSimplifying, we get:\nEthel has $8x = 8x + 8\nSimplifying, we get:\nEthel has $8x = 8x + 8\nSimplifying, we get:\nEthel has $8x = 8x + 8\nSimplifying, we get:\nEthel has $8x = 8x + 8\nSimplifying, we get:\nEthel has $8x = 8x + 8\nSimplifying, we get:\nE"
+  },
+  {
+   "mode": "on",
+   "gold": "120",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Pancho walks 20 miles a day, which is equivalent to \\( \\frac{20}{10} = 2.5 \\) miles per day. Therefore, he walks \\( 2.5 \\times 20 = 40 \\) miles in a week.\n\n\\boxed{40}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "120",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of miles walked by Pancho be x.\n\nSince he walks 20 miles a day, he has 20 miles (x * 20) = 40 miles.\n\nSince he walks 10 miles in a week, he has 10 miles (x * 10) = 50 miles.\n\nTherefore, the total number of miles walked by Pancho is:\n\nx + 40 = 50\n\nx = 50 - 40 = 20 miles.\n\nTherefore, the total number of miles walked by Pancho is:\n\nx + 20 = 50 + 20 = 40 miles.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "150",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The marching band has a total cost of $25, a total of $3,000, and a total of $3,000. The total cost of the uniforms is $3,000 + $3,000 = $4,000. The total cost of the uniforms is $4,000. The total cost of the uniforms is $4,000 + $4,000 = $8,000.\n\n\\boxed{8000}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "150",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of the hat be $x, the cost of the jacket be $y, and the cost of the pants be $z.\n\nThe total cost of the uniforms is $x + y + z = $25.\n\nThe total cost of the hat is $x + y + z = $x + y + z.\n\nThe total cost of the jacket is $y + z + z = $y.\n\nThe total cost of the pants is $x + y + z = $x + y + z.\n\nThe total cost of the pants is $x + y + z = $x + y + z.\n\nThe total cost of the uniforms is"
+  },
+  {
+   "mode": "on",
+   "gold": "1210",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{120}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "1210",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of legs of each spider be \\( x \\). The number of legs of each spider is \\( x \\). The total number of legs of the spiders is \\( x + x + x + x = 8x \\).\n\nThe total number of legs of the insects is \\( 8x \\). The number of legs of the 90 insects is \\( \\frac{90}{8} = 3x \\). The number of legs of the 90 insects is \\( \\frac{90}{3} = 20x \\).\n\nAdding the legs of the 90 insects and the 20 legs"
+  },
+  {
+   "mode": "on",
+   "gold": "51",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{16}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "51",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the ages of the four birds be \\( x \\), \\( y \\), \\( z \\), and \\( w \\) respectively.\n\n1. **Sally's age**:\n   \\[\n   x = y + z\n   \\]\n   Substituting the given values:\n   \\[\n   x = y + (y + z) = y + y + y + z\n   \\]\n   This gives:\n   \\[\n   x = y + z\n   \\]\n\n2. **Granny Red's age**:\n   \\[\n   x = y + w\n   \\]\n   Substituting the given values:\n   \\[\n   x = y + y + w\n   \\]\n   This gives:\n   \\[\n   y = w + "
+  },
+  {
+   "mode": "on",
+   "gold": "18000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{50}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "18000",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To calculate the amount of money she needs to pay in a year, we can use the formula:\n\n$300/month * (1 + 0.05)^2 * (1 + 0.05)^3 = $300/month * $1.05 * $1.05\n\n= $1.05 * $1.05 * $1.05\n\n= $1.05\n\nTherefore, the amount of money that Jessica needs to pay in a year is $1.05.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "95",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Billy has 60 potatoes, so the total time is \\(60 \\times 5 = 150\\) minutes. Billy needs to peel and cut the potatoes in \\(60 \\times 5 = 150\\) seconds. The time required to peel and cut each potato is \\(60 \\times 5 = 150\\) seconds. Therefore, Billy needs \\(150 - 60 = 150\\) seconds to peel and cut the potatoes.\n\n\\boxed{150}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "95",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that Billy has a 60% probability of getting a potato, and that the potatoes are roughly the same size. We can use the fact that the potatoes are roughly the same size, so we can set up the equation:\n\n(60 * 0.5) + (60 * 0.5) = 60\n\nSimplifying this equation, we get:\n\n0.5 + 0.5 = 0.5\n\nSimplifying this equation, we get:\n\n0.5 = 0.5\n\nMultiplying both sides by 0.5, we get:\n\n0.5 = 0.5\n\nSimpli"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Juan and his brother sell lemonade for $3. They make it costs $3 for lemons and $2 for sugar. The total cost is $3x + $2x = $6. They sold 20 glasses of lemonade for $0.50, so they sold 20 x 0.50 = $20.\n\n\\boxed{20}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total cost of the lemonade is $3, so the total cost of lemons is $3 x $2 = $6. The total cost of sugar is $2, so the total cost of lemons is $6 - $2 = $4.\n\n\\boxed{4}<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "100",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the number of boys on the Chinese team, given that 80% of the Chinese team was Japanese, and the rest were Japanese. \n\n1. Let the number of Japanese boys be \\( x \\). The total number of boys on the Chinese team is \\( 60x \\).\n2. The total number of boys on the Chinese team is \\( 80x \\).\n3. The total number of boys on the Chinese team is \\( 60x + 80 \\).\n4. The ratio of t"
+  },
+  {
+   "mode": "off",
+   "gold": "100",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of Chinese boys be x.\nThe number of Japanese boys on the Chinese team is 60, so the Japanese team has 60 boys.\nThe Japanese team has 80 boys, so the Japanese team has 80 - 60 = 20 boys.\nThe Japanese team has 60 boys, so the Japanese team has 20 boys.\nThe Japanese team has 60 boys, so the Japanese team has 20 boys.\nThe Japanese team has 60 boys, so the Japanese team has 20 boys.\nThe "
+  },
+  {
+   "mode": "on",
+   "gold": "350",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Zaid earns 6000$ per month, so the total amount he has after all expenses and donations is:\n\n\\[\n6000 \\times 1.5 = 5000\n\\]\n\n\\boxed{5000}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "350",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the amount of money Zaid has after all expenses and donations be \\( x \\). The total amount of money he has after all expenses and donations is \\( x + y + z = 200 \\).\n\nThe total amount of money he has after all expenses and donations is \\( 200 \\times x + 700 \\times y = 200 \\times (x + y) \\).\n\nThe total amount of money he has after all expenses and donations is \\( 200 \\times (x + y) = 200 \\times"
+  },
+  {
+   "mode": "on",
+   "gold": "122",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the total number of crabs Rani has together, given that Bo has 40 crabs, and Monic has 4 fewer crabs than Bo. \n\n1. Let \\( x \\) be the number of crabs Monic has.\n2. Let \\( y \\) be the number of crabs Bo has.\n3. Let \\( z \\) be the number of crabs Monic has.\n4. The given equations are:\n   - \\( x + y = 40 \\)\n   - \\( x + y + z = 4 \\)\n   - \\( x + y + z = 4 \\)\n\nFrom equation "
+  },
+  {
+   "mode": "off",
+   "gold": "122",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the three crabs have a total of x, y, and z crabs, respectively.\n\nFirst, we can set up the equations for the three crabs:\n\n- Monic: x + y + z = x + y + z\n- Bo: x + y + z = x + y + z\n\nWe can use these equations to solve for x, y, and z:\n\n- From the first equation, we have x + y + z = x + y + z\n- From the second equation, we have x + y + z = x + y + z\n- From the third equation, we "
+  },
+  {
+   "mode": "on",
+   "gold": "130",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Lloyd earns $10 an hour on Math tutoring. \n\n1. **Calculate the total hours he tutored**:  \n   \\[\n   5 \\times 8 = 40\n   \\]\n\n2. **Calculate the total hours he tutored**:  \n   \\[\n   5 \\times 8 = 40\n   \\]\n\n3. **Calculate the total hours he tutored**:  \n   \\[\n   5 \\times 8 = 40\n   \\]\n\n4. **Calculate the total hours he tutored**:  \n   \\[\n   5 \\times 8 = 40\n   \\]\n\n5. **Calculate the total hours he tutore"
+  },
+  {
+   "mode": "off",
+   "gold": "130",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of hours he tutored be $x. \n\nThe first week:\n- Math: $10/x = 10/x + 5/x = 10/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/x + 5/x = 10x/"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the number of votes the loser got in the class, given that the winner got 3/4 of the votes and the total number of votes was 80. \n\n1. **Calculate the total votes**:\n   - The total number of votes is \\(3 \\times 80 = 360\\).\n\n2. **Calculate the number of votes the loser got**:\n   - The loser got 3/4 of the votes, so the total number of votes is \\(3 \\times \\frac{360}{4} = "
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the winner's votes be x and the total number of votes the loser got be y.\n\nThe total number of votes is x + y, so the total number of votes is (x + y) - (x + y).\n\nThe number of votes the loser got is (x - y) - (x + y).\n\nThe total number of votes is (x + y) - (x - y).\n\nThe number of votes the loser got is (x - y) - (x + y).\n\nSubstituting the values of x and y, we get:\n\n(x - y) + (x + y) - (x - "
+  },
+  {
+   "mode": "on",
+   "gold": "160",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Sandra has ordered four times as many red roses as white carnations. The number of white carnations is \\(2x\\) and the number of red roses is \\(2y\\). The ratio of white carnations to red roses is \\(2x:2y = 2:1\\). \n\nTo satisfy the given ratio, we solve for \\(x\\) and \\(y\\):\n\n1. \\(2x = 2y \\implies x = y\\)\n2. \\(2y = 2x \\implies y = x\\)\n\nSubstituting \\(x = y\\) into the first equation:\n\n\\[\n2x = 2x \\impli"
+  },
+  {
+   "mode": "off",
+   "gold": "160",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of red roses ordered by Sandra be \\( S \\). The number of white carnations ordered by Fred is \\( C \\). The number of white carnations ordered by Sandra is \\( S - C \\). The number of white carnations ordered by Fred is \\( C \\times S \\).\n\nWe have the following equations:\n1. \\( S = C \\times S \\)\n2. \\( S = C \\times (S - C) \\)\n3. \\( S = C \\times (S - C) \\)\n\nFrom equation 1, we have \\( S ="
+  },
+  {
+   "mode": "on",
+   "gold": "23",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Jean is two years older than Mark. \n\nLet Jean's age be x. \n\nJean's age is (x + 2) years. \n\nSince Jean is two years older than Mark, we have:\n\n(x + 2) = (x + 5) + 2\n\nSimplifying:\n\nx + x + 2 = x + 5 + 2\n\nSimplifying:\n\nx = 5\n\nThus, Jean's age is:\n\n(5 + 2) = 7 years\n\n\\boxed{7}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "23",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the two years are x and y. \n\nLet's calculate the time it takes for the two years to be equal:\n\n(x + y) / 2 = 30\n\nSimplifying this equation:\n\nx + y = 30\n\nSubtracting the two equations:\n\n(x - y) = 30 - x\n\nSimplifying:\n\nx = y\n\nSubstituting x = y into the first equation:\n\n(y - 5) = 30\n\nSimplifying:\n\ny = 30\n\nSubstituting y = 30 into the second equation:\n\n(x - 5) = 30\n\nSimplifying:\n\nx "
+  },
+  {
+   "mode": "on",
+   "gold": "2",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves two competing teams, each with four members, and the goal is to determine which team has the faster time. \n\n1. **First Team's Time**:\n   - The first runner runs 400 meters in 60 seconds.\n   - The second runner runs 4 times as fast as the first runner.\n   - The time it takes the first runner to run 400 meters is \\( \\frac{400}{60} = \\frac{40}{3} \\) seconds.\n   - The time it take"
+  },
+  {
+   "mode": "off",
+   "gold": "2",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves finding the fastest runner in a 4 by 400 meter relay, given that each runner has a 4-minute leg, and the fastest runner has a 60-second leg. \n\n1. **Equations for the two teams**:\n   - The first runner has a 4-minute leg, so their time is \\( \\frac{4}{60} \\) of a second.\n   - The second runner has a 60-second leg, so their time is \\( \\frac{4}{60} \\) of a second.\n   - The first r"
+  },
+  {
+   "mode": "on",
+   "gold": "25",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{\\dfrac{1}{2}}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "25",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To find the probability of rolling a number greater than 3, we need to calculate the probability of rolling a number greater than 3. This can be done by dividing the number of favorable outcomes by the total number of possible outcomes.\n\nThe number of favorable outcomes is 6, and the total number of possible outcomes is 12. Therefore, the probability of rolling a number greater than 3 is:\n\n(6/12) "
+  },
+  {
+   "mode": "on",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{20}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the apples were labeled as \"A\" and \"B\" in the problem.\n\nLet the apples from the farm be labeled as \"A\" and \"B\" in the following way:\n\n- The apples from the farm labeled \"A\" are \"A\", so the apples from the farm labeled \"B\" are \"B\".\n- The apples from the farm labeled \"B\" are \"B\", so the apples from the farm labeled \"A\" are \"B\".\n\nThe total number of apples from the farm is:\n\n- The a"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves distributing rats into small cages with equal groups, where each rat is given 5 pieces of straw. The key steps are:\n\n1. **Total number of rats**: The total number of rats is \\( \\frac{5 \\times 6}{2} = 15 \\).\n2. **Number of cages**: Each cage has 6 rats, so the total number of cages is \\( 6 \\times 5 = 30 \\).\n3. **Number of rats in each cage**: Each rat has 5 pieces of straw, so "
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining the number of rats in each cage, given that the rats are distributed uniformly among the small rodents. \n\n1. **Total number of rats**:  \n   The total number of rats is \\( \\frac{5}{2} \\times 6 = 15 \\).\n\n2. **Number of rats in each cage**:  \n   Each cage has 6 rats, so the total number of rats is \\( 6 \\times 6 = 24 \\).\n\n3. **Number of rats in each cage**:  \n   Each c"
+  },
+  {
+   "mode": "on",
+   "gold": "106",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Mandy owes $100. The amount of interest she has to pay after 3 months is calculated by the formula:\n\n\\[\n\\text{Interest} = 100 \\times \\frac{1}{12} \\times (2 - \\frac{1}{3}) = 100 \\times \\frac{1}{12} \\times (2 - \\frac{1}{3}) = 100 \\times \\frac{1}{12} \\times (2 - \\frac{1}{3}) = 100 \\times \\frac{1}{12} \\times (2 - \\frac{1}{3}) = 100 \\times \\frac{1}{12} \\times (2 - \\frac{1}{3}) = 100 \\times \\frac{1}{12}"
+  },
+  {
+   "mode": "off",
+   "gold": "106",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that Mandy has a credit card account with a balance of $1,000. \n\nLet's assume that Mandy has a credit card account with a balance of $1,000. \n\nLet's assume that Mandy has a credit card account with a balance of $1,000. \n\nLet's assume that Mandy has a credit card account with a balance of $1,000. \n\nLet's assume that Mandy has a credit card account with a balance of $1,000. \n\nLet's assu"
+  },
+  {
+   "mode": "on",
+   "gold": "50",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total cost of the bags is $400, so the total cost of selling all the bags is $400. The profit is $400 - $2 = $200. The trader sold all the bags at $30 each, leaving $200 for the farmer to pay for the bags. \n\n\\boxed{200}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "50",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the cost of one bag be $x.\nThe total cost of selling all the bags is $2x.\nThe total profit of selling all the bags is $400 - $2x.\nThe total profit of selling all the bags is $400 - $2x.\nThe total profit of selling all the bags is $400 - $2x.\nThe total profit of selling all the bags is $400 - $2x.\nThe total profit of selling all the bags is $400 - $2x.\nThe total profit of selling all the bags i"
+  },
+  {
+   "mode": "on",
+   "gold": "34",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total cost of the three rides is \\(3 \\times (20 + 4 + 2) = 60\\). The total cost of the tickets is \\(60 - 3 = 63\\). The total cost of the food is \\(33 \\times (20 + 4) = 144\\). The total cost of the rides is \\(60 - 144 = 24\\). The total cost of the food is \\(24 \\times (33) = 672\\). The total cost of the tickets is \\(672 - 24 = 672\\).\n\n\\boxed{672}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "34",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total cost of the tickets be \\( T \\). The total cost of the tickets is \\( T + 2T = \\frac{20}{3} \\). The total cost of the rides is \\( 2T \\).\n\nThe total cost of the food is \\( 2T \\). The total cost of the tickets is \\( 2T + 2T = 4T \\).\n\nThe total cost of the food is \\( 4T \\). The total cost of the tickets is \\( 4T + 2T = 8T \\).\n\nThe total cost of the rides is \\( 8T \\).\n\nSubstituting the tot"
+  },
+  {
+   "mode": "on",
+   "gold": "360",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "John collects 3 peaches a minute. \n\n\\boxed{3}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "360",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the time taken by John to collect peaches be t. \n\nThe time taken by John to collect 2 peaches is given by:\n\n2t = 2\n\nSimplifying this equation, we get:\n\nt = 1\n\nThis means that John can collect 1 peaches in 1 minute. \n\nTo find out how many peaches John can collect in 3 hours, we need to find out how many hours he can spend collecting them. \n\nThe time taken by John to collect 2 peaches is given b"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining how many pounds of insects are needed per day for a flock of ten ducks. Let \\( x \\) be the number of ducks per day. The total number of ducks is \\( 10x \\). The total number of insects per day is \\( 10x \\).\n\nThe total number of insects consumed by the flock is \\( 10x \\). The total number of insects consumed by the flock is \\( 10x \\times (10x) = 100x \\).\n\nThe total n"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's assume that the ducks eat a total of 100 pounds of insects per day. Let's assume that the ducks eat a total of 100 pounds of insects per day.\nLet's calculate the total amount of insects consumed by the ducks:\n100 pounds of insects = 100 x 3.5 pounds = 150 pounds\nSince there are ten ducks, we can divide the total amount of insects by the number of ducks:\n150 pounds of insects / 10 ducks = 150"
+  },
+  {
+   "mode": "on",
+   "gold": "91",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Tom starts with 50 trees. \n\n1. **Calculate the number of trees he has left**: \n   - 50 = 10 \u00d7 2.\n   - 10% of 50 = 2.\n   - 50 = 2 \u00d7 10.\n   - 2 = 2.\n   - Therefore, he has 2 trees left.\n\n2. **Calculate the number of trees he has left**:\n   - 50 = 10 \u00d7 2.\n   - 10% of 50 = 2.\n   - 2 = 2.\n   - Therefore, he has 2 trees left.\n\n3. **Calculate the number of trees he has left**:\n   - 50 = 10 \u00d7 2.\n   - 10% "
+  },
+  {
+   "mode": "off",
+   "gold": "91",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of trees he has left be \\( T \\). \n\nThe total number of trees he has left is \\( T \\times (1 - T) \\). \n\nThe total number of trees he has left is \\( T \\times (1 - T) \\). \n\nThe number of trees he has left is \\( \\frac{T}{T} \\). \n\nThe total number of trees he has left is \\( \\frac{T}{T} \\times (1 - T) \\). \n\nSubstituting the values: \n\\[\n\\frac{T}{T} \\times (1 - T) = \\frac{T}{T} \\times (1 - T"
+  },
+  {
+   "mode": "on",
+   "gold": "24",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{18}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "24",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let \\( S \\) be the number of pink plastic flamingos.  \n\n1. **Number of pink flamingos**:  \n   The number of pink flamingos is \\( S - 1 \\).  \n\n2. **Number of white flamingos**:  \n   The number of white flamingos is \\( S - 2 \\).  \n\n3. **Number of white flamingos**:  \n   The number of white flamingos is \\( S - 1 \\).  \n\n4. **Number of white flamingos**:  \n   The number of white flamingos is \\( S - 1 -"
+  },
+  {
+   "mode": "on",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Violetta needs 5 crayons, so the total cost is $5 \u00d7 2 = 10. She needs to pay $10 for the 5 crayons. \n\n\\boxed{10}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To find the change, we can use the principle of linearity of expectation. Let's assume that the change in the price is $x.\nThe total cost of buying 5 crayons is $20.\nThe total cost of buying 5 crayons is $20 x 5 = $50.\nThe total cost of buying 5 crayons is $20 x $50 = $400.\nThe total cost of buying 5 crayons is $400.\nThe change in the price is $400 - $50 = $40.\nTherefore, the change in the price i"
+  },
+  {
+   "mode": "on",
+   "gold": "12",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{8}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "12",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let's use the given information to find the cost of 8 pens:\n\n1. The cost of one pen is $1.20.\n2. The cost of one pencil is $1.30.\n3. The cost of one eraser is $0.30.\n\nWe can set up the following equations based on the given information:\n\n1. The cost of one pen is $1.20.\n2. The cost of one pencil is $1.30.\n3. The cost of one eraser is $0.30.\n\nFrom the first equation, we can solve for the cost of on"
+  },
+  {
+   "mode": "on",
+   "gold": "120",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The problem involves determining how many pounds of carrots will not be used to distribute 40 pounds of carrots to 40 restaurants. \n\n1. **Calculate the total amount of carrots**:  \n   The total amount of carrots is \\(40 \\times 2 = 80 \\, \\text{lb}\\) (since each restaurant has 2 pounds of carrots).  \n\n2. **Calculate the number of restaurants that receive 2 pounds of carrots**:  \n   The total amount "
+  },
+  {
+   "mode": "off",
+   "gold": "120",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the total amount of carrots be x.\n\nThe total amount of carrots to be distributed is given by:\n\nx + 2x = 200\n\nSimplifying this equation:\n\nx + 2x = 200\n\nMultiply both sides by 2:\n\nx + 2x = 40\n\nSimplify:\n\nx = 40 - 2x\n\nSubstitute x = 40 into the equation:\n\n200 - 2(40) = 40 - 2(40)\n\nSimplify:\n\n200 = 400\n\nDivide both sides by 400:\n\nx = 40\n\nTherefore, 40 pounds of carrots will be distributed to 40 re"
+  },
+  {
+   "mode": "on",
+   "gold": "6277",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "\\boxed{23}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "6277",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To find the number of kids in Soda, we need to calculate the total number of people in the city. \n\nThe population of Soda is given by:\n\\[\nP = 23786 \\times 9092\n\\]\n\nThe population of Soda is:\n\\[\nP = 23786 \\times 9092\n\\]\n\nCalculating the product of the two numbers:\n\\[\n23786 \\times 9092 = 23786 \\times 9092\n\\]\n\nCalculating the product of the two numbers:\n\\[\n23786 \\times 9092 = 23786 \\times 9092\n\\]\n\nCa"
+  },
+  {
+   "mode": "on",
+   "gold": "320",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Elaine initially had 20 Pokemon cards. After the third month, she collected 20 fewer than the first month, which means she collected 20 - 20 = 0 Pokemon cards. The total number of Pokemon cards she collected in the third month is 20 + 0 = 20.\n\n\\boxed{20}<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "320",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of Pokemon cards she collected in the first month be \\( x \\). The number of Pokemon cards she collected in the second month is given by:\n\\[\nx + 2x = 20\n\\]\nSubstituting the values of \\( x \\) and \\( y \\):\n\\[\nx + 2(y + 20) = 20\n\\]\nSimplifying:\n\\[\nx + 2y + 20 = 20\n\\]\n\\[\nx + y = 10\n\\]\nSince \\( x \\) and \\( y \\) are integers, \\( x + y = 10 \\). Therefore, \\( x = y + 10 \\). Substituting \\( x"
+  },
+  {
+   "mode": "on",
+   "gold": "7500",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Mark's total income is \\(1000 \\times 5 = 2000\\). Publisher A's income is \\(5 \\times 2 = 10\\). Publisher B's income is \\(10 \\times 2 = 20\\).\n\nTo find the difference between the two publishers' total income, we use the formula for the difference in total income:\n\\[\n\\text{Difference} = (2000 - 20) \\times (10 - 20)\n\\]\nCalculating the values:\n\\[\n2000 = 1000 \\times 5 \\implies 2000 - 20 = 1000 \\implies 2"
+  },
+  {
+   "mode": "off",
+   "gold": "7500",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "Let the number of sentences in each week be \\( n \\). Let the total number of sentences be \\( S \\).\n\nThe total amount of money paid by each publisher is \\( S \\times (1 - 2p) \\).\n\nThe total amount paid by Publisher A is \\( S \\times (1 - 2p) \\).\n\nThe total amount paid by Publisher B is \\( S \\times (1 - 2p) \\).\n\nThe total amount paid by Publisher A and Publisher B is \\( S \\times (1 - 2p) \\).\n\nThe tota"
+  }
+ ]
+}
