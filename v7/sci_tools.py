@@ -266,6 +266,42 @@ SMOLTALK1_REPO = 'HuggingFaceTB/smoltalk'
 CHATMT_SUBSETS = ('smol-magpie-ultra', 'everyday-conversations')   # 100 % 3+-turn conversations (Apache-2.0 on the card)
 
 
+def _chat_files_text_iter(tag, files, *, skip_docs=0, doc_counters=None, counter_key='', exclude_holdout=True, only_holdout=False,
+                          holdout_pct=5):
+    """ChatML rendering of any HF parquet set with a `messages` column (the chatmt extract), exact resume via _parquet_stream."""
+    from v7.data import _parquet_stream, pretrain_holdout_bucket
+
+    def extract(row):
+        msgs = row.get('messages') or []
+        if sum(1 for m in msgs if m.get('role') == 'user') < 1:
+            return ()
+        doc = ''.join(_turn(m['role'], re.sub(r'<think>.*?</think>', '', m.get('content') or '', flags=re.S)) for m in msgs
+                      if m.get('role') in ('system', 'user', 'assistant'))
+        hold = pretrain_holdout_bucket(doc, holdout_pct)
+        if (exclude_holdout and hold) or (only_holdout and not hold):
+            return ()
+        return (doc,)
+    yield from _parquet_stream(tag, files, extract, ['messages'], skip_docs=skip_docs, doc_counters=doc_counters,
+                               counter_key=counter_key)
+
+
+def chatsr_text_iter(*, counter_key: str = 'chatsr', **kw) -> Iterator[str]:
+    """SCI-1 chat ramp (2026-11-12; Library's R5 audit 26630a1: 0 hits, Apache-2.0): smoltalk v1 smol-rewrite + smol-summarize (train)."""
+    import itertools
+    from v7.data import _hf_parquet_files
+    per = [_hf_parquet_files(SMOLTALK1_REPO, f'data/{s}/train-*.parquet') for s in ('smol-rewrite', 'smol-summarize')]
+    files = [f for g in itertools.zip_longest(*per) for f in g if f]
+    yield from _chat_files_text_iter('chatsr', files, counter_key=counter_key, **kw)
+
+
+def tuluif_text_iter(*, counter_key: str = 'tuluif', **kw) -> Iterator[str]:
+    """SCI-1 chat ramp, the instruction-following share (Lead 2026-11-12): allenai/tulu-3-sft-personas-instruction-following (ODC-BY);
+    its 5 IFEval 13-gram hits drop through the stream decontam index v2 (v1 + IFEval)."""
+    from v7.data import _hf_parquet_files
+    files = _hf_parquet_files('allenai/tulu-3-sft-personas-instruction-following', 'data/train-*.parquet')
+    yield from _chat_files_text_iter('tuluif', files, counter_key=counter_key, **kw)
+
+
 def chatmt_text_iter(*, skip_docs: int = 0, doc_counters=None, counter_key: str = 'chatmt', exclude_holdout: bool = True,
                      only_holdout: bool = False, holdout_pct: int = 5) -> Iterator[str]:
     """SCI-1 multi-turn chat (Lead 2026-11-02): smoltalk v1's multi-turn subsets, every turn rendered in ChatML (system / user /

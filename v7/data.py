@@ -1411,6 +1411,7 @@ def _dclm_edu_text_iter(
 def _fineweb_edu_text_iter(
     edu_score_min: int = 3,
     name: str = 'sample-10BT',
+    local: bool = True,
     *,
     exclude_holdout: bool = False,
     holdout_pct: int = 5,
@@ -1431,7 +1432,7 @@ def _fineweb_edu_text_iter(
     Read via ``_parquet_stream`` (fast resume; same order as the old stream).
     """
 
-    local_dir = os.environ.get('FINEWEB_LOCAL_DIR', '').strip()
+    local_dir = os.environ.get('FINEWEB_LOCAL_DIR', '').strip() if local else ''
     if local_dir:
         from pathlib import Path as _P
         root = _P(local_dir)
@@ -1802,6 +1803,13 @@ def _blend_interleave_text_iters(
             # loud (2026-11-12: fineweb and chatmt ran dry unseen for days; the blend just renormalised). Lead's watcher greps this.
             print(f"[DRY-SOURCE] source '{names[choice]}' ran out (StopIteration) at cumulative {consumed:,} tokens; "
                   f"the blend renormalises over {sum(alive)} live sources", flush=True)
+            continue
+        except RuntimeError as exc:
+            # a network source whose retries are spent (_stream_retry): drop it for this process instead of crashing the run, so
+            # an HF outage cannot stall an unattended run for days (Lead 2026-11-12); the next restart re-opens it
+            alive[choice] = False
+            print(f"[DRY-SOURCE] source '{names[choice]}' FAILED ({exc}) at cumulative {consumed:,} tokens; dropped for this "
+                  f"process, the blend renormalises over {sum(alive)} live sources", flush=True)
             continue
         served[choice] += max(len(text), 1) / _CHARS_PER_TOKEN
         yield names[choice], text
@@ -2679,6 +2687,8 @@ def _reason_text_iter(
 SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'dclm':          {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceTB/dclm-edu'},
     'fineweb':       {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceFW/fineweb-edu'},
+    # SCI-1 segment 3 (2026-11-12): fineweb-edu sample-100BT streamed from HF (the local sample-10BT ran dry at ~23.1B); own cursor
+    'fineweb100':    {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceFW/fineweb-edu sample-100BT', 'fineweb_name': 'sample-100BT', 'hf_only': '1'},
     # Stage L (T>=8192) long-document sources; kind 'web' => part of the
     # grammar/knowledge warmup pool like dclm/fineweb.
     'fineweb_long':  {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceFW/fineweb-edu', 'min_chars': 12000},
@@ -2726,6 +2736,10 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'worked':        {'schema': 'text',     'kind': 'scitool',   'hf': 'MetaMathQA + GSM8K train (plain worked solutions)'},
     'pysci':         {'schema': 'text',     'kind': 'scitool',   'hf': 'common-pile/stackv2_edu_filtered (python, sci imports)'},
     'chatmt':        {'schema': 'text',     'kind': 'scitool',   'hf': 'HuggingFaceTB/smoltalk multi-turn (magpie-ultra, everyday)'},
+    'chatmt2':       {'schema': 'text',     'kind': 'scitool',   'hf': 'chatmt epoch 2 (own cursor; chatmt ran dry at ~21.4B, R7 epoch 2 of 4)'},
+    # SCI-1 chat ramp (2026-11-12, R5 audit 26630a1): rewrite / summarize chat, and the instruction-following share
+    'chatsr':        {'schema': 'text',     'kind': 'scitool',   'hf': 'HuggingFaceTB/smoltalk smol-rewrite + smol-summarize'},
+    'tuluif':        {'schema': 'text',     'kind': 'scitool',   'hf': 'allenai/tulu-3-sft-personas-instruction-following'},
 }
 
 
@@ -2754,8 +2768,8 @@ def _open_source_iter(
         if name == 'pg19':
             return _pg19_text_iter(skip_docs=skip, doc_counters=doc_counters,
                                    counter_key=name, fresh_file=fresh_file)
-        return _fineweb_edu_text_iter(  # fineweb / fineweb_long
-            edu_score_min, name=fineweb_name, exclude_holdout=exclude_holdout,
+        return _fineweb_edu_text_iter(  # fineweb / fineweb_long / fineweb100
+            edu_score_min, name=spec.get('fineweb_name', fineweb_name), exclude_holdout=exclude_holdout, local=not spec.get('hf_only'),
             holdout_pct=holdout_pct, skip_docs=skip,
             doc_counters=doc_counters, counter_key=name,
             min_chars=int(spec.get('min_chars', 0)), fresh_file=fresh_file,
@@ -2765,9 +2779,12 @@ def _open_source_iter(
         if name == 'pysci':
             return _st.pysci_text_iter(skip_docs=skip, doc_counters=doc_counters, counter_key=name,
                                        exclude_holdout=exclude_holdout, holdout_pct=holdout_pct)
-        if name == 'chatmt':
+        if name in ('chatmt', 'chatmt2'):
             return _st.chatmt_text_iter(skip_docs=skip, doc_counters=doc_counters, counter_key=name,
                                         exclude_holdout=exclude_holdout, holdout_pct=holdout_pct)
+        if name in ('chatsr', 'tuluif'):
+            return {'chatsr': _st.chatsr_text_iter, 'tuluif': _st.tuluif_text_iter}[name](
+                skip_docs=skip, doc_counters=doc_counters, counter_key=name, exclude_holdout=exclude_holdout, holdout_pct=holdout_pct)
         fn = {'tools': _st.tools_text_iter, 'worked': _st.worked_text_iter}.get(name, _st.think_text_iter)
         return fn(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name, bump=_bump_counter,
                   exclude_holdout=exclude_holdout, holdout_pct=holdout_pct)
