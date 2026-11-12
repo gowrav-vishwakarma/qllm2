@@ -1799,6 +1799,9 @@ def _blend_interleave_text_iters(
             text = next(iters[choice])
         except StopIteration:
             alive[choice] = False
+            # loud (2026-11-12: fineweb and chatmt ran dry unseen for days; the blend just renormalised). Lead's watcher greps this.
+            print(f"[DRY-SOURCE] source '{names[choice]}' ran out (StopIteration) at cumulative {consumed:,} tokens; "
+                  f"the blend renormalises over {sum(alive)} live sources", flush=True)
             continue
         served[choice] += max(len(text), 1) / _CHARS_PER_TOKEN
         yield names[choice], text
