@@ -4558,6 +4558,11 @@ fitted threshold:
   - Milestones: M11 (step 167,849) = the baseline before the ramp; then M12, M13, … each, from Mind's milestone copies
     after Mind's CHECK flag (.checked_step_N).
   - Runner `v14/tmp/far_told_watch.sh`: each GPU job inside a tmux session named `slotdil3` (Lead's collision guard).
+  - **OUTAGE NOTE (2026-11-12 10:08 IST, before any number):** the local box was down Nov 7 02:00 → Nov 12 10:02, so no
+    milestone ran; the 6000 kept only M10 / M11 and the 26B / 27B saves (sci1_long2_4a97ca7).
+    - The far block reads as M11 (baseline, step 167,849) → 26B (step 396,734) → 27B (step 411,993).
+    - Runner `v14/tmp/far_told_paths.sh` (explicit paths). It starts after all three of Mind's CHECK flags, then runs
+      27B → 26B → M11 in slotdil3.
 - **A32b: self-compiled state forks, gate on the convention (PRE-REGISTERED 2026-11-06 15:49 IST, before any A32b number; the
   cause above was found after the A32 data, labelled so).**
   - Body: the release candidate (as DIL3; Decay_M9 if none passes). FRESH docs: make_doc seed 26500 · 1000 + L (never
