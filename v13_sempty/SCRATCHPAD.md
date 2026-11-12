@@ -1850,3 +1850,11 @@ auto --val_every 500 --save_every_steps 2500`, no `--gradient_checkpointing`.
   → "Speed: fused real arm". The apples-to-apples number is the Phase-1
   fair run (10 epochs, T=2048); this scratchpad and superseded `tmp_*`
   scripts get cleaned up at the end of the quality program (Phase 5).
+
+## 4090 queue (Lead, 12:23 IST 2026-11-12)
+1. cx_m2 resume (after Library's FAR-TOLD on the four points; tmux mindfar resumes it).
+2. **ctl-far**: the equal-data control at the ctl recipe (103M, 1.0B, PAM M2 vs T++ vs Mamba-2) WITH the far block (b2s_far + proto_far
+   in the cont2-style mix, packer hold on), to test whether the far carry is architectural (does T++ / Mamba-2 also learn s8 @8k from
+   b2s_far?). Pre-register before launch (v13_sempty/tmp/ctl_chain.sh as the base).
+3. m9n (paper-only jitter calibration) when a gap appears.
+

@@ -7,6 +7,16 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-12 12:23 IST: rule carry trained at 1.8-3.2k generalises to 8k (beyond the window): s8 @8k 0.19 -> 0.97
+**What we saw:** SCI-1 386M, segment 2 of the long run (`sci1_long2_4a97ca7`, code `4a97ca7`; far block = b2s_far 1.2 % + proto_far 0.8 %
+ramped in from M11 over 2B, `8b2679d` / `b502422`). s8 @8k (pre-registered headline, untrained): M11 0.186 (margin −1.1) -> 22.5B 0.979
+(+8.5) / 26B 0.974 / 27B 0.964 (+7.9); 2k / 4k 0.99 (trained distance); needles t40 8k 0.89 -> 0.92-0.93. Logs: logs/learning_probes/
+v13_sempty_sci1_{best_model,step_396734,step_411993}_4a97ca7_*.json, EXPERIMENTS_SEMPY "far block RESULT, part 1" (`53778f7`).
+**What it says:** the O(1) notebook carries an induced rule ~2x past the longest trained gap and past the training window (no state
+crosses windows in training): distance supervision, not more task data, was the missing piece (the four-way decay finding).
+**For Library / Lead / the paper:** a within-model gain; the comparative claim needs the far block in the equal-data control for PAM,
+T++ and Mamba-2 (queued on the 4090 after cx_m2). Told 8k (Library's FAR-TOLD) is the keep rule's second half.
+
 ## 2026-11-07 01:29 IST: an LR decay erases far rule carry first; the training data never taught that distance
 **What we saw:** four SCI-1 tests (plain 1B decay, M9 <-> decay interpolation, rule-x2 decays from M10 and from M9; logs/s8reg/, EXPERIMENTS_SEMPY
 "FINDING: the far rule margin is the decay's first casualty"): s8 at 2k / 4k falls with the LR every time (M9 0.77 -> 0.23 plain;
