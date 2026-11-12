@@ -50,7 +50,8 @@ def grams(text: str):
 
 
 def test_items():
-    """(set name, text) for every protected item: Mind's item list (same definitions) + BABILong qa1-10 facts/question/target."""
+    """(set name, text) for every protected item: Mind's item list (same definitions) + BABILong qa1-10 facts/question/target
+    + IFEval prompts (chat ramp, 2026-11-12)."""
     from v7.decontam import _items
     yield from _items()
     try:
@@ -61,6 +62,12 @@ def test_items():
                 yield 'babilong', f"{r['input']} {r['question']} {r['target']}"
     except Exception as e:                                                  # noqa: BLE001
         print(f'  [audit] babilong not loaded: {type(e).__name__}: {e}', flush=True)
+    try:                                                                    # chat ramp (R5, 2026-11-12): IFEval prompts
+        from datasets import load_dataset
+        for r in load_dataset('google/IFEval', split='train'):
+            yield 'ifeval', r['prompt']
+    except Exception as e:                                                  # noqa: BLE001
+        print(f'  [audit] ifeval not loaded: {type(e).__name__}: {e}', flush=True)
 
 
 def build_index():
@@ -86,14 +93,35 @@ def lookup(idx, g):
     return hit, idx['S'][pos[hit]], idx['I'][pos[hit]]
 
 
+def hf_iter(name):
+    """hf:<repo>:<config or ->:<split>: stream rows; a chat row (messages / conversations) becomes its joined turn texts,
+    else the first string field among text / prompt / content / instruction + response / output."""
+    from datasets import load_dataset
+    _, repo, cfg, split = name.split(':', 3)
+    ds = load_dataset(repo, None if cfg in ('', '-') else cfg, split=split, streaming=True)
+    for r in ds:
+        msgs = r.get('messages') or r.get('conversations')
+        if isinstance(msgs, list):
+            yield '\n'.join(str(m.get('content') or m.get('value') or '') for m in msgs if isinstance(m, dict))
+            continue
+        parts = [r[k] for k in ('text', 'prompt', 'instruction', 'input', 'content', 'response', 'output', 'completion')
+                 if isinstance(r.get(k), str) and r[k]]
+        if parts:
+            yield '\n'.join(parts)
+
+
 def audit_source(name, it, n_docs, idx, tag):
     inv = {v: k for k, v in idx['sets'].items()}
     st = dict(source=name, view=tag, docs=0, words=0, docs_hit=collections.Counter(), docs_hit_any=0,
-              examples=collections.defaultdict(list), gram_freq=collections.Counter(), strings_hit=set())
+              examples=collections.defaultdict(list), gram_freq=collections.Counter(), strings_hit=set(), toks=[])
+    from v7.data import get_chat_tokenizer
+    tok = get_chat_tokenizer()
     t0 = time.time()
     for text in it:
         g, words = grams(text)
         st['docs'] += 1; st['words'] += len(words)
+        if len(st['toks']) < 3000:                                         # doc length in tokens (median / p90 for ramp sizing)
+            st['toks'].append(len(tok.encode(text, add_special_tokens=False)))
         h, sids, strs = lookup(idx, g)
         if h.size:
             st['docs_hit_any'] += 1
@@ -117,6 +145,7 @@ def main():
     ap.add_argument('--sources', default=SOURCES_SCI1); ap.add_argument('--docs', type=int, default=20000)
     ap.add_argument('--out', required=True); ap.add_argument('--views', default='raw,filtered')
     ap.add_argument('--mix_seed', type=int, default=43)
+    ap.add_argument('--fineweb_name', default='sample-10BT', help='fineweb-edu config (sample-100BT replaces the dry local slice)')
     a = ap.parse_args()
     import v7.data as D
     t0 = time.time()
@@ -146,11 +175,14 @@ def main():
                           by_set=dict(collections.Counter(next(k for k, v in idx['sets'].items() if v == int(idx['S'][np.nonzero(idx['I'] == i)[0][0]])) for i, _ in planted)))
     print(f'[audit] POSITIVE CONTROL: {mine}/{len(ctrl_docs)} planted docs flagged by the audit, {theirs} by Mind\'s filter', flush=True)
     for name in a.sources.split(','):
-        spec = D.SOURCE_REGISTRY[name]
         for view in a.views.split(','):
             cnt = {}
-            it = D._open_source_iter(name, spec, edu_score_min=3, fineweb_name='sample-10BT', exclude_holdout=True, holdout_pct=5,
-                                     skip=0, doc_counters=cnt, mix_seed=a.mix_seed)
+            if name.startswith('hf:'):                                     # a candidate not yet in the registry: hf:repo:config:split
+                it = hf_iter(name)
+            else:
+                spec = D.SOURCE_REGISTRY[name]
+                it = D._open_source_iter(name, spec, edu_score_min=3, fineweb_name=a.fineweb_name, exclude_holdout=True,
+                                         holdout_pct=5, skip=0, doc_counters=cnt, mix_seed=a.mix_seed)
             if view == 'filtered':
                 if not os.environ.get('DECONTAM_INDEX'):
                     continue
@@ -159,6 +191,8 @@ def main():
             top = st['gram_freq'].most_common(5)
             res['sources'].setdefault(name, {})[view] = dict(
                 docs=st['docs'], words=st['words'], docs_hit_any=st['docs_hit_any'],
+                tokens_median=int(np.median(st['toks'])) if st['toks'] else None,
+                tokens_p90=int(np.percentile(st['toks'], 90)) if st['toks'] else None,
                 pct_any=round(100 * st['docs_hit_any'] / max(st['docs'], 1), 4),
                 pct_by_set={k: round(100 * v / max(st['docs'], 1), 4) for k, v in sorted(st['docs_hit'].items())},
                 examples={k: v for k, v in st['examples'].items()}, top_gram_hits=top, dropped_by_filter=cnt.get(f'{name}#decon', 0))
