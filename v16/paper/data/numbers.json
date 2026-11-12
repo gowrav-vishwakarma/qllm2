@@ -805,5 +805,125 @@
    "value fetch 1.00 is the library's",
    "recall reported to 32k on the 386M model; 128k (1.00) measured on the 103M model; 24 GB card limit"
   ]
+ },
+ "far_block": {
+  "source": "EXPERIMENTS_SEMPY 'far block RESULT' parts 1-2 (Mind 53778f7, 1036f6d); FAR-TOLD Library ce27cf6; checks on sci1_long_3c2bf1f step_167849 (11B) and sci1_long2_4a97ca7 best_model step_344000 (22.5B), step_396734 (26B), step_411993 (27B)",
+  "cols": [
+   "11B",
+   "22.5B",
+   "26B",
+   "27B"
+  ],
+  "s8_8k": [
+   0.186,
+   0.979,
+   0.974,
+   0.964
+  ],
+  "s8_8k_margin": [
+   -1.1,
+   8.5,
+   8.0,
+   7.9
+  ],
+  "told_train_8k": [
+   0.1,
+   0.53,
+   0.03,
+   0.45
+  ],
+  "told_train_2k": [
+   0.67,
+   0.85,
+   0.58,
+   0.79
+  ],
+  "told_a26_2k": [
+   0.2,
+   0.31,
+   0.2,
+   0.22
+  ],
+  "told_a26_2k_unit_G2_G3": {
+   "11B": [
+    0.64,
+    0.36
+   ],
+   "22.5B": [
+    0.89,
+    0.91
+   ]
+  },
+  "skillpack_8k_state": [
+   0.095,
+   0.715,
+   0.515,
+   0.54
+  ],
+  "t40_8k": [
+   0.894,
+   0.931,
+   0.919,
+   0.919
+  ],
+  "t40_16k": [
+   0.836,
+   0.886,
+   0.833,
+   0.831
+  ],
+  "hs": [
+   0.336,
+   0.352,
+   0.357,
+   0.355
+  ],
+  "arce": [
+   0.539,
+   0.566,
+   0.557,
+   0.554
+  ],
+  "b2s_prompt_lengths_before": {
+   "median": 472,
+   "max": 1572,
+   "n_ge_2048_of_600": 0
+  }
+ },
+ "decay_studies": {
+  "source": "EXPERIMENTS_SEMPY s8reg A/B/C2/C3/D, LAWA-lite (Mind 24d145e, 835d246, 7a9eecd, 95498f3)",
+  "decay_m9": {
+   "s8_D": 0.231,
+   "hs": 0.343,
+   "arce": 0.567,
+   "nll": 3.383
+  },
+  "m10_same_tokens_constant_lr": {
+   "s8_D": 0.423
+  },
+  "c2_from_m10": {
+   "start": 0.423,
+   "end": 0.359
+  },
+  "c3_from_m9": {
+   "start": 0.77,
+   "end": 0.457
+  },
+  "c3_margin_at0_change": 3.39,
+  "lawa_L1": {
+   "s8_D": 0.777,
+   "nll": 3.482,
+   "nll_gain_share": 0.43
+  },
+  "jitter_10_steps": {
+   "from": 0.423,
+   "to": 0.331
+  },
+  "worked_ab": {
+   "s8_with": 0.418,
+   "s8_without": 0.423,
+   "t40_8k_with": 0.69,
+   "t40_8k_without": 0.85
+  }
  }
 }
