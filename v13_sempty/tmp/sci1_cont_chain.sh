@@ -11,7 +11,7 @@ disk_gb() { df -BG / | awk 'NR==2{gsub("G","",$4); print $4}'; }
 [ "$(disk_gb)" -ge 25 ] || { echo "sci1 cont: disk $(disk_gb)G < 25, REFUSE $(date -u +%FT%TZ)"; exit 1; }
 [ -s "$CONT_FROM" ] || { echo "sci1 cont: no $CONT_FROM"; exit 1; }
 echo "sci1 continuation chain: code $H in $PWD, $(date -u +%FT%TZ); from $CONT_FROM; tokens $CONT_TOKENS; SOURCES=$SOURCES WEIGHTS=$WEIGHTS"
-COMMON="ECHO=1 CHRONO=1 OUT_GATE=1 DELTA=1 ANSWER_W=100 SEED=43 SEQ=${SEQ:-4096} BLEND_WARMUP=0 FINEWEB_LOCAL_DIR=data/fineweb-edu GEN_EVERY=0 VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,chatmt MAX_RETRIES=20 ANSWER_IN_WINDOW=1 RESET_AT_EOS=1 DECONTAM_INDEX=.cache/decontam/v1.npy"
+COMMON="ECHO=1 CHRONO=1 OUT_GATE=1 DELTA=1 ANSWER_W=100 SEED=43 SEQ=${SEQ:-4096} BLEND_WARMUP=0 FINEWEB_LOCAL_DIR=data/fineweb-edu GEN_EVERY=0 VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,chatmt MAX_RETRIES=20 ANSWER_IN_WINDOW=1 RESET_AT_EOS=1 DECONTAM_INDEX=${DECONTAM_INDEX_C:-.cache/decontam/v1.npy}"
 MAIN=$C/${CONT_TAG}_$H; DEC=$C/sci1_decay_$H
 env $COMMON $GEOM SOURCES=$SOURCES WEIGHTS=$WEIGHTS TAG=$CONT_TAG CKPT_DIR=$MAIN PIN_HASH=$H LR=$LR WARMUP=${WARMUP_C:-500} LR_SCHEDULE=wsd_stable \
   CONTINUE_FROM=$CONT_FROM TARGET_TOKENS=$CONT_TOKENS BATCH=$BATCH GRAD_ACCUM=$GRAD_ACCUM SAVE_EVERY=500 KEEP_EVERY=$KEEP_EVERY KEEP_LAST=${KEEP_LAST:-4} \

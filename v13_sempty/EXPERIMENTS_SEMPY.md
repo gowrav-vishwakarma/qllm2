@@ -6105,6 +6105,33 @@ window (no state carries across windows) and its per-gap distance (~1,170 tokens
 jitter on the thesis cells so far -> segment 3 continues from 28B (final after told 8k). The fineweb loss (from 347k) shows mostly in
 the web holdout loss, little in the thesis cells.
 
+## segment 3: fineweb-edu streaming + the chat ramp (PRE-REGISTERED 12:31 IST 2026-11-12, before any number; Lead's decisions, Library's R5 audit 26630a1)
+
+**Start point:** segment 2's 28B milestone (step 427,252) or, by Lead's rollback rule, its best_model = step 344,000 (22.5B, before
+fineweb ran dry) if told 8k ALSO favours 344k clearly (Library's FAR-TOLD). `sci1_seg3_switch.sh` (FROM=28b|344k), env
+`sci1_long3_env.sh`, code `94eee16`+ (sources) / `8b2679d` (ramp, hold).
+**Mix (R1-R7):**
+- (a) replacements at their old shares: `fineweb100` = fineweb-edu sample-100BT streamed from HF (own cursor; 13-gram drop rate 0.005 %
+  HS in the audit), `chatmt2` = chatmt epoch 2 (R7: 2 of 4).
+- (b) the CHAT RAMP (R2: the one ramp in flight, 2B tokens, linear in cumulative tokens from the start checkpoint's counters): chat 5.4 %
+  -> 19.9 %: smoltalk2_mid 2.2 -> 12 %, chatmt2 3.2 -> 6 %, `chatsr` (smol-rewrite + smol-summarize) 0 -> 1.5 %, `tuluif` (tulu-3
+  personas instruction-following, the IF share) 0 -> 0.4 %; taken from dclm / fineweb100 in proportion (0.221 / 0.230 -> 0.150 /
+  0.156). R7-sized for <= 4 epochs over 10B (tuluif ~11M tokens, chatsr ~54M, chatmt ~640M): **the IF share is small by data size**.
+- smol-constraints OUT (47.6 % IFEval verbatim templates); smoltalk2_sft OUT (median 20.6k tokens, split across windows).
+- far block (b2s_far 1.2 %, proto_far 0.8 %) and the rule docs unchanged.
+- stream decontam index **v2** (v1 + IFEval, sha a4b66d1b; drop counts per source in the cursor / header); WARMUP 0; LR 8e-4.
+- safety: `[DRY-SOURCE]` line on a dry or failed source (Lead's ntfy watcher), a failed network source is dropped, not fatal.
+**Reads at each 1B milestone (CHECK + FAR-TOLD + the chat probe):** target = Library's simple-chat probe with its instruction-following
+cell (yes / no, one word, multi-step; user: judged by our probes + human eval, no v11 comparison) and a fixed human-eval set of short
+questions ("is water wet"-style); guards (R3): s8 @8k (3-save) >= −0.05, told 8k >= −0.10, t40 16k and clk2 8k >= −0.05, HS / ARC-e /
+PIQA >= −0.01, per-source science holdout <= +0.03, web holdout (dclm / fineweb val) back toward the pre-dry 2.98. Also watched: the
+single-gap reach cells (skill pack @8k, clk2 @16k) that the dry stretch cost (part 1b), expected to recover.
+**Keep rule:** judged at ramp end + 1B (3B after the switch): keep the chat ramp if the chat probe's IF cell rises and no guard falls at
+two consecutive milestones; else freeze the ramp at its current share. Release path: a short decay from the first milestone after
+that, judged by the strict rule (3-save s8 + margin) plus the chat probe.
+**Closest prior:** SmolLM2's staged mid-training / annealing mixes (smoltalk), OLMo-2 mid-training; difference: no claim (data
+engineering for the product), judged by our own probes.
+
 **far block RESULT, part 1b: single-gap reach cells (12:30 IST 2026-11-12; outside reviewer read, Mind verified from the diag jsonls):**
 
 | point | skill pack @8k bare (n 200) | clk2 @8k 1x / 8x+c4 (n 100) | clk2 @16k 1x / 8x+c4 (n 50) | clk2 @32k 1x / 8x+c4 (n 50) |
