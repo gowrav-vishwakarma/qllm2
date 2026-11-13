@@ -1185,7 +1185,7 @@ def build_argparser():
                         'queue with --stream_worker 0; 0 = inline, the pre-2026-10-27 '
                         'path). 64 x 0.21 s = 13 s of GPU work: rides out the ~3 s '
                         'HF read stalls')
-    p.add_argument('--arch', choices=('pam', 'mamba2', 'transformer', 'grove'), default='pam',
+    p.add_argument('--arch', choices=('pam', 'mamba2', 'transformer', 'grove', 'gdn'), default='pam',
                    help='sequence mixer: pam (the v13_sempty model), mamba2 '
                         '(reference Mamba-2 baseline, baseline_mamba2.py) or '
                         'transformer (Transformer++ baseline, baseline_transformer.py); '
@@ -1426,6 +1426,9 @@ def main():
         model = Mamba2LM(Mamba2Config(vocab_size=cfg.vocab_size,
                                       d_model=args.mamba_d_model,
                                       n_layer=args.mamba_n_layer))
+    elif args.arch == 'gdn':
+        from v13_sempty.baseline_gdn import GDNConfig, GDNLM
+        model = GDNLM(GDNConfig(vocab_size=cfg.vocab_size))
     elif args.arch == 'transformer':
         from v13_sempty.baseline_transformer import TransformerConfig, TransformerLM
         model = TransformerLM(TransformerConfig(vocab_size=cfg.vocab_size))

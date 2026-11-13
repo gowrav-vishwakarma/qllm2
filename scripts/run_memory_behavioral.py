@@ -111,6 +111,15 @@ def _load_v13_sempty(checkpoint: Path, preset: str, device: torch.device):
         model.load_state_dict(payload['model_state_dict'])
         model.to(device).eval()
         return model, get_chat_tokenizer(), cfg
+    if isinstance(raw, dict) and raw.get('arch') == 'gdn':
+        # Gated DeltaNet baseline trained by v13_sempty/train.py --arch gdn.
+        from v13_sempty.baseline_gdn import GDNConfig, GDNLM
+        from v7.data import get_chat_tokenizer
+        cfg = GDNConfig(**raw)
+        model = GDNLM(cfg)
+        model.load_state_dict(payload['model_state_dict'])
+        model.to(device).eval()
+        return model, get_chat_tokenizer(), cfg
     if isinstance(raw, dict) and raw.get('arch') == 'transformer':
         # Transformer++ baseline trained by v13_sempty/train.py --arch transformer.
         from v13_sempty.baseline_transformer import TransformerConfig, TransformerLM
