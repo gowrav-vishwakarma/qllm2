@@ -18,8 +18,9 @@ for m in "$@"; do
   if tmux has-session -t "=mindcxm2" 2>/dev/null; then cxp=1; touch $CX/.PAUSED; tmux kill-session -t "=mindcxm2"; sleep 5
     P=$(pgrep -f "v13_sempty.train .*--checkpoint_dir checkpoints_v13_sempty/cx_m2_main_c17775a( |$)" | head -1)
     [ -n "$P" ] && { kill -TERM $P; sleep 30; kill -KILL $P 2>/dev/null; }; fi
+  touch $HOME/.qllm_check_wants_gpu   # wio_chain.sh treats this as busy and yields the card (2026-11-16)
   until [ "$(nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits | awk -F", " '{print $1-$2}')" -ge 20000 ]; do sleep 30; done
-  RUN=$RUN bash v13_sempty/tmp/sci1_check_local.sh $m; echo "$RUN $m exit $? $(TZ=Asia/Kolkata date)"
+  RUN=$RUN bash v13_sempty/tmp/sci1_check_local.sh $m; echo "$RUN $m exit $? $(TZ=Asia/Kolkata date)"; rm -f $HOME/.qllm_check_wants_gpu
   # then Library's FAR-TOLD for this milestone runs on the free card (Library 2026-11-07); cx_m2 resumes after its DONE line (<= 60 min)
   K=$(( ${m#step_} / 15259 )); FT=/home/gowrav/Development/qllm_v14norm/logs/v14_fartold_watch.log; t=0
   until grep -q "FAR-TOLD-m${K}far-DONE" $FT 2>/dev/null || [ $t -ge 120 ]; do sleep 30; t=$((t + 1)); done

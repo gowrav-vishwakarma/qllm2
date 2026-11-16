@@ -4,6 +4,8 @@
 # proportion), five arms: gdn (Gated DeltaNet, fla 0.3.2, closest prior), nochrono (PAM M2 with the Chrono clock off: plain RoPE,
 # shared readers on the RoPE rotation, 6dfff6c), pam (PAM M2 all on), mamba2, tpp. Same scheduler / yields / readouts as ctl_chain.sh,
 # plus s8 on three decay saves (3-save mean). Readouts in logs/wio/.
+# gdn arm runs in ~/.venvs/qllm_gdn = .venv's exact pins (torch 2.8.0+cu128, datasets 4.0.0, pyarrow 21.0.0, transformers 4.57.6) on
+# Python 3.11 + fla 0.3.2 + einops (fla needs Python >= 3.10); every other arm in .venv. Arm speeds are quoted only from SOLO windows.
 #   tmux new-session -d -s mindwio "bash v13_sempty/tmp/wio_chain.sh 2>&1 | tee -a logs/v13_sempty_wio_chain_<hash>_<stamp>.log"
 cd "$(dirname "$0")/../.." || exit 1
 H=${SCREEN_HASH:-$(git rev-parse --short HEAD)}; C=checkpoints_v13_sempty; PY=.venv/bin/python; X="symbolic\|Warning\|warn"
@@ -15,17 +17,24 @@ VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,cha
 MAX_RETRIES=0 ANSWER_IN_WINDOW=1 RESET_AT_EOS=1 DECONTAM_INDEX=.cache/decontam/v1.npy PIN_HASH=$H"
 BASELINE="CHRONO=0 OUT_GATE=0 DELTA=0 ECHO=0"
 PAMSPEC="ECHO=1 OUT_GATE=1 DELTA=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2128 SHARE_READS=1"
-ARMS=("gdn:ARCH=gdn $BASELINE"
+ARMS=("gdn:ARCH=gdn PYTHON=$HOME/.venvs/qllm_gdn/bin/python $BASELINE"
       "nochrono:CHRONO=0 $PAMSPEC"
       "pam:CHRONO=1 $PAMSPEC"
       "mamba2:ARCH=mamba2 MAMBA_N_LAYER=17 $BASELINE"
       "tpp:ARCH=transformer $BASELINE")
 echo "wio chain: code $H in $PWD, $(date -u +%FT%TZ); SOURCES=$SOURCES WEIGHTS=$WEIGHTS"
 userjobs() { nvidia-smi --query-compute-apps=process_name --format=csv,noheader | grep -qE 'venv-maya|voice-agent'; }   # user rule 2026-11-16: never train beside the user's jobs
-busy() { userjobs && return 0; pgrep -f '^[^ ]*python[^ ]* (-u )?(-m v14\.|([^ ]*/)?(scripts/(run_|mc_eval|sci_gen|think_eval)|v14/[a-z]|v16/humaneval/(dump|think_eval_full|rec)|v16/bench))' >/dev/null; }
+# busy = the user's jobs or one of Mind's CHECK / eval probes. Library's v14 probes (~4.5-9 GB) are NOT busy: wio runs beside them on
+# the VRAM gate (Lead 2026-11-16, user gave us the full card); whoever starts later waits for free memory, nobody is killed.
+# ~/.qllm_check_wants_gpu (set by sci1_milestone_waiter.sh while a SCI-1 milestone CHECK waits / runs) = busy: wio yields the card.
+busy() { userjobs && return 0; [ -f $HOME/.qllm_check_wants_gpu ] && return 0; pgrep -f '^[^ ]*python[^ ]* (-u )?([^ ]*/)?(scripts/(run_|mc_eval|sci_gen|think_eval)|v16/humaneval/(dump|think_eval_full|rec)|v16/bench)' >/dev/null; }
+# other GPU jobs of ours beside the trainer (cwd / cmdline under ~/Development/qllm*, excluding the trainer $1): their tok/s is NOT an arm speed
+neighbours() { local q; for q in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits); do [ "$q" = "$1" ] && continue
+  { readlink /proc/$q/cwd; tr '\0' ' ' </proc/$q/cmdline; } 2>/dev/null | grep -q 'Development/qllm' && echo -n "$q "; done; }
 memok() { [ "$(awk '/MemAvailable/{print int($2/1048576)}' /proc/meminfo)" -ge "${1:-12}" ]; }
 free_mb() { nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits | awk -F", " '{print $1-$2}'; }
-declare -A NEED=([gdn]=${NEED_GDN:-16000} [nochrono]=18800 [pam]=18800 [tpp]=12600 [mamba2]=9000 [readouts]=12000)
+# gdn: smoke 2026-11-16 measured peak 11,522 MiB (nvidia-smi, solo, 25 min at the arm recipe) + 3 GB (user 4090 rule: free >= measured peak + 3 GB)
+declare -A NEED=([gdn]=${NEED_GDN:-14600} [nochrono]=18800 [pam]=18800 [tpp]=12600 [mamba2]=9000 [readouts]=12000)
 quiet() {  # $1 MB needed: not busy, RAM ok and VRAM free for 5 consecutive minutes; gives up (return 1) after $2 minutes (0 = never)
   local ok=0 t=0; while [ $ok -lt 5 ]; do if ! busy && memok 20 && [ "$(free_mb)" -ge "$1" ]; then ok=$((ok + 1)); else ok=0; fi
     t=$((t + 1)); [ "${2:-0}" -gt 0 ] && [ $t -ge $2 ] && [ $ok -lt 5 ] && return 1; sleep 60; done; }
@@ -36,7 +45,7 @@ segment() {  # $1 tag, $2 ckpt dir, $3 env (arm spec + schedule), $4 arm name (V
   log=$(ls -t logs/v13_sempty_${tag}_${H}_*.log 2>/dev/null | head -1)
   while true; do
     [ -f $dir/.done ] && return 0
-    local P=$(trainer_pid $dir) why=""
+    local P=$(trainer_pid $dir) why="" lastnb=x
     if [ -n "$P" ]; then echo "=== $tag: adopting running trainer $P $(date -u +%FT%TZ)"
     else
       quiet ${NEED[$arm]} 10 || { echo "=== $tag: blocked (VRAM / busy) 10 min, trying another arm $(date -u +%FT%TZ)"; return 2; }
@@ -48,6 +57,7 @@ segment() {  # $1 tag, $2 ckpt dir, $3 env (arm spec + schedule), $4 arm name (V
     while kill -0 $P 2>/dev/null; do
       busy && { why="yield to a CHECK / eval"; break; }
       memok 12 || { why="RAM < 12 GB"; break; }
+      nb=$(neighbours $P); [ "$nb" != "${lastnb-x}" ] && { echo "=== $tag: GPU $([ -n "$nb" ] && echo "SHARED with pids $nb(tok/s not an arm speed)" || echo SOLO) from $(date -u +%FT%TZ)"; lastnb=$nb; }
       sleep 15
     done
     if [ -n "$why" ]; then

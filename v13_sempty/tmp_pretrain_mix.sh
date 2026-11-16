@@ -136,7 +136,8 @@ while :; do
   if [ "$attempt" -gt 1 ]; then
     echo "=== ${TAG} resume attempt $attempt $(date -u +%Y-%m-%dT%H:%M:%SZ) ===" | tee -a "$LOG"
   fi
-.venv/bin/python -u -m v13_sempty.train \
+# PYTHON: the gdn arm needs fla: ~/.venvs/qllm_gdn = .venv's exact pins on Python 3.11 + fla 0.3.2 (qllm311's datasets 3.6 / pyarrow 26 deadlock the loader)
+"${PYTHON:-.venv/bin/python}" -u -m v13_sempty.train \
   --preset "$PRESET" \
   --dataset mix \
   --pretrain_sources "$SOURCES" \
