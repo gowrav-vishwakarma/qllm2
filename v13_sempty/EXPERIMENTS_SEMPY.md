@@ -6193,7 +6193,7 @@ weight. **Verdict: removing chat did not bring told 8k back; chat stays at 19.9 
 hold. Most misses are a FORMAT flip (bare "56.2." with no unit; Library e6b66b1; Argon / Lead): proto4k's 20 % no-protocol docs
 (v14/protocol_docs.py:177, `has_proto = rng.random() >= 0.2`) teach the bare answer at 100x answer weight, while the far docs
 (proto_far, all protocol) carry ~1/3 of proto4k's answer-token share (0.311 % vs 0.830 %, Argon) and ask 1-3 questions (line 253).
-Told 8k is a format-choice readout here, not a reach readout. Next: segment 3d below.
+(Reading corrected 20:18 IST: a bare answer = the told rule forgotten at 8k, a reach failure; see "CORRECTION" under segment 3d.) Next: segment 3d below.
 
 ## segment 3d: proto_far 0.8 % -> 1.6 % (PRE-REGISTERED 19:28 IST 2026-11-16, before any number; Lead agreed option 1, GO on the 6000 change pending)
 
@@ -6219,9 +6219,14 @@ kind) are reported, not read alone.
 **unit4 basis (Library c7b0f84, 9 points; Lead's GO condition, confirmed by Lead 20:03 IST):** the stop rule hides no unit (after_dot = 0.000 at every
 point) and unit_after equals the told 8k headline at every point, so the missing unit is a real model format choice, not a scorer
 artifact. The bare " 56.2." answers are complete answers in the no-protocol format that proto4k's 20 % no-protocol docs train
-(protocol_docs.py:177); 39B also gives 41 % sentence answers. **Next lever if 3d shows NO EFFECT (not in this step):** a generator variant
-in which every proto4k / proto_far doc carries the protocol, or the no-protocol docs are labelled, removing the competing habit (a new
-data version with fresh cursors; Library's suggestion, pre-register separately).
+(protocol_docs.py:177); 39B also gives 41 % sentence answers. **CORRECTION (20:18 IST, Library):** the 20 % no-protocol proto4k docs are the probe's CONTRAST condition ("no protocol stated ->
+answer the raw value"). A bare " 56.2." at 8k is therefore the model answering as if NO rule had been told: the told rule did not
+survive 8k tokens. It is a REACH failure of the told rule, not a competing format habit, and those docs must stay (they make the told
+cell meaningful). The "format flip" readings in the chat-off verdict and in the mechanism line above are withdrawn in that sense:
+told 8k does measure reach, specifically the reach of a TOLD rule; s8 (a rule shown by demos) holding at 0.94-0.99 while told 8k swings
+0.06-0.37 says told-rule reach is the weak, unstable part. 3d still targets it directly: proto_far is the only source that trains
+"rule told, used thousands of tokens later", and it is 2.7x thinner in answer tokens than proto4k. The chat-off verdict (chat NOT
+implicated) stands; it rests on the numbers, not on the reading.
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
