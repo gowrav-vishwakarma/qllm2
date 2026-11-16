@@ -5154,7 +5154,7 @@ this is reach, not a competing format habit (my first message to Mind / Lead sai
 answers (41 %) are a separate format effect. Told 8k swings by checkpoint in whether the rule survives 8k; read single points
 with that in mind.
 
-### TOLD-MARGIN diagnostic: is the told unit carried, or carried but out-voted by '.'? (PRE-REGISTERED 2026-11-16 20:22 IST, before any code or number; Argon via Lead)
+### TOLD-MARGIN diagnostic: is the told unit carried, or carried but out-voted by '.'? (PRE-REGISTERED 2026-11-16 20:21 IST, before any code or number; Argon via Lead)
 - One teacher-forced pass, no decoding. FAR-TOLD's docs (A28's, seed 26000, trained wording) at 2k and 8k, 100 docs each.
   Prefix = the fetched row + the question + " " + the TARGET number. At the next token, read three logit sets: held (warm), noprot,
   and twin = held + 4 (held - noprot).
