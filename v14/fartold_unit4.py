@@ -1,8 +1,10 @@
 """FAR-TOLD secondary diagnostic (Lead / Argon 2026-11-16 19:10 IST; the headline stays the pre-registered `right`).
 Many low told-8k points answer a bare "56.2." and stop. Package._gen holds a '.' after a digit for one token and DROPS that
 look-ahead when it is not a digit, so a unit right after the period ("56.2. mg") is never shown. This re-reads the same docs
-(A28's, seed 26000) with the protocol twin (alpha 4), greedy for 6 tokens with NO stop, and records:
-  unit4   the number is followed by the unit, an early '.' between them ignored (6 free tokens)
+(A28's, seed 26000) with the protocol twin (alpha 4), greedy for 16 tokens with NO stop (Lead / Argon: 39B answers full sentences), and records:
+  unit4   the answer STARTS with the number, then the unit (an early '.' between them ignored)
+  unit_after  the TARGET number appears anywhere and is followed by the unit ('.' ignored)
+  verbose  the answer starts with a word (a sentence), not a number
   after_dot  the token right after the first '.'-after-the-number is the unit (what the stop rule dropped)
     python v14/fartold_unit4.py --ckpt <weights> --wording train --length 8192 --docs 100 --out logs/v14_fartold_unit4_<tag>_<hash>_<stamp>.jsonl
 """
@@ -28,7 +30,7 @@ from v16.package import Package  # noqa: E402
 
 
 @torch.no_grad()
-def free_gen(pkg, st, off, prefix, tst, toff, n=6, alpha=4.0):
+def free_gen(pkg, st, off, prefix, tst, toff, n=16, alpha=4.0):
     la, sa, oa = pkg.mind.feed(prefix, copy.deepcopy(st), off)
     lb, sb, ob = pkg.mind.feed(prefix, copy.deepcopy(tst), toff)
     out = []
@@ -50,7 +52,7 @@ def main():
     enc = lambda s: tok.encode(s, add_special_tokens=False)  # noqa: E731
     fill = filler_tokens(str(FILL)); out = open(a.out, 'w')
     rng = random.Random(26000 * 1000 + a.length + 0)
-    u4 = ad = 0
+    u4 = ad = uaf = vb = 0
     for di in range(a.docs):
         doc = make_doc(rng, tok, fill, 'unit', a.length, a.wording)
         q = EXAM.format(q=doc['question']); qi = enc(q)
@@ -62,6 +64,8 @@ def main():
         u = doc['unit']
         text = ''.join(pieces)                           # the number, an optional early '.', then the unit (multi-token units ok)
         unit4 = int(re.match(r'\s*\d+(?:\.\d+)?\.?\s*' + re.escape(u) + r'(?![^\W\d_])', text) is not None)
+        ua = re.search(r'(?<![\d.])' + re.escape(doc['target']) + r'(?!\d)\.?\s*' + re.escape(u) + r'(?![^\W\d_])', text)
+        verbose = int(re.match(r'\s*[^\W\d_]', text) is not None)
         m = re.match(r'\s*\d+(?:\.\d+)?\.(?!\d)', text); after = None
         if m:                                            # the token right after the number's closing '.'
             acc = ''
@@ -70,10 +74,10 @@ def main():
                 if len(acc) >= m.end():
                     after = ''.join(pieces[i + 1:]); break
         after_dot = int(after is not None and re.match(r'\s*' + re.escape(u) + r'(?![^\W\d_])', after) is not None)
-        u4 += unit4; ad += after_dot
-        out.write(json.dumps(dict(doc=di, unit=u, target=doc['target'], pieces=pieces, unit4=unit4, after_dot=after_dot,
+        u4 += unit4; ad += after_dot; uaf += int(ua is not None); vb += verbose
+        out.write(json.dumps(dict(doc=di, unit=u, target=doc['target'], pieces=pieces, unit4=unit4, unit_after=int(ua is not None), verbose=verbose, after_dot=after_dot,
                                   bare_dot=int(m is not None), hash=h)) + '\n'); out.flush()
-    print(f'unit4 {u4 / a.docs:.3f} after_dot {ad / a.docs:.3f} (n {a.docs})', flush=True)
+    print(f'unit4 {u4 / a.docs:.3f} unit_after {uaf / a.docs:.3f} after_dot {ad / a.docs:.3f} verbose {vb / a.docs:.3f} (n {a.docs})', flush=True)
     print('UNIT4 DONE', flush=True)
 
 
