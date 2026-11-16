@@ -5109,3 +5109,19 @@ is the demos are written through the O(1) state's rule fork into the session, wh
   (it keeps the far gain). Otherwise plumbing / not met.
 - Closest prior work: context-aware decoding with an adaptive alpha (CAD, Shi et al. 2023; AdaCAD 2024). Difference: the alpha is
   switched by the token's TYPE (copied number vs convention) inside a state-fork read whose demos the mind wrote itself.
+
+### FAR-TOLD on Mind's chat-off points (2026-11-16 18:53-19:27 IST, code 802af59 / f0e43c7 (no change to the told path); pre-registration EXPERIMENTS_SEMPY "chat-off natural experiment", 35c78a7)
+ptwin right / unit; bare = answers that are only a number + "."; verbose = answers that start with a word (the unit never appears in
+either when the stop rule hits). 100 docs, 400 rows per file, peak 3.9-4.5 GB.
+
+| point | train 8k ptwin | bare / verbose (8k) | train 2k ptwin | a26 2k ptwin | plain 2k right / unit |
+|---|---|---|---|---|---|
+| 30B (step 457770) | 0.31 / 0.33 | 55 / 0 | 0.89 / 0.96 | 0.49 / 0.80 | 0.25 / - |
+| 39B (step 595101) | 0.06 / 0.09 | 36 / 41 | 0.38 / 0.65 | 0.23 / 0.52 | 0.02 / 0.04 |
+| 40B (step 610360) | 0.37 / 0.40 | 50 / 0 | 0.88 / 0.93 | 0.46 / 0.79 | 0.19 / 0.20 |
+| 40.5B (seg3_end) | 0.12 / 0.12 | 63 / 16 | 0.69 / 0.75 | 0.25 / 0.62 | 0.03 / 0.03 |
+
+Reading: 40B and 40.5B do NOT move the same way (0.37 vs 0.12 at 8k), so on the pre-registered headline the chat-off verdict is
+unresolved. Where the told read fails, nearly every answer is a format miss (bare number or sentence: 79, 50, 79 of 100 at
+39B / 40B / 40.5B). The unit4 diagnostic (e381df8; 16 free tokens, unit_after, verbose) is running on all 9 points to separate
+the format habit from the reach.
