@@ -6105,6 +6105,34 @@ window (no state carries across windows) and its per-gap distance (~1,170 tokens
 jitter on the thesis cells so far -> segment 3 continues from 28B (final after told 8k). The fineweb loss (from 347k) shows mostly in
 the web holdout loss, little in the thesis cells.
 
+## wio: "what is ours" (PAM vs Gated DeltaNet, and PAM without its clock) at the ctl recipe + the far block (PRE-REGISTERED 16:32 IST 2026-11-16, before any number; Lead + user GO 2026-11-12)
+
+**Question:** is the shared clock / phase what makes PAM's rule carry ours, and not the gated delta rule it shares with prior work?
+**Closest prior work: Gated DeltaNet** (Yang, Kautz, Hatamizadeh 2024, arXiv 2412.06464): gated delta-rule state, short conv on
+q / k / v, output gate, **no rotary or phase on q / k** (checked in fla 0.3.2 `fla/layers/gated_deltanet.py`). Difference in one line:
+PAM rotates q / k by a content-driven per-head clock (Chrono) that the shared readers reuse; GDN carries position only through the
+conv and the decay.
+**Arms (each ~103M, identical data, seed, schedule):** the ctl recipe (1.0B tokens: 0.9B wsd_stable + 0.1B linear decay, SEQ 4096,
+BATCH 16 x 4096, LR 1.2e-3, seed 43, decontam v1) on the cont2 mix **plus the far block** (b2s_far 1.2 % + proto_far 0.8 %, taken
+from dclm / fineweb in proportion), so it doubles as the far-data equal-data control:
+- `gdn`: fla GatedDeltaNetModel, 12 x 768, 6 heads x 64, SwiGLU 1280, **102.51M** (1f3f205); published reference implementation.
+- `nochrono`: PAM M2 with Chrono off (plain RoPE; the shared readers read on the RoPE rotation, 6dfff6c; MLP 2128 as M2: the clock's
+  warp projections are ~37k params, < 0.1 %, so no re-match).
+- `pam`: PAM M2 all on (ctl's body).
+- `mamba2`, `tpp`: ctl's baselines.
+Runner `v13_sempty/tmp/wio_chain.sh` (ctl's scheduler: arm by arm to the end, gdn first, then nochrono; yields to CHECKs; never
+trains while the user's own GPU jobs are on the card). Readouts in logs/wio/; told cells by Library (FAR-TOLD protocol) at each arm's end.
+**Readouts per arm:** s8 @8k (b2 suite, 400 trials, seed 7000, spread 0 / 2k / 4k / 8k; **3-save mean** over the decay saves at
++500 / +1000 / end, with the margin); told 2k / 8k (ptwin); needles t40 8k / 16k; clk2 8k / 16k; holdout loss; HS / ARC-e / PIQA;
+state MB at decode.
+**Claim rule (pre-stated):** "the clock is what is ours" stands only if BOTH
+1. `pam` beats `gdn`: s8 @8k 3-save mean >= gdn + 0.10 AND told 8k >= gdn + 0.10 (n 100, ~±0.07); and
+2. `nochrono` loses that gap: pam − nochrono >= 0.10 on s8 @8k, and nochrono's lead over gdn is <= half of pam's.
+If (1) holds but not (2), the edge is PAM's but not the clock's (say which parts remain: notebooks, readers, echo). If (1) fails,
+no "ours" claim against GDN at this scale (stated as a limit). Language (holdout) and benchmarks are reported, not bars; a pam holdout
+worse than gdn by > 0.03 is stated next to any rule claim. Params and tokens are in every table row.
+**Order / cost:** after the chat-off CHECKs; ~3-4.4 h per arm on the 4090 when the card is ours (GDN speed measured in its smoke).
+
 ## chat-off natural experiment: does chat share push told 8k down? (PRE-REGISTERED 16:04 IST 2026-11-16, before any number; Lead agreed)
 
 **Observation that prompted it:** told 8k (Library's ptwin, n 100) fell 0.45 (27B, chat ~5 %) -> 0.36 (29B) -> 0.31 (30B, chat ~20 %)
