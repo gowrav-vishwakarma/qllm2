@@ -5060,3 +5060,17 @@ Audit of the 26B dip (Lead asked): all 12 files have 400 rows (4 arms x 100), ev
 reads global_step 396734 / 26.0B tokens, the same as the source step_396734.pt. Not a run problem, so the dip is real. The plain
 read is also 0.00 at 26B and 0.37 at 27B, so the told 8k ability appears between 26B and 27B. It is not monotone in tokens.
 Lead's decision: FROM = 28b (344k vs 27B told 8k is +0.08, within jitter).
+
+### FAR-TOLD segment 3: 29B and 30B (run 2026-11-13 15:29-15:45 IST, code ce27cf6; recorded 2026-11-16 16:00 IST after a session restart)
+Same cells and docs as above (ptwin right / unit; plain = warm read). Weights copies verified: steps 442511 / 457770, 29.0B / 30.0B tokens; 400 rows per file.
+
+| point | train 2k ptwin | train 8k ptwin | a26 2k ptwin | train 2k plain | train 8k plain |
+|---|---|---|---|---|---|
+| 27B (step 411993) | 0.79 / 0.98 | 0.45 / 0.50 | 0.22 / 0.74 | 0.37 | 0.12 |
+| 344k (best_model) | 0.85 / 0.99 | 0.53 / 0.59 | 0.31 / 0.90 | 0.46 | 0.14 |
+| 29B (step 442511) | 0.49 / 0.92 | 0.36 / 0.55 | 0.32 / 0.83 | 0.22 | 0.11 |
+| 30B (step 457770) | 0.89 / 0.96 | 0.31 / 0.33 | 0.49 / 0.80 | 0.25 | 0.10 |
+
+Reading: told 8k has not recovered to 344k's 0.53 / 27B's 0.45 (29B 0.36, 30B 0.31; with 100 docs, ±0.05 is jitter). 2k is noisy
+across points (0.49 -> 0.89), while the held-out wording rises (0.22 -> 0.32 -> 0.49). Plain 2k falls from 0.37-0.46 to 0.22-0.25.
+So the protocol twin, not the warm read, carries the told rule in segment 3.
