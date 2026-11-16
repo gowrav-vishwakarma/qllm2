@@ -6335,6 +6335,10 @@ them with no effect from 3d. Read them as: clk2 16k = the 42B / 43B MEAN >= 0.80
 MEAN >= 0.91 (41B − 0.03; n 800, SE ~0.008, last six saves 0.941-0.986). The told 8k bars, bare count and HellaSwag guard are unchanged.
 **3d baseline, 41B (3c mix, step 625,619, CHECK done 21:02 IST):** s8 @8k 0.941 | skill @8k 0.610 | clk2 16k 0.85 | clk2 32k-run @16k 0.52 |
 t40 16k 0.919 | HS / ARC-e / PIQA acc 0.319 / 0.554 / 0.628 (386M PAM, 41.0B tokens). Told 8k + TOLD-MARGIN: Library (m41far).
+**41B told (Library m41far, 41ba344, logs/v14_fartold_m41far_*_41ba344_20261116_2156.jsonl + v14_told_margin_m41_41ba344_20261116_2156.jsonl):**
+told 2k 0.84 | told 8k 0.35 (bare count 45, verbose 2) | a26 2k 0.43 | TOLD-MARGIN 8k: unit pick 0.68, gate_win 0.46 (noprot 0.34; chance
+0.27). So the 3d bars resolve to: WORKS needs the 42B / 43B told 8k mean >= 0.45 (both 0.45 and 41B + 0.10 = 0.45) with bare count <= 35;
+NO EFFECT if <= 0.38; otherwise decide at 44B.
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
