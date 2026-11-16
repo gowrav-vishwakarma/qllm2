@@ -6149,6 +6149,11 @@ worse than gdn by > 0.03 is stated next to any rule claim. Params and tokens are
   the lineage tsv and three new Library probe files (v14/a32c.py, told_margin.py, check_layout.py) that no training path imports.
   Found scripts/require_clean_tree.sh deleted in the shared checkout (not by Mind; restored from HEAD), so the guard was silently off
   for the gdn start from ~20:15; the trainer code was at 227f3eb throughout (git diff checked).
+- 22:00 IST: ENVIRONMENT CAVEAT. The ctl chain ran from ../qllm_ctl, whose .venv links ~/.venvs/qllm311 (datasets 3.6, pyarrow 26,
+  mamba_ssm 2.2.5); all ctl arms shared it. wio runs from qllm2: pam / nochrono / tpp in .venv (Py3.9), gdn / mamba2 in ~/.venvs/qllm_gdn
+  (.venv's exact pins on Py3.11 + fla 0.3.2 + mamba_ssm / causal_conv1d copied from qllm311; launcher default b0b2426). Within wio all arms
+  share package pins (torch 2.8.0+cu128, datasets 4.0.0, pyarrow 21.0.0); a wio-vs-ctl number crosses environments and is labelled so.
+  (Goes into wio_chain.sh's header at the next safe restart; not edited while the chain runs, since bash reads it incrementally.)
 
 ## chat-off natural experiment: does chat share push told 8k down? (PRE-REGISTERED 16:04 IST 2026-11-16, before any number; Lead agreed)
 
