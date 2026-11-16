@@ -1,0 +1,22 @@
+{
+ "ckpt": "checkpoints_v13_sempty/wio_gdn_decay_227f3eb/latest.pt",
+ "results": {
+  "hellaswag": {
+   "acc": 0.27454690300736906,
+   "acc_norm": 0.28121888070105555,
+   "n": 10042
+  },
+  "arc_easy": {
+   "acc": 0.44023569023569026,
+   "acc_norm": 0.39604377104377103,
+   "n": 2376
+  },
+  "piqa": {
+   "acc": 0.5941240478781284,
+   "acc_norm": 0.5761697497279652,
+   "n": 1838
+  }
+ },
+ "sec": 72.7,
+ "fp32": false
+}

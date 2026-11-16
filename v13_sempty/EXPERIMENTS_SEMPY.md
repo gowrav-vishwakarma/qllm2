@@ -6187,6 +6187,17 @@ worse than gdn by > 0.03 is stated next to any rule claim. Params and tokens are
   no-op for gdn / mamba2 / tpp (it acts only on PAM's echo path), so their clk2 is the plain 8-dilated read: labelled so.
   Step-save safety: each probe writes <out>.part, moved into place only on exit 0 AND a parse check; a decay step save is deleted
   only after its json parses. Chain restarted 01:44 IST (readouts).
+- 02:04 IST 2026-11-17: gdn ARM RESULT (readouts complete; Gated DeltaNet, fla 0.3.2, 102,508,944 params, 1.000B tokens = 0.9B
+  wsd_stable + 0.1B decay, seed 43, SEQ 4096; outputs logs/wio/v13_sempty_*wio_gdn_227f3eb*):
+  s8 @8k (mean of shift_wide_new@8192 and affine_map_new@8192): end (15,259) 0.444 | 15,000 0.408 | 14,500 0.374 | 14,000 0.265.
+  The kept saves sit at absolute steps 14,000 / 14,500 / 15,000 + end (KEEP_EVERY 500 counts from step 0), not at decay +500 / +1000;
+  read as: **3-save mean = the last three (14,500 / 15,000 / end) = 0.408**, the same rule for every arm.
+  s8 by distance at end: shift_wide_new 0.93 / 0.56 / 0.35 / 0.16 at 0 / 2k / 4k / 8k; affine_map_new 0.98 / 0.92 / ... / 0.73.
+  t40 needles: 2k 0.681 | 4k 0.544 | 8k 0.458 | 16k 0.325. clk2 (plain 8-dilated read; echo no-op): 8k 0.17 | 16k 0.06.
+  HS / ARC-e / PIQA acc 0.2745 / 0.4402 / 0.5941 (acc_norm 0.2812 / 0.396 / 0.5762). Holdout val 3.3854 (computed after training).
+  State at decode: 12 x 6 x 64 x 128 x 4 B = 2.36 MB (fp32, short-conv tails excluded). Speed SOLO: median 114,074 tok/s over steps
+  10,750-13,700 (the solo window from 16:47 UTC; smoke 62k was at a shorter window with warm-up). ctl solo refs: T++ 77k, Mamba-2 113k.
+  Dtype: s8 / t40 / val in bf16 backbone + fp32 head (other arms fp32); clk2 / mc bf16 for all. Told 2k / 8k: Library on "wio chain DONE".
 
 ## chat-off natural experiment: does chat share push told 8k down? (PRE-REGISTERED 16:04 IST 2026-11-16, before any number; Lead agreed)
 
