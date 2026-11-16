@@ -5074,3 +5074,24 @@ Same cells and docs as above (ptwin right / unit; plain = warm read). Weights co
 Reading: told 8k has not recovered to 344k's 0.53 / 27B's 0.45 (29B 0.36, 30B 0.31; with 100 docs, ±0.05 is jitter). 2k is noisy
 across points (0.49 -> 0.89), while the held-out wording rises (0.22 -> 0.32 -> 0.49). Plain 2k falls from 0.37-0.46 to 0.22-0.25.
 So the protocol twin, not the warm read, carries the told rule in segment 3.
+
+### A32b RESULT (2026-11-16 16:16 IST; code b87d507; logs/v14_a32b_{m22best,m30}_b87d507_20261116_1600.*; 100 docs per cell, A28's docs)
+Bodies (Lead, no release picked): 344k (best_model) and 30B (step 457770). The twin arm reproduces FAR-TOLD exactly (same docs).
+right (value / unit):
+
+| body | cell | twin | a32b (self-written unit) | oracle (true unit) | unit_hat right | bar | verdict |
+|---|---|---|---|---|---|---|---|
+| 344k | a26 2k | 0.31 (0.36 / 0.90) | 0.21 (0.22 / 0.94) | 0.22 (0.22 / 0.97) | 0.97 | 0.56 | NOT met |
+| 344k | train 8k | 0.53 (0.88 / 0.59) | **0.82** (0.89 / 0.91) | 0.83 (0.89 / 0.92) | 0.99 | 0.78 | **MET** |
+| 30B | a26 2k | 0.49 (0.65 / 0.80) | 0.42 (0.45 / 0.91) | 0.45 (0.45 / 0.96) | 0.94 | 0.74 | NOT met |
+| 30B | train 8k | 0.31 (0.93 / 0.33) | **0.60** (0.92 / 0.65) | 0.61 (0.92 / 0.66) | 0.99 | 0.56 | **MET** |
+
+**Verdict: half met.** The far half works on both bodies: the told rule held 8k back gains +0.29 on each body, the whole gain is the unit
+(0.59 -> 0.91, 0.33 -> 0.65), and the value stays ~0.9. The mind's self-written demos equal the true-unit oracle (unit_hat 0.94-0.99),
+so self-compiling costs nothing over being told. The held-out 2k half fails: the unit was already 0.80-0.90 there, and the demos
+LOWER the value copy (0.36 -> 0.22, 0.65 -> 0.45) in both a32b and oracle. Post-hoc reading (not tested): the three random demo
+values compete with the row's value for the copy when the protocol sits 2k back in a held-out wording.
+Step back: the mind can turn a prose rule it just read into examples it reads well far later. The demos' cost is to the
+VALUE, which suggests demos that carry the unit without a competing number (e.g. "{x} -> {x} {u}" with x = the row's own
+field name) as the next variant. That needs its own pre-registration. Closest prior work: SG-ICL (Kim et al. 2022); the difference
+is the demos are written through the O(1) state's rule fork into the session, which the far read then uses.
