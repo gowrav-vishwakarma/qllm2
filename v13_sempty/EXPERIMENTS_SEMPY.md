@@ -6307,6 +6307,20 @@ Rows end at 4B; beyond that the page uses a reference block with no claim.
 **Cost / order:** geometry smoke on the 4090 between wio arms (b386_smoke, tmux mindb386, after the gdn arm's readouts) measures params,
 peak VRAM and tok/s; the run's box and time are the user's call through Lead (after the release decay, or earlier).
 
+**SMOKE (03:21 IST 2026-11-17, 4090 SOLO, stage-A recipe: LR 8e-4, 65,536 tok/step, 12 min per arm; logs
+logs/v13_sempty_b386_{tpp,m2,m2w}_smoke_2261be1a_20261117_*.log, driver logs/v13_sempty_b386_smoke_driver_2261be1a_20261117_0244.log):**
+| arm | params | steady tok/s | peak MiB (nvidia-smi) |
+|---|---|---|---|
+| tpp 1024x24, 16 heads, d_ff 3168 | 385,751,040 | 27,800 | 20,508 |
+| m2 1024x51 | 388,125,216 | 32,620 | 17,354 |
+| m2w 1280x31 | 381,386,120 | 34,300 | 15,228 |
+All three train (loss falling, 0 errors). GEOMETRY RULE APPLIED: 1024x51 is kept (32,620 >= 0.75 x 34,300 = 25,725). The first smoke
+(02:06-02:43) died on FINEWEB_LOCAL_DIR=data/fineweb-edu (a 6000-only path), dropped on the 4090; the 6000 runs keep it.
+PRICE on the 4090 at these speeds (stage-A 4-LR screen = 2B; main = the chosen LR's stage A continued to 4B = 3.5B more):
+tpp 20.0 h + 35.0 h = 55 h; m2 17.0 h + 29.8 h = 47 h; together ~102 h (~4.2 days of the card). Optional 0.25B decay from M4: tpp 2.5 h,
+m2 2.1 h, plus PAM's (386M PAM on the 4090 not measured; 6000 speed applies if run there): ~4.6 h + PAM, over Lead's ~3 h lean.
+tpp at 20.5 GB peak needs the whole 4090 (no neighbour under the + 3 GB rule); m2 17.4 GB leaves ~3 GB. The 6000 would be faster.
+
 ## SCI-1 segment table (21:58 IST 2026-11-16; steps / tokens from the checkpoints' own global_step / global_tokens, 65,536 tokens per step from step 0)
 
 | # | run dir | global steps | tokens | parent | mix | line |
