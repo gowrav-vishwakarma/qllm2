@@ -768,7 +768,7 @@ def test_sparse_memory(batch_size=2, seq_len=30, seed=0):
     return True
 
 
-def test_shared_reads(batch_size=2, seq_len=40, seed=0):
+def test_shared_reads(batch_size=2, seq_len=40, seed=0, chrono=True):
     """M2 shared reads: (1) pam_shared_read with the writer's own query equals
     the writer's read (the write is reusable, exactly); (2) share_reads at
     init == off; (3) causal; (4) a reader's gradient reaches its q_proj AND
@@ -790,7 +790,8 @@ def test_shared_reads(batch_size=2, seq_len=40, seed=0):
     cfg = get_config('tiny_real')
     cfg.n_layers = 4
     cfg.chunk_size = 16
-    cfg.chrono = cfg.out_gate = cfg.delta = True
+    cfg.chrono = chrono
+    cfg.out_gate = cfg.delta = True
     cfg.pam_layers = (1,)
     cfg.share_reads = True
     m = LM(cfg).to(dev).eval()
@@ -840,7 +841,36 @@ def test_shared_reads(batch_size=2, seq_len=40, seed=0):
     d_w = (w_with - w_without).abs().max().item()
     assert d_w > 1e-8, "readers send no gradient into the writer"
     print(f"  shared read == writer read {d_k:.1e}   init parity {d_init:.1e}   "
-          f"causal {d_past:.1e}   reader grad ok, writer grad shift {d_w:.1e} ({dev})")
+          f"causal {d_past:.1e}   reader grad ok, writer grad shift {d_w:.1e} ({dev}, chrono={chrono})")
+    return True
+
+
+def test_shared_reads_plain_rope(seed=0):
+    """lad_nochrono: M2 readers on a plain-RoPE writer (Chrono off): the same four checks, plus decode (one token at a time,
+    carrying notebooks) == the parallel forward."""
+    test_shared_reads(seed=seed, chrono=False)
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.n_layers = 4
+    cfg.chunk_size = 7
+    cfg.chrono = False
+    cfg.out_gate = cfg.delta = True
+    cfg.pam_layers = (1,)
+    cfg.share_reads = True
+    m = LM(cfg).eval()
+    for b in m.blocks:
+        if b.reader is not None:
+            nn.init.normal_(b.reader.o_proj.weight, std=0.3)
+    ids = torch.randint(0, cfg.vocab_size, (2, 17))
+    with torch.no_grad():
+        par, _, _ = m.forward(ids)
+        out, st = [], None
+        for t in range(ids.shape[1]):
+            lt, st, _ = m.forward(ids[:, t:t + 1], states=st, step_offset=t)
+            out.append(lt)
+    d = (par - torch.cat(out, dim=1)).abs().max().item()
+    assert d < RECUR_ATOL, f"plain-RoPE shared reads: decode != parallel {d:.3e}"
+    print(f"  plain-RoPE readers: decode == parallel {d:.1e}")
     return True
 
 
@@ -1030,6 +1060,7 @@ def main():
         test_echo_memory,
         test_sparse_memory,
         test_shared_reads,
+        test_shared_reads_plain_rope,
         test_transformer_baseline,
         test_prefetch_order_and_cursor,
         test_worker_stream_order_and_cursor,

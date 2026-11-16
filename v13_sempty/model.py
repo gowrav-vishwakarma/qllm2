@@ -656,6 +656,10 @@ class RealPAMLayer(nn.Module):
             )  # named-exit: the RoPE table is a plain buffer, sliced here
             cos_t = rotation.select(self.rot_pair, 0)
             sin_t = rotation.select(self.rot_pair, 1)
+            if self.expose:   # M2 readers use the writer's rotation; plain RoPE here (lad_nochrono), the Chrono clock above
+                rc = self.rope_cache[step_offset:position_end].to(dtype=queries.dtype)       # [T,P,2]
+                shape = (batch.size, self.heads.size, rc.shape[0], rc.shape[1])
+                self._rot = (rc[..., 0].expand(*shape), rc[..., 1].expand(*shape))         # [B,H,T,P], as Chrono's
 
             def _rotate(x):
                 # Split each channel pair (even, odd) and rotate it by 2x2.
@@ -1219,8 +1223,8 @@ class LM(nn.Module):
         # E1 Echo memory (see PAMConfig.echo): plain-torch projections at the
         # top of the stack; the delta read reuses pam_delta_batched.
         if cfg.share_reads:
-            assert cfg.pam_layers and cfg.delta and cfg.chrono, \
-                "M2 share_reads needs pam_layers, delta and chrono"
+            assert cfg.pam_layers and cfg.delta and cfg.use_rope, \
+                "M2 share_reads needs pam_layers, delta and a rotation (Chrono clock or plain RoPE)"
         self.echo = cfg.echo
         if self.echo:
             assert not cfg.is_complex, "echo is implemented for the real arm"
