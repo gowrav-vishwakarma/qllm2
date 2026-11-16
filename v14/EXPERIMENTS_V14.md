@@ -5125,7 +5125,7 @@ Reading: 40B and 40.5B do NOT move the same way (0.37 vs 0.12 at 8k), so on the 
 unresolved. Where the told read fails, nearly every answer is a format miss (bare number or sentence: 79, 50, 79 of 100 at
 39B / 40B / 40.5B). The unit4 diagnostic (e381df8; 16 free tokens, unit_after, verbose) is running on all 9 points to separate
 the format habit from the reach.
-- **A32c note before any A32c number (2026-11-16 19:36 IST; Argon via Lead, checked by Library on the jsonls; the bar is NOT
+- **A32c note before any A32c number (2026-11-16 19:33 IST; Argon via Lead, checked by Library on the jsonls; the bar is NOT
   moved):** the split arm takes its digits from the warm read, whose value_ok on a26 2k is only 0.44 (344k) / 0.70 (30B)
   (FAR-TOLD a26w2k plain arm), and its unit from the a32b contrast (unit 0.94 / 0.91). So split is roughly capped at
   0.44 x 0.94 = 0.41 on 344k and 0.70 x 0.91 = 0.64 on 30B. The 344k bar (twin 0.31 + 0.10 = 0.41) sits at that cap: a split miss
