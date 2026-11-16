@@ -38,3 +38,21 @@ smoke): ~5.8x slower at its own best micro-batch (the micro-batch is forced by m
 from latest.pt on Library's "done" (`tmux new-session -d -s mindcxm2 "cd /home/gowrav/Development/qllm_cx && SCREEN_HASH=c17775a
 NEED_CX=16000 bash v16/complex/cx_chain_live.sh 2>&1 | tee -a logs/v16_cx_chain_c17775a.log"`); `.PAUSED` marks the hold. Each later
 pause the same way (clean save first). The ETA moves by the pause length + ~25 min stream restart.
+
+## cx_m2 RESULT (16:27 IST 2026-11-16; readouts at the decay end, 1.0B tokens; clk2 rerun after the probe fix bec69ed)
+
+Same parse for both arms (logs/cx/, logs/ctl/; t40 = mean accuracy over positions and 1 / 4 / 8 associations):
+
+| bar | cx_m2 (complex, 102.95M) | ctl PAM M2 (real, 102.88M) | Δ | verdict |
+|---|---|---|---|---|
+| B1 s8 D (mean of 8 cells) | 0.536 | 0.523 | +0.01 | no difference (< 0.10) |
+| B2 needles t40 8k / 16k | 0.289 / 0.236 | 0.650 / 0.586 | −0.36 / −0.35 | **complex worse** |
+| B3 holdout val loss | 3.7745 | 3.427 | +0.35 nats | **complex worse** (bar 0.03) |
+| B4 HS / ARC-e / PIQA (acc) | 0.271 / 0.438 / 0.577 | 0.274 / 0.455 / 0.606 | −0.003 / −0.017 / −0.029 | lower (reported) |
+| clk2 8k / 16k (8x + c4) | 0.27 / 0.12 | 0.59 / 0.15 | −0.32 / −0.03 | complex worse at 8k |
+| B5 told rule | not run (the package path has no complex state) | 0.53 | - | - |
+
+**Verdict:** at matched params and the identical recipe, the complex-arithmetic body with every part of the paper's body is worse on
+language (+0.35 nats), needles (−0.35) and one-read reach (−0.32 at 8k), equal on in-context rules (s8), and ~5.8x slower to train
+with ~3x the memory. The real body stays; no complex path is carried forward. This agrees with the September record (real better on
+TinyStories) at a larger, fairer test. The complex code stays in v16/complex (last commit with it: HEAD) for the record.
