@@ -6227,6 +6227,9 @@ told 8k does measure reach, specifically the reach of a TOLD rule; s8 (a rule sh
 0.06-0.37 says told-rule reach is the weak, unstable part. 3d still targets it directly: proto_far is the only source that trains
 "rule told, used thousands of tokens later", and it is 2.7x thinner in answer tokens than proto4k. The chat-off verdict (chat NOT
 implicated) stands; it rests on the numbers, not on the reading.
+Two refinements (Lead): only 39B's sentence answers (41 %) are a separate FORMAT effect; and told 2k swings too (0.38 / 0.88 / 0.69
+at 39B / 40B / 40.5B), so the told-protocol signal sits near the decision edge even at trained distance. In short: told-rule carry is
+weak and flips by checkpoint, while example-rule reach (s8) and recall (clk2) hold. The WORKS / NO EFFECT rule is unchanged.
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
