@@ -6165,6 +6165,46 @@ each; skill = skillpack A_state @8192, n 200; clk2 = clk2_echo free 8x+c4, n 50;
 point; 40.5B is back at 0.635, so the two disagree and neither counts alone (the single-checkpoint jitter seen at 26B). The verdict
 waits on told 8k.
 
+### chat-off VERDICT: chat NOT implicated (19:28 IST 2026-11-16; told 8k by Library, FAR-TOLD ptwin, n 100)
+
+| point (chat share) | told 8k | bare num+dot (of 100) | told 2k | a26 2k |
+|---|---|---|---|---|
+| 30B (~20 %) | 0.31 | 55 | - | - |
+| 39B (~6 %) | 0.06 | 36 | 0.38 | 0.23 |
+| 40B (0 %, ~0.1B) | 0.37 | 50 | 0.88 | 0.46 |
+| 40.5B (0 %, ~0.6B) | 0.12 | 63 | 0.69 | 0.25 |
+
+By the pre-registered rule: "implicated" needed 40.5B >= 0.45, and no chat-off point came near it (best 0.37). 40.5B = 0.12 is in the
+"NOT implicated" band. 40B (0.37, +0.06 over 30B, inside ~±0.07) and 40.5B (−0.19) do not agree in direction, so 40B carries no
+weight. **Verdict: removing chat did not bring told 8k back; chat stays at 19.9 %** (user: base model WITH chat).
+**What it says instead:** told 8k swings 0.06 <-> 0.37 between saves 0.5B apart, while s8 @8k (0.94-0.99) and clk2 16k (0.86-0.91)
+hold. Most misses are a FORMAT flip (bare "56.2." with no unit; Library e6b66b1; Argon / Lead): proto4k's 20 % no-protocol docs
+(v14/protocol_docs.py:177, `has_proto = rng.random() >= 0.2`) teach the bare answer at 100x answer weight, while the far docs
+(proto_far, all protocol) carry ~1/3 of proto4k's answer-token share (0.311 % vs 0.830 %, Argon) and ask 1-3 questions (line 253).
+Told 8k is a format-choice readout here, not a reach readout. Next: segment 3d below.
+
+## segment 3d: proto_far 0.8 % -> 1.6 % (PRE-REGISTERED 19:28 IST 2026-11-16, before any number; Lead agreed option 1, GO on the 6000 change pending)
+
+**Mechanism (stated):** the told 8k misses are mostly the bare-number format, not lost reach. Far protocol docs are the only far
+source that teaches "report with the protocol's unit at distance", and they are 2.7x thinner in answer tokens than proto4k (whose
+20 % no-protocol docs teach the bare form). Doubling proto_far doubles the far protocol answer signal without touching chat.
+**Caveat (stated):** if chat competes for capacity, less chat is the direct lever and more proto_far only the indirect one; the
+chat-off test above did not show chat as the cause, and the user's direction keeps chat at 19.9 %.
+**Closest prior work:** data-mixture optimisation (DoReMi, Xie et al. 2023; Data Mixing Laws, Ye et al. 2024). **Difference:** one
+share change aimed at one probe-measured skill family (rule told in context, answered 8k tokens later, beyond the 4k training
+docs), judged by that probe plus its format split, not by perplexity.
+**Change:** weights only. proto_far 0.00800 -> 0.01600; dclm 0.14997 -> 0.14597; fineweb100 0.15615 -> 0.15215. Chat 19.9 %,
+b2s_far 1.2 % (s8 saturated), everything else, CYCLE_SOURCES, decontam v2 unchanged. Fixing 3 questions per far doc (+50 % answer
+density) is NOT in this step (it would change the generator under resumed cursors); a later, separate step if needed.
+**When / how:** segment 3c runs to its 41B milestone (step 625,619 = the with-chat baseline point under 3c's mix); segment 3d
+continues from that save (continue_from, cursors kept, WARMUP_C=0), like 3b -> 3c.
+**Readouts:** the usual 4090 CHECK + Library FAR-TOLD at 41B (baseline), 42B, 43B.
+**Rule (pre-stated):** WORKS if the mean told 8k of 42B and 43B >= 0.45 and >= 41B + 0.10, with bare num+dot mean <= 35, s8 @8k >= 0.94,
+clk2 16k >= 0.85, and HellaSwag acc not below 41B by > 0.01. NO EFFECT if that mean <= 41B + 0.03: revert the weights and pre-register
+the 3-question generator step. In between: run to 44B and decide on three points. Points that disagree in direction (40B vs 40.5B
+kind) are reported, not read alone.
+**Confounds:** chat cycling (pass 2) and more tokens change together with the share; the 41B baseline is under 3c's mix to limit this.
+
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
 **Why:** segment 3's chat sources did not cycle, so R7's <= 4-epoch sizing never applied: tuluif ran dry at 32.95B, chatsr at 34.43B,
