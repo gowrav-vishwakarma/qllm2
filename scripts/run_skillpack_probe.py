@@ -64,6 +64,8 @@ class Body:
                 z, b, t = self.m._stem(x, 0)
                 z, _ = self.m._run_blocks(z, b, t, None, 0, x)
                 lm, _ = self.m._lm_vector(z, x, b, t)
+                if lm.ndim == 4:   # v16/complex head (cx_m2): (batch, time, model_dim, complex_pair); use its own readout
+                    return self.m(x)[0][0, -1].float()
                 last = lm.raw(b, t, self.m.model_dim)[0, -1].float()
                 return last @ self.m.embed.embed.weight.float().T
             hidden = self.m._hidden_to_lm(x)[0][0, -1].float()
