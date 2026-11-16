@@ -1191,6 +1191,9 @@ def build_argparser():
                         'transformer (Transformer++ baseline, baseline_transformer.py); '
                         'same data/loss/schedule/ckpts; PAM ladder flags are ignored')
     p.add_argument('--mamba_d_model', type=int, default=768)
+    p.add_argument('--tpp_geom', type=str, default='',
+                   help='Transformer++ geometry d_model,n_layer,n_head,d_ff (empty = TransformerConfig defaults, 101.9M); '
+                        '1024,24,16,3168 = 385.75M, -0.02 %% of SCI-1 PAM (386M baselines, 2026-11-16)')
     p.add_argument('--grove_spec', type=str, default='',
                    help='v15 Grove body for --arch grove (v15/hook.py spec string; '
                         "empty = v15.hook.DEFAULT_SPEC, ~102.6M)")
@@ -1431,7 +1434,8 @@ def main():
         model = GDNLM(GDNConfig(vocab_size=cfg.vocab_size))
     elif args.arch == 'transformer':
         from v13_sempty.baseline_transformer import TransformerConfig, TransformerLM
-        model = TransformerLM(TransformerConfig(vocab_size=cfg.vocab_size))
+        tg = dict(zip(('d_model', 'n_layer', 'n_head', 'd_ff'), map(int, args.tpp_geom.split(',')))) if args.tpp_geom else {}
+        model = TransformerLM(TransformerConfig(vocab_size=cfg.vocab_size, **tg))
     elif args.arch == 'grove':
         from v15.hook import DEFAULT_SPEC, build_grove_lm
         model = build_grove_lm(cfg.vocab_size, args.grove_spec or DEFAULT_SPEC)

@@ -71,6 +71,8 @@ INIT_FROM="${INIT_FROM:-}"     # warm start: weights from this ckpt, stream cont
 ARCH="${ARCH:-pam}"            # pam | mamba2 | transformer | grove (set CHRONO=0 OUT_GATE=0 DELTA=0)
 GROVE_SPEC="${GROVE_SPEC:-}"   # v15 Grove body spec for ARCH=grove (empty = v15.hook.DEFAULT_SPEC, ~102.6M)
 MAMBA_N_LAYER="${MAMBA_N_LAYER:-17}"   # 17 x 768 = 102.6M (param-matched to PAM)
+MAMBA_D_MODEL="${MAMBA_D_MODEL:-768}"  # 1024 x 51 layers = 388.1M (+0.6 % of SCI-1 PAM)
+TPP_GEOM="${TPP_GEOM:-}"               # d_model,n_layer,n_head,d_ff; empty = 101.9M default; 1024,24,16,3168 = 385.75M
                                # (NO_DECAY removed 2026-09-07: FAIL at 100M, EXPERIMENTS "R2")
 ANSWER_W="${ANSWER_W:-1}"      # CE weight on answer tokens of synthetic recall/reason docs
                                # (1 = plain LM loss). Micro-bench: recall is learned only
@@ -124,7 +126,8 @@ if [ "$N_LAYERS" != "0" ]; then EXTRA+=(--n_layers "$N_LAYERS"); fi
 if [ "$ANSWER_W" != "1" ]; then EXTRA+=(--answer_weight "$ANSWER_W"); fi
 if [ -n "$BASE_DT_BIAS" ]; then EXTRA+=(--base_dt_bias "$BASE_DT_BIAS"); fi
 if [ -n "$INIT_FROM" ]; then EXTRA+=(--init_from "$INIT_FROM"); fi
-if [ "$ARCH" != "pam" ]; then EXTRA+=(--arch "$ARCH" --mamba_n_layer "$MAMBA_N_LAYER"); fi
+if [ "$ARCH" != "pam" ]; then EXTRA+=(--arch "$ARCH" --mamba_n_layer "$MAMBA_N_LAYER" --mamba_d_model "$MAMBA_D_MODEL"); fi
+if [ -n "$TPP_GEOM" ]; then EXTRA+=(--tpp_geom "$TPP_GEOM"); fi
 if [ -n "$GROVE_SPEC" ]; then EXTRA+=(--grove_spec "$GROVE_SPEC"); fi
 
 # Auto-resume loop: --resume auto picks up <CKPT_DIR>/latest.pt when it exists
@@ -137,6 +140,10 @@ while :; do
   if [ "$attempt" -gt 1 ]; then
     echo "=== ${TAG} resume attempt $attempt $(date -u +%Y-%m-%dT%H:%M:%SZ) ===" | tee -a "$LOG"
   fi
+# gdn (fla) and mamba2 (mamba_ssm 2.2.5) need packages .venv (Py3.9) lacks: default them to ~/.venvs/qllm_gdn when it exists
+# (.venv's exact pins on Py3.11 + fla + mamba_ssm / causal_conv1d from qllm311, same torch 2.8.0+cu128). 2026-11-16: the ctl chain
+# ran from ../qllm_ctl, whose .venv is a link to qllm311; from qllm2 the mamba2 arm would fail to import.
+if [ -z "${PYTHON:-}" ] && { [ "${ARCH:-pam}" = gdn ] || [ "${ARCH:-pam}" = mamba2 ]; } && [ -x "$HOME/.venvs/qllm_gdn/bin/python" ]; then PYTHON=$HOME/.venvs/qllm_gdn/bin/python; fi
 # PYTHON: the gdn arm needs fla: ~/.venvs/qllm_gdn = .venv's exact pins on Python 3.11 + fla 0.3.2 (qllm311's datasets 3.6 / pyarrow 26 deadlock the loader)
 "${PYTHON:-.venv/bin/python}" -u -m v13_sempty.train \
   --preset "$PRESET" \
