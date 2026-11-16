@@ -6105,6 +6105,23 @@ window (no state carries across windows) and its per-gap distance (~1,170 tokens
 jitter on the thesis cells so far -> segment 3 continues from 28B (final after told 8k). The fineweb loss (from 347k) shows mostly in
 the web holdout loss, little in the thesis cells.
 
+## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
+
+**Why:** segment 3's chat sources did not cycle, so R7's <= 4-epoch sizing never applied: tuluif ran dry at 32.95B, chatsr at 34.43B,
+smoltalk2_mid at 38.46B, chatmt2 at 39.88B; from 39.9B the run trained at 0 % chat.
+**Change:** code a31ed81 (CYCLE_SOURCES: a dry parquet source re-opens from its start up to N total passes; the pass number is saved
+as `<name>@pass` beside the exact cursor). Segment 3c = segment 3's mix at the ramp's TARGET shares (chat 19.9 %: smoltalk2_mid 12 %,
+chatmt2 6 %, chatsr 1.5 %, tuluif 0.4 %), no ramp, started from segment 3's latest save (moved to `seg3_end.pt`), CYCLE_SOURCES =
+smoltalk2_mid:4, chatmt2:3 (chatmt's first epoch was its own source), chatsr:4, tuluif:4. Far block, rule docs, decontam v2 unchanged.
+smoltalk2 SFT stays OUT (unseen for the later SFT stage; user 11-14).
+**Verified before launch:** stub test (a31ed81); CPU smoke on the real tuluif stream: one pass 28,433 docs, cursor at the end -> re-opens
+as pass 2 at row 0, counters tuluif@pass 2 / @r 3 after 3 docs.
+**Checks:** the log shows `[cycle] ... pass 2` for all four sources within the first hour; window chat share back to ~20 %
+(Lead's window-mix readout); no source `finished pass N` before the next milestones. Probes at the milestones as before (the far /
+told / reach cells feed the recovery decision, a separate proposal).
+**Closest prior work:** multi-epoch repetition of small high-quality sets (Muennighoff et al. 2023, "Scaling Data-Constrained LMs":
+up to ~4 epochs costs little); plumbing, no claim.
+
 ## far block result part 2: told rule (FAR-TOLD, Library's jsonls) and the rollback decision (13:36 IST 2026-11-12)
 
 | ckpt | told train 8k | told train 2k | a26 2k |
