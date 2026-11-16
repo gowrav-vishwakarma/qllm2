@@ -1818,6 +1818,45 @@ def _blend_interleave_text_iters(
 _CHARS_PER_TOKEN = 3.9   # GPT-2 BPE on English web/books (measured 3.6-4.2)
 
 
+def _parse_cycle_sources(spec: str) -> Dict[str, int]:
+    """CYCLE_SOURCES='smoltalk2_mid:2,chatmt2:3' -> {name: total passes allowed} (empty = no cycling, the old behaviour)."""
+    out = {}
+    for part in filter(None, (p.strip() for p in spec.split(','))):
+        name, _, n = part.partition(':')
+        out[name.strip()] = int(n or 1)
+    return out
+
+
+def _cycle_source(name: str, it: Iterator[str], passes: int, doc_counters: Optional[Dict[str, int]], reopen) -> Iterator[str]:
+    """Re-open a dry parquet-stream source from its start, up to ``passes`` passes in total (2026-11-16: the segment-3 chat
+    sources ran out after one pass although R7 sized them for <= 4 epochs; the run went to 0 % chat at 39.9B).
+
+    The pass number lives in ``doc_counters['<name>@pass']`` (1 = the first pass; saved with the cursor), and the in-pass
+    position in the stream's exact ``@f`` / ``@r`` cursor, which is cleared at each re-open, so a resume lands in the same pass at
+    the same row. ``doc_counters[name]`` keeps counting docs over all passes. Each pass reads the files in the same order."""
+    ek = f'{name}@pass'
+    while True:
+        got = 0
+        for x in it:
+            got += 1
+            yield x
+        p = int(doc_counters.get(ek, 1)) if doc_counters is not None else 1
+        if p >= passes:
+            print(f"[cycle] '{name}' finished pass {p} of {passes}: no more passes", flush=True)
+            return
+        if doc_counters is None:
+            return
+        doc_counters[ek] = p + 1
+        for k in (f'{name}@f', f'{name}@r'):
+            doc_counters.pop(k, None)
+        print(f"[cycle] '{name}' ran dry after pass {p}: re-opening from the start as pass {p + 1} of {passes} "
+              f"(docs so far {doc_counters.get(name, 0):,})", flush=True)
+        it = reopen()
+        if p >= 2 and got == 0:   # a re-opened pass that yields nothing: stop instead of spinning
+            print(f"[cycle] '{name}' pass {p} yielded nothing: stopping", flush=True)
+            return
+
+
 # ── smoltalk2 streaming (format-aware chat/reasoning) ────────────────────────
 
 SMOLTALK2_REPO = 'HuggingFaceTB/smoltalk2'
@@ -3293,6 +3332,9 @@ def load_pretrain_mix(
 
     tagged = []
     web_sources: List[str] = []
+    cycle_passes = _parse_cycle_sources(os.environ.get('CYCLE_SOURCES', ''))
+    if cycle_passes:
+        print(f"[cycle] sources re-open from the start when dry, up to N passes in total: {cycle_passes}", flush=True)
     for s in sources:
         spec = SOURCE_REGISTRY.get(s)
         if spec is None:
@@ -3304,6 +3346,10 @@ def load_pretrain_mix(
             doc_counters=doc_counters, mix_seed=mix_seed,
             fresh_file=stream_fresh_file,
         )
+        if s in cycle_passes:
+            it = _cycle_source(s, it, cycle_passes[s], doc_counters, lambda s=s, spec=spec: _open_source_iter(
+                s, spec, edu_score_min=edu_score_min, fineweb_name=fineweb_name, exclude_holdout=exclude_holdout,
+                holdout_pct=holdout_pct, skip=0, doc_counters=doc_counters, mix_seed=mix_seed))
         if spec['kind'] == 'web':
             web_sources.append(s)
         tagged.append((s, _decontam_wrap(s, it, doc_counters)))
