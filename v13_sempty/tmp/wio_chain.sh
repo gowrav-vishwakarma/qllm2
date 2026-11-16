@@ -104,7 +104,10 @@ step_arm() {  # $1 arm entry; returns 0 = finished (readouts done), 1 = progress
 while true; do
   all=1; prog=0
   # arm by arm to the end (gdn, then nochrono first: the pair Lead reads first); after any progress, back to the first unfinished arm
-  for a in "${ARMS[@]}"; do step_arm "$a"; r=$?; [ $r -ne 0 ] && all=0; [ $r -eq 1 ] && { prog=1; break; }; done
+  # a STARTED arm that is blocked (yield to a CHECK / the user) is waited for, not skipped: the next arm must not start in its place
+  # (2026-11-16: gdn yielded to the 41B CHECK and the loop moved on to nochrono)
+  for a in "${ARMS[@]}"; do step_arm "$a"; r=$?; [ $r -ne 0 ] && all=0; [ $r -eq 1 ] && { prog=1; break; }
+    [ $r -eq 2 ] && [ -d $C/wio_${a%%:*}_main_$H ] && break; done
   [ $all -eq 1 ] && break
   [ $prog -eq 0 ] && { echo "=== all arms blocked, waiting 5 min $(date -u +%FT%TZ)"; sleep 300; }
 done
