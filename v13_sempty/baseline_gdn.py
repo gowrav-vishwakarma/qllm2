@@ -64,7 +64,16 @@ class GDNLM(nn.Module):
         return self.net.embeddings.weight[: self.config.vocab_size]
 
     def _hidden_to_lm(self, input_ids, step_offset: int = 0):
-        hidden = self.net(input_ids=input_ids, use_cache=False).last_hidden_state   # after the final norm
+        # fla's chunked GDN kernel refuses fp32 ("ChunkGatedDeltaRuleFunction does not support float32"). Training runs under the
+        # trainer's bf16 autocast (unchanged: this branch is skipped there); fp32 callers (the trainer's exact val, run_learning_probe,
+        # run_memory_behavioral, fp32 mc_eval) get the backbone in bf16 and the hidden back in fp32 for an fp32 head / CE.
+        # 2026-11-17: before this, every gdn in-training val failed (wio gdn main / decay logs) and the fp32 probes could not run.
+        if input_ids.is_cuda and not torch.is_autocast_enabled('cuda'):
+            with torch.amp.autocast('cuda', dtype=torch.bfloat16):
+                hidden = self.net(input_ids=input_ids, use_cache=False).last_hidden_state
+            hidden = hidden.float()
+        else:
+            hidden = self.net(input_ids=input_ids, use_cache=False).last_hidden_state   # after the final norm
         return hidden, torch.zeros((), device=input_ids.device)
 
     ce_from_lm = Mamba2LM.ce_from_lm

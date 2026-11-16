@@ -53,7 +53,10 @@ class Body:
 
     def __init__(self, model, device):
         self.m, self.dev = model, device
+        # gdn (v13_sempty/baseline_gdn.py) has .net like Mamba-2 and shares its last-logits path; tagged on its own so the log says
+        # gdn, not mamba2. --dilate_where echo acts only on PAM's echo path: a no-op for gdn / mamba2 / transformer (label only).
         self.arch = 'pam' if hasattr(model, '_lm_vector') else (
+            'gdn' if getattr(getattr(model, 'config', None), 'arch', '') == 'gdn' else
             'mamba2' if hasattr(model, 'net') else 'transformer')
 
     @torch.no_grad()
@@ -84,6 +87,9 @@ class Body:
     def state_bytes(self) -> float:
         if self.arch == 'mamba2':
             return MAMBA2_STATE_BYTES
+        if self.arch == 'gdn':   # per layer: heads x head_k x head_v delta state (fp32 at decode); short-conv tails left out
+            c = self.m.config
+            return float(c.n_layer * c.num_heads * c.head_dim * int(c.head_dim * c.expand_v) * 4)
         if self.arch == 'transformer':
             return 0.0
         x = torch.zeros((1, 8), dtype=torch.long, device=self.dev)

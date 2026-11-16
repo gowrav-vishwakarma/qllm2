@@ -786,6 +786,16 @@ class Trainer:
         if max_steps is not None and self.global_step >= max_steps:
             print(f"[resume] already at step {self.global_step} >= {max_steps}; "
                   f"nothing to do", flush=True)
+            if os.environ.get('POST_VAL') == '1':
+                # post-hoc val of a finished run (2026-11-17: every wio gdn val failed in training on fla's fp32 refusal, fixed in
+                # baseline_gdn.py): the SAME loaders / _val_loss as the in-training val, printed as "[post-hoc ...]"; no save
+                for name, loader in [('val', self.val_loader), ('wiki_val', self.wiki_val_loader)] + \
+                        list((self.source_val_loaders or {}).items()):
+                    if loader is None:
+                        continue
+                    vl = self._val_loss(loader)
+                    print(f"  [post-hoc {name} @ step {self.global_step}] val_loss={vl:.4f} "
+                          f"val_ppl={math.exp(min(vl, 20)):.2f}", flush=True)
             return losses
         try:
             steps_per_epoch = len(self.train_loader)

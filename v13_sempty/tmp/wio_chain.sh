@@ -85,22 +85,31 @@ segment() {  # $1 tag, $2 ckpt dir, $3 env (arm spec + schedule), $4 arm name (V
     echo "=== $tag trainer exited before 100 % (crash?), resuming $(date -u +%FT%TZ)"; sleep 60
   done
 }
-readouts() {  # $1 run dir, $2 name
-  local B=$1/latest.pt n=$2 LP D T M; [ -f $B ] || { echo "$n: no checkpoint"; return; }   # local: D / T must not clobber the caller's
+# json_ok: a probe output is complete = it parses (json, or every jsonl line) and is non-empty. Probes write to <out>.part; it is moved
+# into place only when the probe exited 0 AND json_ok, so a crash can never leave a file that counts as done (or that deletes a save).
+json_ok() { $PY -c "
+import json, sys; t = open(sys.argv[1]).read().strip(); assert t
+try: json.loads(t)
+except ValueError: [json.loads(l) for l in t.splitlines() if l.strip()]" "$1" 2>/dev/null; }
+put() { [ "$1" -eq 0 ] && json_ok "$2.part" && mv "$2.part" "$2" || { echo "    probe for $2 failed (exit $1): not kept"; rm -f "$2.part"; }; }
+readouts() {  # $1 run dir, $2 name, $3 arm
+  local B=$1/latest.pt n=$2 LP D T M P; [ -f $B ] || { echo "$n: no checkpoint"; return; }   # local: D / T must not clobber the caller's
+  # the arm's own interpreter: gdn (fla) / mamba2 (mamba_ssm) live in ~/.venvs/qllm_gdn, .venv has neither (Argon / Lead 2026-11-17)
+  P=$PY; case $3 in gdn|mamba2) P=$HOME/.venvs/qllm_gdn/bin/python;; esac
   quiet ${NEED[readouts]}
-  echo "=== $n readouts $(date -u +%FT%TZ)"; mkdir -p logs/wio
+  echo "=== $n readouts ($P) $(date -u +%FT%TZ)"; mkdir -p logs/wio
   LP=logs/wio/v13_sempty_${n}_spread_s7000_t400.json
-  [ -f $LP ] || $PY scripts/run_learning_probe.py --model-type v13_sempty --checkpoint $B --output $LP --suite b2 --tasks shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000 --spread 0,2048,4096,8192 2>&1 | grep -E "per task|free \(A7|saved"
+  [ -f $LP ] || { $P scripts/run_learning_probe.py --model-type v13_sempty --checkpoint $B --output $LP.part --suite b2 --tasks shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000 --spread 0,2048,4096,8192 2>&1 | grep -E "per task|free \(A7|saved|Error"; put ${PIPESTATUS[0]} $LP; }
   D=logs/wio/v13_sempty_clk2_echo_${n}.jsonl
-  [ -s $D ] || $PY scripts/run_skillpack_probe.py --checkpoint $B --variants dilate --dilations 1,8 --dilate_where echo --lengths 8192,16384 --docs 50 --seed 8700 --mem_frac 0.5 --out $D 2>&1 | grep -v "$X" | tail -1
+  [ -s $D ] || { rm -f $D.part; $P scripts/run_skillpack_probe.py --checkpoint $B --variants dilate --dilations 1,8 --dilate_where echo --lengths 8192,16384 --docs 50 --seed 8700 --mem_frac 0.5 --out $D.part 2>&1 | grep -v "$X" | tail -1; put ${PIPESTATUS[0]} $D; }
   T=logs/wio/v13_sempty_${n}_t40_behavioral.json
-  [ -f $T ] || $PY scripts/run_memory_behavioral.py --model-type v13_sempty --checkpoint $B --preset baseline_real_pm --context-lengths 2048,4096,8192,16384 --positions 0,0.5,1 --association-counts 1,4,8 --trials 40 --max-context 16384 --output $T 2>&1 | grep -v scored | tail -1
+  [ -f $T ] || { $P scripts/run_memory_behavioral.py --model-type v13_sempty --checkpoint $B --preset baseline_real_pm --context-lengths 2048,4096,8192,16384 --positions 0,0.5,1 --association-counts 1,4,8 --trials 40 --max-context 16384 --output $T.part 2>&1 | grep -v scored | tail -1; put ${PIPESTATUS[0]} $T; }
   M=logs/wio/v13_sempty_mc_${n}.json
-  [ -f $M ] || $PY scripts/mc_eval.py --ckpt $B --out $M 2>&1 | grep -E '^(hellaswag|arc|piqa)'
+  [ -f $M ] || { $P scripts/mc_eval.py --ckpt $B --out $M.part 2>&1 | grep -E '^(hellaswag|arc|piqa)|Error'; put ${PIPESTATUS[0]} $M; }
   for k in $(ls $1/step_*.pt 2>/dev/null); do   # 3-save mean: s8 on each kept decay save, then the save is deleted (d_drive space)
     LK=logs/wio/v13_sempty_${n}_$(basename $k .pt)_spread_s7000_t400.json
-    [ -f $LK ] || $PY scripts/run_learning_probe.py --model-type v13_sempty --checkpoint $k --output $LK --suite b2 --tasks shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000 --spread 0,2048,4096,8192 2>&1 | grep -E "per task|saved"
-    [ -s $LK ] && rm -f $k
+    [ -f $LK ] || { $P scripts/run_learning_probe.py --model-type v13_sempty --checkpoint $k --output $LK.part --suite b2 --tasks shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000 --spread 0,2048,4096,8192 2>&1 | grep -E "per task|saved|Error"; put ${PIPESTATUS[0]} $LK; }
+    [ -s $LK ] && json_ok $LK && rm -f $k
   done
   [ -s $LP ] && [ -s $D ] && [ -s $T ] && [ -s $M ]   # all four written (an OOM beside the TTS reserve leaves one missing: retried)
 }
@@ -110,7 +119,7 @@ step_arm() {  # $1 arm entry; returns 0 = finished (readouts done), 1 = progress
   if [ ! -f $S/.done ]; then segment wio_${name}_main $S "$spec LR_SCHEDULE=wsd_stable WARMUP=500 TARGET_TOKENS=$STABLE_TOKENS" $name; return $(( $? == 2 ? 2 : 1 )); fi
   [ -s $S/stable_final.pt ] || cp $S/latest.pt $S/stable_final.pt
   if [ ! -f $D/.done ]; then segment wio_${name}_decay $D "$spec LR_SCHEDULE=decay CONTINUE_FROM=$S/stable_final.pt TARGET_TOKENS=$DECAY_TOKENS KEEP_EVERY=500 KEEP_LAST=4" $name; return $(( $? == 2 ? 2 : 1 )); fi
-  if [ ! -f $D/.readouts ]; then quiet ${NEED[readouts]} 10 || return 2; readouts $D wio_${name}_$H && touch $D/.readouts; return 1; fi
+  if [ ! -f $D/.readouts ]; then quiet ${NEED[readouts]} 10 || return 2; readouts $D wio_${name}_$H $name && touch $D/.readouts; return 1; fi
   return 0
 }
 while true; do
