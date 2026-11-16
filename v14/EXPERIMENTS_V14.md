@@ -5153,3 +5153,22 @@ the harness. (unit4 is a little higher, mostly a unit right after a wrong number
 this is reach, not a competing format habit (my first message to Mind / Lead said habit and was withdrawn). Only the 39B sentence
 answers (41 %) are a separate format effect. Told 8k swings by checkpoint in whether the rule survives 8k; read single points
 with that in mind.
+
+### TOLD-MARGIN diagnostic: is the told unit carried, or carried but out-voted by '.'? (PRE-REGISTERED 2026-11-16 20:22 IST, before any code or number; Argon via Lead)
+- One teacher-forced pass, no decoding. FAR-TOLD's docs (A28's, seed 26000, trained wording) at 2k and 8k, 100 docs each.
+  Prefix = the fetched row + the question + " " + the TARGET number. At the next token, read three logit sets: held (warm), noprot,
+  and twin = held + 4 (held - noprot).
+- Units are scored by their FIRST token (" μL" is " μ" + "L"; " μ" is unique within volume, and every mass unit is one token).
+  Train wording quantities: mass (5 units, chance 0.20), volume (3 units, chance 0.33). Chance is reported per doc mix.
+- Per doc: unit_acc = argmax over the same quantity's units is the gold unit; M_id = l(gold) - max l(other units of that quantity);
+  M_gate = l(gold) - l('.'); gate_win = M_gate > 0.
+- Points: 26B, 27B, 344k, 30B, 39B, 40B, 40.5B (+ M11 as the pre-far baseline).
+- **Reading rule (fixed now):** validity first: noprot unit_acc must be ≤ chance + 0.10, else the diagnostic is void.
+  - Twin unit_acc at 8k ≥ 0.70 at a point = the unit is CARRIED there.
+  - ≤ chance + 0.10 = the rule is LOST.
+  - Between = partial.
+  - "Gate drift" is the claim only if unit_acc ≥ 0.70 holds at ALL of 26B / 39B / 40.5B (the low headline points), and those
+    points' twin gate_win rate is lower than 27B / 344k / 40B's.
+  - If the low points have unit_acc ≤ chance + 0.10, the headline swings are carry swings.
+- Closest prior work: logit-lens / probing of in-context rules (e.g. function vectors, Todd et al. 2024). Difference: the probe is
+  the state-fork contrast at a forced answer position in an O(1) state, separating unit identity from the answer-format gate.
