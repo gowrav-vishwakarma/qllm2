@@ -94,7 +94,7 @@ sci1_far_block	sci1_long	2026-11-07	long run segment 2 from M11: b2s_far 0->1.2 
 sci1_seg3	sci1_far_block	2026-11-12	long run segment 3: fineweb100 + chatmt2 replace the dry sources; chat ramp 5.4 -> 19.9 % (IF share tuluif 0.4 %) over 2B; decontam v2	pending	?	94eee16	?	segment 3
 seg3c	sci1_seg3	2026-11-16	segment 3c: chat sources cycle (CYCLE_SOURCES up to 4 epochs) from segment 3 latest, chat at ramp targets 19.9 %	running	-	(this commit)	-	EXPERIMENTS_SEMPY "segment 3c"
 chatoff	sci1_seg3	2026-11-16	chat-off natural experiment: told 8k at 39B / 40B / 40.5B (chat sources dry) vs 30B	NOT implicated: told 8k 0.31 (30B) -> 0.06 / 0.37 / 0.12 at 39B / 40B / 40.5B, chat off; misses mostly bare-number format	91bdc49	29f357b	logs/*sci1_{step_595101,step_610360,seg3_end}_91bdc49*	EXPERIMENTS_SEMPY "chat-off natural experiment"
-wio_gdn	ctl_pam	2026-11-16	wio: Gated DeltaNet 102.51M (fla 0.3.2) at the ctl recipe + far block, 1.0B tokens	pending (pre-registered)	-	-	logs/wio/	EXPERIMENTS_SEMPY "wio"
+wio_gdn	ctl_pam	2026-11-16	wio: Gated DeltaNet 102.51M (fla 0.3.2) at the ctl recipe + far block, 1.0B tokens	running	227f3eb	227f3eb	logs/wio/	EXPERIMENTS_SEMPY "wio"
 wio_nochrono	ctl_pam	2026-11-16	wio: PAM M2 with Chrono off (plain RoPE, readers on RoPE) at the ctl recipe + far block	pending (pre-registered)	-	-	logs/wio/	EXPERIMENTS_SEMPY "wio"
 wio_pam	ctl_pam	2026-11-16	wio: PAM M2 all on at the ctl recipe + far block (far-data equal-data control)	pending (pre-registered)	-	-	logs/wio/	EXPERIMENTS_SEMPY "wio"
 wio_mamba2	ctl_mamba2	2026-11-16	wio: Mamba-2 at the ctl recipe + far block	pending (pre-registered)	-	-	logs/wio/	EXPERIMENTS_SEMPY "wio"

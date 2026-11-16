@@ -6133,6 +6133,18 @@ no "ours" claim against GDN at this scale (stated as a limit). Language (holdout
 worse than gdn by > 0.03 is stated next to any rule claim. Params and tokens are in every table row.
 **Order / cost:** after the chat-off CHECKs; ~3-4.4 h per arm on the 4090 when the card is ours (GDN speed measured in its smoke).
 
+### wio launched (Lead GO, 20:12 IST 2026-11-16; code 227f3eb; tmux mindwio on the 4090, gdn arm first)
+
+- gdn smoke (solo, 1,350 steps at the arm recipe): ~62k tok/s (main ~3.8 h + decay ~0.4 h), peak 11,522 MiB -> NEED_GDN 14,600
+  (measured peak + 3 GB), loss 3.10-3.53 at steps 1,150-1,350 (ctl tpp 3.49 @1000). ctl solo speeds for reference: tpp 77k, mamba2 113k.
+- Environment: gdn in ~/.venvs/qllm_gdn = .venv's exact pins (torch 2.8.0+cu128, datasets 4.0.0, pyarrow 21.0.0) on Python 3.11 +
+  fla 0.3.2 + einops; all other arms in .venv. (qllm311's datasets 3.6 / pyarrow 26 deadlocked the loader.)
+- Sharing: runs beside Library's probes on the VRAM gate. Yields to the user's jobs and to SCI-1 milestone CHECKs (~/.qllm_check_wants_gpu).
+  A yield is a SIGTERM with no save handler: the arm resumes from its last save (SAVE_EVERY 200 = ~13M tokens, ~3.5 min), the data
+  cursor is exact at that save, so the redone steps see the same batches and every arm ends at the same token count (1.0B); only
+  wall time is lost. Speeds are quoted from SOLO windows only (log lines "GPU SOLO / SHARED").
+- Claim rule unchanged from the pre-registration above (c492727).
+
 ## chat-off natural experiment: does chat share push told 8k down? (PRE-REGISTERED 16:04 IST 2026-11-16, before any number; Lead agreed)
 
 **Observation that prompted it:** told 8k (Library's ptwin, n 100) fell 0.45 (27B, chat ~5 %) -> 0.36 (29B) -> 0.31 (30B, chat ~20 %)
