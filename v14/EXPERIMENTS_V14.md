@@ -5179,3 +5179,31 @@ with that in mind.
   - If the low points have unit_acc ≤ chance + 0.10, the headline swings are carry swings.
 - Closest prior work: logit-lens / probing of in-context rules (e.g. function vectors, Todd et al. 2024). Difference: the probe is
   the state-fork contrast at a forced answer position in an O(1) state, separating unit identity from the answer-format gate.
+
+### TOLD-MARGIN RESULT (2026-11-16 21:26 IST; code b4f1bc9; logs/v14_told_margin_<pt>_b4f1bc9_*.{log,jsonl}; 100 docs per cell; chance 0.27 at both lengths (doc mix))
+
+| point | told 8k headline | twin unit_acc 8k | twin gate_win 8k | noprot unit_acc 8k (valid ≤ 0.37) | held unit_acc 8k | twin unit_acc / gate_win 2k |
+|---|---|---|---|---|---|---|
+| M11 | 0.10 | 0.52 | 0.13 | 0.29 | 0.32 | 0.96 / 0.82 |
+| 26B | 0.03 | 0.59 | 0.06 | **0.39 (void)** | 0.41 | 1.00 / 0.83 |
+| 27B | 0.45 | 0.65 | 0.70 | 0.20 | 0.31 | 1.00 / 0.98 |
+| 344k | 0.53 | **0.74** | 0.67 | 0.33 | 0.44 | 0.99 / 0.99 |
+| 30B | 0.31 | 0.69 | 0.39 | 0.33 | 0.39 | 0.98 / 0.97 |
+| 39B | 0.06 | 0.57 | 0.11 | 0.30 | 0.35 | 0.90 / 0.72 |
+| 40B | 0.37 | **0.73** | 0.43 | 0.26 | 0.36 | 0.99 / 0.93 |
+| 40.5B | 0.12 | 0.48 | 0.14 | 0.30 | 0.32 | 0.93 / 0.77 |
+
+**Verdict by the pre-registered rule:**
+- Validity holds at every 8k point except 26B (noprot 0.39 > 0.37), where the diagnostic is void.
+- "Gate drift" is NOT the claim: the low headline points (39B 0.57, 40.5B 0.48; 26B void) are below 0.70.
+- "Lost" is NOT the claim either: every point is above chance + 0.10 = 0.37.
+- So the low points are PARTIAL carry: the told unit is still identifiable from the twin at 8k (0.48-0.59 vs chance 0.27), but
+  only 344k and 40B reach "carried" (≥ 0.70).
+- What tracks the headline is the gate. twin gate_win at 8k is 0.06-0.14 at the low points vs 0.39-0.70 at the high ones; unit
+  identity moves less (0.48-0.59 vs 0.65-0.74).
+- At 2k both are near ceiling everywhere (unit 0.90-1.00).
+- The warm read (held) carries almost no identity at 8k (0.31-0.44, about noprot). Only the state-fork contrast recovers it.
+Reading: at 8k the told rule fades in degree, not all-or-none. The unit's identity survives partly and the twin can still read it,
+but its margin over the no-protocol '.' answer collapses at the low checkpoints. For Mind's 3d this says the lever is the carry
+STRENGTH (a stronger margin), not identity; a pure gate fix would not rescue the 0.5-level identity. Closest prior work as
+pre-registered (function-vector probes).
