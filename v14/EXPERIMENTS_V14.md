@@ -5095,3 +5095,17 @@ Step back: the mind can turn a prose rule it just read into examples it reads we
 VALUE, which suggests demos that carry the unit without a competing number (e.g. "{x} -> {x} {u}" with x = the row's own
 field name) as the next variant. That needs its own pre-registration. Closest prior work: SG-ICL (Kim et al. 2022); the difference
 is the demos are written through the O(1) state's rule fork into the session, which the far read then uses.
+
+### A32c: split-alpha read + number-free demos (PRE-REGISTERED 2026-11-16 19:10 IST, before any A32c code or number)
+- **Cause (post-hoc, from A32b's jsonl; Argon's reading, checked by Library):** on 344k, 8 of the 20 a26 2k docs that twin got
+  right and a32b got wrong have the integer and "." right and only the decimal wrong; on 30B it is 6 of 19. The wrong decimal equals
+  one of the three demo decimals in 6/8 and 5/6 (chance ~1/3). So the contrast (alpha 4 on every token) pulls in the demos' digits.
+- **Arms**, same docs / bodies / cells as A32b (344k + 30B; a26 2k, train 8k; 100 docs; A28's docs, seed 26000):
+  - a32b: reference, rerun from the same code;
+  - split: same demos, alpha 0 (warm) while the decoded token is a digit or ".", alpha 4 otherwise (the unit);
+  - nonum: demos with no number, "Report rule.\nn -> n {u}" x3 (the unit still written by the mind at t0), alpha 4;
+  - twin: today's read (baseline).
+- **Bar:** on the a26 2k cell, the best of split / nonum ≥ twin + 0.10 on BOTH bodies, and the same arm on train 8k ≥ a32b − 0.05
+  (it keeps the far gain). Otherwise plumbing / not met.
+- Closest prior work: context-aware decoding with an adaptive alpha (CAD, Shi et al. 2023; AdaCAD 2024). Difference: the alpha is
+  switched by the token's TYPE (copied number vs convention) inside a state-fork read whose demos the mind wrote itself.
