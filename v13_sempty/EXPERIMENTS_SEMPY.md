@@ -6105,7 +6105,7 @@ window (no state carries across windows) and its per-gap distance (~1,170 tokens
 jitter on the thesis cells so far -> segment 3 continues from 28B (final after told 8k). The fineweb loss (from 347k) shows mostly in
 the web holdout loss, little in the thesis cells.
 
-## chat-off natural experiment: does chat share push told 8k down? (PRE-REGISTERED 16:12 IST 2026-11-16, before any number; Lead agreed)
+## chat-off natural experiment: does chat share push told 8k down? (PRE-REGISTERED 16:04 IST 2026-11-16, before any number; Lead agreed)
 
 **Observation that prompted it:** told 8k (Library's ptwin, n 100) fell 0.45 (27B, chat ~5 %) -> 0.36 (29B) -> 0.31 (30B, chat ~20 %)
 while reach recovered. Segment 3's chat sources then ran dry one by one (tuluif 32.95B, chatsr 34.43B, smoltalk2_mid 38.46B, chatmt2
