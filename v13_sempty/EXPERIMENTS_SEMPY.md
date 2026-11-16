@@ -6242,6 +6242,9 @@ pure gate flip. A gate-only fix would cap near 0.5; carry strength is the target
 **Added secondary readout for 3d (reported, not a bar; the rule above is unchanged):** unit pick and gate_win at 41B / 42B / 43B. If 3d
 WORKS by the rule, gate_win should rise with it; a told 8k gain with flat gate_win is reported as unexplained.
 
+**3d baseline, 41B (3c mix, step 625,619, CHECK done 21:02 IST):** s8 @8k 0.941 | skill @8k 0.610 | clk2 16k 0.85 | clk2 32k-run @16k 0.52 |
+t40 16k 0.919 | HS / ARC-e / PIQA acc 0.319 / 0.554 / 0.628 (386M PAM, 41.0B tokens). Told 8k + TOLD-MARGIN: Library (m41far).
+
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
 **Why:** segment 3's chat sources did not cycle, so R7's <= 4-epoch sizing never applied: tuluif ran dry at 32.95B, chatsr at 34.43B,
