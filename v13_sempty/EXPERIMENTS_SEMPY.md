@@ -6105,6 +6105,22 @@ window (no state carries across windows) and its per-gap distance (~1,170 tokens
 jitter on the thesis cells so far -> segment 3 continues from 28B (final after told 8k). The fineweb loss (from 347k) shows mostly in
 the web holdout loss, little in the thesis cells.
 
+## chat-off natural experiment: does chat share push told 8k down? (PRE-REGISTERED 16:12 IST 2026-11-16, before any number; Lead agreed)
+
+**Observation that prompted it:** told 8k (Library's ptwin, n 100) fell 0.45 (27B, chat ~5 %) -> 0.36 (29B) -> 0.31 (30B, chat ~20 %)
+while reach recovered. Segment 3's chat sources then ran dry one by one (tuluif 32.95B, chatsr 34.43B, smoltalk2_mid 38.46B, chatmt2
+39.88B), so its last saves are a free chat-off test.
+**Points:** 39B (step_595101: chat ~6 %, chatmt2 only, for ~0.5B), 40B (step_610360: 0 % chat for ~0.1B), 40.5B (seg3_end.pt:
+0 % chat for ~0.6B). Each gets the 4090 CHECK (s8 spread, t40, skill pack, clk2, benchmarks) and Library's FAR-TOLD (told 2k / 8k,
+a26 2k), same protocol as 29B / 30B.
+**Reading rule (told 8k, the headline):** chat IMPLICATED if 40.5B reaches >= 0.45 (27B's level; +0.14 over 30B, ~2.8 sigma at n 100)
+with s8 @8k and clk2 16k not lower than 30B by more than 0.05; NOT implicated if 40.5B <= 0.36; in between = unresolved, segment 3c's
+41B / 42B milestones decide. Single-checkpoint jitter is real (26B 0.03), so a point counts only if 40B and 40.5B agree in direction.
+**Action:** implicated -> propose a lower chat share for 3c with the freed share going to far rule docs (b2s_far / proto_far), argued
+with Lead before any change; otherwise chat stays at 19.9 % (user: base model WITH chat).
+**Confounds stated:** more tokens (30B -> 40.5B) and fineweb100 at a higher share also change between the points; the test cannot
+separate "chat removed" from "web added".
+
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
 **Why:** segment 3's chat sources did not cycle, so R7's <= 4-epoch sizing never applied: tuluif ran dry at 32.95B, chatsr at 34.43B,

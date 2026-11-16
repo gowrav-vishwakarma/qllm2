@@ -93,3 +93,4 @@ s8reg_C3	s8reg_C2	2026-11-06	0.25B rule-x2 decay from M9 (C2 recipe), saves ever
 sci1_far_block	sci1_long	2026-11-07	long run segment 2 from M11: b2s_far 0->1.2 % + proto_far 0->0.8 % ramped over 2B (packer hold, WARMUP 0); headline s8 @8k untrained	running	?	8b2679d	?	far block
 sci1_seg3	sci1_far_block	2026-11-12	long run segment 3: fineweb100 + chatmt2 replace the dry sources; chat ramp 5.4 -> 19.9 % (IF share tuluif 0.4 %) over 2B; decontam v2	pending	?	94eee16	?	segment 3
 seg3c	seg3	2026-11-16	segment 3c: chat sources cycle (CYCLE_SOURCES up to 4 epochs) from segment 3 latest, chat at ramp targets 19.9 %	running	-	(this commit)	-	EXPERIMENTS_SEMPY "segment 3c"
+chatoff	seg3	2026-11-16	chat-off natural experiment: told 8k at 39B / 40B / 40.5B (chat sources dry) vs 30B	running	-	-	-	EXPERIMENTS_SEMPY "chat-off natural experiment"
