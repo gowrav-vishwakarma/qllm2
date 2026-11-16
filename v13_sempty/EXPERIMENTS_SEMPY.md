@@ -6149,6 +6149,22 @@ with Lead before any change; otherwise chat stays at 19.9 % (user: base model WI
 **Confounds stated:** more tokens (30B -> 40.5B) and fineweb100 at a higher share also change between the points; the test cannot
 separate "chat removed" from "web added".
 
+### chat-off: CHECK cells (4090, 18:51 IST 2026-11-16; told 8k from Library's FAR-TOLD still pending, no verdict yet)
+
+| point (chat share) | step | s8 @8k | skill @8k | clk2 16k 8x+c4 | clk2 32k-run @16k | t40 16k | HS / ARC-e / PIQA acc |
+|---|---|---|---|---|---|---|---|
+| 30B (~20 %) | 457,770 | 0.949 | 0.590 | 0.86 | 0.64 | 0.803 | 0.317 / 0.553 / 0.626 |
+| 39B (~6 %) | 595,101 | 0.941 | 0.615 | 0.89 | 0.62 | 0.817 | 0.318 / 0.543 / 0.640 |
+| 40B (0 %, ~0.1B) | 610,360 | 0.986 | 0.795 | 0.91 | 0.68 | 0.728 | 0.323 / 0.561 / 0.640 |
+| 40.5B (0 %, ~0.6B) | seg3_end | 0.961 | 0.635 | 0.90 | 0.44 | 0.789 | 0.323 / 0.558 / 0.651 |
+
+386M PAM; tokens = the point's label. Cells parsed the same way as the 29B / 30B table (s8 = mean of the two b2 @8192 accuracies, n 400
+each; skill = skillpack A_state @8192, n 200; clk2 = clk2_echo free 8x+c4, n 50; t40 16k = t40_long all-cell mean). Outputs in logs/
+(learning_probes, memory_probes, diag, sci1) under `sci1_{step_595101,step_610360,seg3_end}_91bdc49`.
+**Reading so far:** the rule's side conditions hold (s8 and clk2 at 40.5B are not below 30B by > 0.05). 40B's skill @8k 0.795 is one
+point; 40.5B is back at 0.635, so the two disagree and neither counts alone (the single-checkpoint jitter seen at 26B). The verdict
+waits on told 8k.
+
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
 **Why:** segment 3's chat sources did not cycle, so R7's <= 4-epoch sizing never applied: tuluif ran dry at 32.95B, chatsr at 34.43B,
