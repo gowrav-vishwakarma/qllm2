@@ -6219,8 +6219,20 @@ PAM side = SCI-1's existing CHECK at those steps (M1 s8 D 0.322, M4 s8 D 0.782, 
 **Claim rule (pre-stated):** "PAM learns rules the baselines do not, at equal size and data" stands if PAM's s8 @8k beats BOTH baselines
 by >= 0.10 at >= 3 of the 4 milestones, and at M4. Language: PAM's M4 holdout within +0.03 of the better baseline counts as "matched"
 (bar 2 tolerance); worse by > 0.03 is stated next to any rule claim. Benchmarks are reported, not bars. Params and tokens in every row.
-**Limits stated:** LR 8e-4 is PAM's tuned LR, used unchanged for the baselines (ctl did the same at 1.2e-3); no per-baseline LR sweep.
+**Limits stated:** (superseded by the AMENDMENT below: an LR check per baseline is added; PAM's 8e-4 was width-scaled, not tuned.)
 Rows end at 4B; beyond that the page uses a reference block with no claim.
+**AMENDMENT (22:00 IST 2026-11-16, Mind + Lead, before any b386 run): LR check per baseline, and a correction.**
+- Correction: SCI-1's LR 8e-4 was NOT tuned at 386M. It was width-scaled from the 103M runs' 1.2e-3 (~1 / width; "no screen at this
+  size, stated", SCI-1 pre-registration above). "PAM's tuned LR" in Limits is wrong; PAM gets no re-tuning either way.
+- Prior evidence (102M, 100M tokens, phase-3b mix, not this mix): T++ screen 2e-4 / 6e-4 / 1.2e-3 -> 4.5543 / 4.1379 / **4.0733**
+  (tflr @e072a8f); Mamba-2 screen 2e-4 / 6e-4 / 1.2e-3 -> 1.2e-3 (m2lr @3f69057). Both optima sat at the TOP edge of the grid, so the
+  true optimum may be higher. Width-scaled to d 1024: T++ 1.2e-3 x 672/1024 = 7.9e-4, Mamba-2 1.2e-3 x 768/1024 = 9.0e-4. A short screen
+  also once picked the wrong LR for PAM (the 100M screen, "Scoreboard result" 2026-10-29: short screens favour higher LRs).
+- **Check:** per baseline, stage A only (0.5B, SOURCES_A, warmup 2,000, constant LR) at 5.7e-4 / 8e-4 / 1.13e-3 / 1.6e-3 (sqrt-2 steps
+  around the width-scaled optimum, one step past the old grid's top edge). Pick = lowest stage-A holdout at 0.5B; a HIGHER LR must win
+  by > 0.01 nats (the old screens' guard against short-screen bias), else the lower one. If 1.6e-3 wins, add 2.26e-3 before choosing.
+  Continue only the pick through stage B to 4B. The non-picked arms are reported (holdout at 0.5B) in the b386 table.
+- Cost: 4 x 0.5B per baseline = 2B tokens each, added to the 4B run (estimate when the smoke gives speeds).
 **Cost / order:** geometry smoke on the 4090 between wio arms (b386_smoke, tmux mindb386, after the gdn arm's readouts) measures params,
 peak VRAM and tok/s; the run's box and time are the user's call through Lead (after the release decay, or earlier).
 
