@@ -5130,3 +5130,24 @@ the format habit from the reach.
   (FAR-TOLD a26w2k plain arm), and its unit from the a32b contrast (unit 0.94 / 0.91). So split is roughly capped at
   0.44 x 0.94 = 0.41 on 344k and 0.70 x 0.91 = 0.64 on 30B. The 344k bar (twin 0.31 + 0.10 = 0.41) sits at that cap: a split miss
   on 344k may be the warm read's value ceiling, not the method. The result will say so beside the pre-registered verdict.
+
+### FAR-TOLD unit4 diagnostic (secondary; 2026-11-16 19:48-20:17 IST, code e381df8; logs/v14_fartold_unit4_<pt>_e381df8_*.{log,jsonl}; train 8k, 100 docs, twin read, 16 free tokens)
+
+| point | headline right | unit4 | unit_after | after_dot | verbose | bare num+dot |
+|---|---|---|---|---|---|---|
+| M11 | 0.10 | 0.12 | 0.10 | 0 | 0.05 | 62 |
+| 26B | 0.03 | 0.06 | 0.03 | 0 | 0.04 | 75 |
+| 27B | 0.45 | 0.49 | 0.45 | 0 | 0.03 | 20 |
+| 344k | 0.53 | 0.58 | 0.53 | 0 | 0.00 | 21 |
+| 29B | 0.36 | 0.55 | 0.36 | 0 | 0.12 | 11 |
+| 30B | 0.31 | 0.33 | 0.31 | 0 | 0.00 | 55 |
+| 39B | 0.06 | 0.08 | 0.06 | 0 | 0.41 | 36 |
+| 40B | 0.37 | 0.40 | 0.37 | 0 | 0.00 | 50 |
+| 40.5B | 0.12 | 0.12 | 0.12 | 0 | 0.16 | 63 |
+
+Reading: after_dot is 0 at every point, so Package._gen's digit-dot hold hides no unit. A bare "56.2." is a finished answer (the free
+read goes on "\n\nQuestion: ..."). unit_after equals the headline everywhere, so the pre-registered `right` measures the model and not
+the harness. (unit4 is a little higher, mostly a unit right after a wrong number.) The told-8k swings are real format choices: the
+mind answers in the bare-value format (the 20 % no-protocol proto4k docs train exactly " 56.2.", protocol_docs.py:177; Argon via
+Lead) or, at 39B, in a sentence. Which format wins moves between neighbouring checkpoints. Told 8k is a format-choice measure on
+top of reach; read single points with that in mind.
