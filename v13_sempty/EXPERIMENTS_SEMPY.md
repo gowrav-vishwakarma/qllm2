@@ -6125,7 +6125,7 @@ trains while the user's own GPU jobs are on the card). Readouts in logs/wio/; to
 **Readouts per arm:** s8 @8k (b2 suite, 400 trials, seed 7000, spread 0 / 2k / 4k / 8k; **3-save mean** over the decay saves at
 +500 / +1000 / end, with the margin); told 2k / 8k (ptwin); needles t40 8k / 16k; clk2 8k / 16k; holdout loss; HS / ARC-e / PIQA;
 state MB at decode.
-**CLARIFICATION of the 3-save mean (02:12 IST 2026-11-17, Mind + Lead; recorded after gdn's readouts and BEFORE any other arm's
+**CLARIFICATION of the 3-save mean (02:06 IST 2026-11-17, Mind + Lead; recorded after gdn's readouts and BEFORE any other arm's
 readout exists):** KEEP_EVERY 500 counts from step 0, so the decay saves land at absolute steps 14,000 / 14,500 / 15,000 + end
 (15,259), not at decay +500 / +1000. The 3-save mean = the mean of the LAST THREE (14,500 / 15,000 / end), for every arm; 14,000 is
 reported but not in the mean. gdn: (0.37375 + 0.4075 + 0.44375) / 3 = 0.4083. So rule 1's bars for `pam`: s8 @8k 3-save mean
