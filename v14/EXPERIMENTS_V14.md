@@ -5130,7 +5130,7 @@ the format habit from the reach.
   (FAR-TOLD a26w2k plain arm), and its unit from the a32b contrast (unit 0.94 / 0.91). So split is roughly capped at
   0.44 x 0.94 = 0.41 on 344k and 0.70 x 0.91 = 0.64 on 30B. The 344k bar (twin 0.31 + 0.10 = 0.41) sits at that cap: a split miss
   on 344k may be the warm read's value ceiling, not the method. The result will say so beside the pre-registered verdict.
-- **A32c implementation bug, found before any verdict (2026-11-16 20:30 IST; Argon via Lead, checked in the code):** the first
+- **A32c implementation bug, found before any verdict (2026-11-16 20:29 IST; Argon via Lead, checked in the code):** the first
   split arm (41a7e17) took EVERY digit / '.' piece from the warm read, including the sentence-end '.' after a finished number, so the
   unit never got alpha 4. On the partial 344k run (170 split rows) 37 ended "NN.N." with no unit and 7 looped (" 73.9.1.1.1").
   This is an error against the pre-registered spec, not a result. Those split rows are INVALID; the partial run is kept as

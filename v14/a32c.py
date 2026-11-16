@@ -3,7 +3,7 @@
   twin    today's told read (held session vs noprot, alpha 4)
   a32b    held + self-written numeric demos vs noprot, alpha 4 (reference rerun)
   split   the a32b session, but the token is taken from the WARM read (alpha 0) while it continues the answer number (digits,
-          one '.', the fraction digits: num_step), else from the alpha 4 contrast (the unit). Fixed 20:30 IST; the first version
+          one '.', the fraction digits: num_step), else from the alpha 4 contrast (the unit). Fixed 20:29 IST; the first version
           (41a7e17) took every digit / '.' piece warm, incl. the sentence-end '.', and its split rows are INVALID.
   nonum   held + number-free demos "Report rule.\\nn -> n {u}" x3 (unit written by the mind at t0) vs noprot, alpha 4
 Bar: a26 2k best of split / nonum >= twin + 0.10 on BOTH bodies, and the same arm on train 8k >= a32b - 0.05.
@@ -36,7 +36,7 @@ ALPHA = 4.0
 
 
 def num_step(sofar, piece):
-    """True when the warm read's next piece CONTINUES the answer number (fix 2026-11-16 20:30 IST, Argon via Lead: the first
+    """True when the warm read's next piece CONTINUES the answer number (fix 2026-11-16 20:29 IST, Argon via Lead: the first
     version took ANY digit / '.' piece warm, so the sentence-end '.' after a finished number went warm and the unit never got
     alpha 4). Allowed: digits at the start; more digits or ONE '.' after the integer; digits right after that '.'. Nothing after."""
     s = sofar.strip(); p = piece.strip() if not sofar.strip() else piece
