@@ -6235,6 +6235,12 @@ implicated) stands; it rests on the numbers, not on the reading.
 Two refinements (Lead): only 39B's sentence answers (41 %) are a separate FORMAT effect; and told 2k swings too (0.38 / 0.88 / 0.69
 at 39B / 40B / 40.5B), so the told-protocol signal sits near the decision edge even at trained distance. In short: told-rule carry is
 weak and flips by checkpoint, while example-rule reach (s8) and recall (clk2) hold. The WORKS / NO EFFECT rule is unchanged.
+**TOLD-MARGIN (Library b47afc1, teacher-forced, told 8k twin):** the told unit is still picked above chance (0.27) at every point,
+0.48-0.59 at the low points (M11, 39B, 40.5B; 26B void) vs 0.69-0.74 at 30B / 344k / 40B, but its margin over '.' (the no-protocol
+answer) collapses there: gate_win 0.06-0.14 vs 0.39-0.70. So the low points are PARTIAL carry with a weak margin: not a lost rule, not a
+pure gate flip. A gate-only fix would cap near 0.5; carry strength is the target, which more far-distance supervision (3d) addresses.
+**Added secondary readout for 3d (reported, not a bar; the rule above is unchanged):** unit pick and gate_win at 41B / 42B / 43B. If 3d
+WORKS by the rule, gate_win should rise with it; a told 8k gain with flat gate_win is reported as unexplained.
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
