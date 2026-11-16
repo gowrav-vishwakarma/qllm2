@@ -13,6 +13,7 @@
 #   instruction), rerun it with --resume; arms already in the JSON are kept.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+[ -f scripts/require_clean_tree.sh ] || { echo "launch guard scripts/require_clean_tree.sh missing: REFUSE (restore: git show HEAD:scripts/require_clean_tree.sh > scripts/require_clean_tree.sh)"; exit 1; }   # fail closed (2026-11-16: the guard was found deleted)
 source scripts/require_clean_tree.sh
 
 ARMS="${ARMS:-echo,tpp}"
@@ -53,6 +54,7 @@ done
 
 # Re-check after the wait: code committed while we waited must be clean too,
 # or the hash in the log name would not describe the code that runs.
+[ -f scripts/require_clean_tree.sh ] || { echo "launch guard scripts/require_clean_tree.sh missing: REFUSE (restore: git show HEAD:scripts/require_clean_tree.sh > scripts/require_clean_tree.sh)"; exit 1; }   # fail closed (2026-11-16: the guard was found deleted)
 source scripts/require_clean_tree.sh
 HASH=$(git rev-parse --short HEAD)
 STAMP=$(date +%Y%m%d_%H%M)
