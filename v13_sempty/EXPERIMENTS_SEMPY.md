@@ -6144,6 +6144,11 @@ worse than gdn by > 0.03 is stated next to any rule claim. Params and tokens are
   cursor is exact at that save, so the redone steps see the same batches and every arm ends at the same token count (1.0B); only
   wall time is lost. Speeds are quoted from SOLO windows only (log lines "GPU SOLO / SHARED").
 - Claim rule unchanged from the pre-registration above (c492727).
+- 20:49 IST: chain restarted at 20:49 with the scheduler fix 90711f4 (a started, blocked arm is waited for, not skipped: gdn had yielded to the
+  41B CHECK and the loop moved on to nochrono). Pinned 227f3eb with ALLOW_CODE_DRIFT=1: the drift since 227f3eb is only wio_chain.sh,
+  the lineage tsv and three new Library probe files (v14/a32c.py, told_margin.py, check_layout.py) that no training path imports.
+  Found scripts/require_clean_tree.sh deleted in the shared checkout (not by Mind; restored from HEAD), so the guard was silently off
+  for the gdn start from ~20:15; the trainer code was at 227f3eb throughout (git diff checked).
 
 ## chat-off natural experiment: does chat share push told 8k down? (PRE-REGISTERED 16:04 IST 2026-11-16, before any number; Lead agreed)
 
