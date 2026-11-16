@@ -6216,6 +6216,12 @@ clk2 16k >= 0.85, and HellaSwag acc not below 41B by > 0.01. NO EFFECT if that m
 the 3-question generator step. In between: run to 44B and decide on three points. Points that disagree in direction (40B vs 40.5B
 kind) are reported, not read alone.
 **Confounds:** chat cycling (pass 2) and more tokens change together with the share; the 41B baseline is under 3c's mix to limit this.
+**unit4 basis (Library c7b0f84, 9 points; Lead's GO condition, confirmed by Lead 20:03 IST):** the stop rule hides no unit (after_dot = 0.000 at every
+point) and unit_after equals the told 8k headline at every point, so the missing unit is a real model format choice, not a scorer
+artifact. The bare " 56.2." answers are complete answers in the no-protocol format that proto4k's 20 % no-protocol docs train
+(protocol_docs.py:177); 39B also gives 41 % sentence answers. **Next lever if 3d shows NO EFFECT (not in this step):** a generator variant
+in which every proto4k / proto_far doc carries the protocol, or the no-protocol docs are labelled, removing the competing habit (a new
+data version with fresh cursors; Library's suggestion, pre-register separately).
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
