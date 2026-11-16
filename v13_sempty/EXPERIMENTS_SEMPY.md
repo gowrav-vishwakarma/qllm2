@@ -6320,6 +6320,12 @@ PRICE on the 4090 at these speeds (stage-A 4-LR screen = 2B; main = the chosen L
 tpp 20.0 h + 35.0 h = 55 h; m2 17.0 h + 29.8 h = 47 h; together ~102 h (~4.2 days of the card). Optional 0.25B decay from M4: tpp 2.5 h,
 m2 2.1 h, plus PAM's (386M PAM on the 4090 not measured; 6000 speed applies if run there): ~4.6 h + PAM, over Lead's ~3 h lean.
 tpp at 20.5 GB peak needs the whole 4090 (no neighbour under the + 3 GB rule); m2 17.4 GB leaves ~3 GB. The 6000 would be faster.
+**PLACEMENT (PROVISIONAL, Lead 03:2x IST 2026-11-17, pending the user's word; nothing launches before wio finishes):** the 4-LR
+screen stays as amended (no cut). (1) After wio's last arm, the 4090 runs the stage-A LR screens (tpp ~20 h, m2 ~17 h), resumable,
+yielding to milestone CHECKs and the user's jobs; Library's probes fit between arms. (2) The 3.5B main continuations go on the 6000
+after SCI-1's release decay if the user agrees, else on the 4090. (3) The optional 0.25B decay branch is decided after the mains.
+A 5-min 6000 speed smoke of the 386M tpp / m2 runs only in a gap that does not disturb 3d (the card is full during 3d), likely the
+release-decay gap.
 
 ## SCI-1 segment table (21:58 IST 2026-11-16; steps / tokens from the checkpoints' own global_step / global_tokens, 65,536 tokens per step from step 0)
 
