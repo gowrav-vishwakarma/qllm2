@@ -6133,7 +6133,7 @@ no "ours" claim against GDN at this scale (stated as a limit). Language (holdout
 worse than gdn by > 0.03 is stated next to any rule claim. Params and tokens are in every table row.
 **Order / cost:** after the chat-off CHECKs; ~3-4.4 h per arm on the 4090 when the card is ours (GDN speed measured in its smoke).
 
-### wio launched (Lead GO, 20:12 IST 2026-11-16; code 227f3eb; tmux mindwio on the 4090, gdn arm first)
+### wio launched (Lead GO, 20:09 IST 2026-11-16; code 227f3eb; tmux mindwio on the 4090, gdn arm first)
 
 - gdn smoke (solo, 1,350 steps at the arm recipe): ~62k tok/s (main ~3.8 h + decay ~0.4 h), peak 11,522 MiB -> NEED_GDN 14,600
   (measured peak + 3 GB), loss 3.10-3.53 at steps 1,150-1,350 (ctl tpp 3.49 @1000). ctl solo speeds for reference: tpp 77k, mamba2 113k.
