@@ -6238,6 +6238,18 @@ Rows end at 4B; beyond that the page uses a reference block with no claim.
   by > 0.01 nats (the old screens' guard against short-screen bias), else the lower one. If 1.6e-3 wins, add 2.26e-3 before choosing.
   Continue only the pick through stage B to 4B. The non-picked arms are reported (holdout at 0.5B) in the b386 table.
 - Cost: 4 x 0.5B per baseline = 2B tokens each, added to the 4B run (estimate when the smoke gives speeds).
+**NOTE (22:05 IST 2026-11-16, Argon via Lead; accepted points, before any b386 run):**
+- (A) Mamba-2 geometry: the published Mamba-2 370M is d_model 1024 x 48 layers, d_intermediate 0, tied embeddings (verified:
+  huggingface.co/state-spaces/mamba2-370m config.json; Mamba-1 370M the same). Ours, 1024 x 51 = 388.1M, is that shape + 3 layers to match
+  params; cite it so. Argon's alternative 1280 x 31 (381.4M, -1.15 %, the same d / L ratio as our 102.6M 768 x 17) is smoked too. **Decision
+  rule, set now:** keep 1024 x 51 unless its measured tok/s is below 0.75x that of 1280 x 31 at the same micro-batch; decided at the smoke,
+  before the LR screen, and never changed after.
+- (B) LR: covered by the 4-point screen above.
+- (C) Mix: M1-M4 contain no far-block docs for PAM either (the far block starts at 11B), so b386 is like-for-like on data. The far-block
+  comparison at equal data is carried by wio at 103M; the release row (~43B) has NO same-size baseline, stated on the page.
+- (D) Decay: M1-M4 compare constant-LR saves for all three bodies. Optional, priced with the rest (Lead leans yes if <= ~3 h in total): a
+  0.25B decay branch from M4 for all three (PAM from sci1_main step_061036 on d_drive), same decay schedule, read with the full CHECK, to give
+  a decayed same-size row for benchmarks.
 **Cost / order:** geometry smoke on the 4090 between wio arms (b386_smoke, tmux mindb386, after the gdn arm's readouts) measures params,
 peak VRAM and tok/s; the run's box and time are the user's call through Lead (after the release decay, or earlier).
 
