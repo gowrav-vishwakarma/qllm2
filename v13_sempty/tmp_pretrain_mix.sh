@@ -87,6 +87,7 @@ RESUME_LOG="${RESUME_LOG:-}"           # append to an existing run log instead o
 
 # Refuse uncommitted code / code drift from a pinned run (PIN_HASH = the
 # commit an existing CKPT_DIR/RESUME_LOG is named after).
+[ -f scripts/require_clean_tree.sh ] || { echo "launch guard scripts/require_clean_tree.sh missing: REFUSE (restore: git show HEAD:scripts/require_clean_tree.sh > scripts/require_clean_tree.sh)"; exit 1; }   # fail closed (2026-11-16: the guard was found deleted, so source only warned)
 source scripts/require_clean_tree.sh "${PIN_HASH:-}"
 HASH=$(git rev-parse --short HEAD)
 STAMP=$(date +%Y%m%d_%H%M)

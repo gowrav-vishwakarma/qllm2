@@ -35,6 +35,7 @@ SCREEN="${SCREEN:-scratch}"
 ARMS="${ARMS:?set ARMS, e.g. ARMS=\"lr2e-4:LR=2e-4\" (see header)}"
 read -ra BASE_ENV <<< "${BASE:-}"
 HASH="${SCREEN_HASH:-$(git rev-parse --short HEAD)}"   # pin on relaunch
+[ -f scripts/require_clean_tree.sh ] || { echo "launch guard scripts/require_clean_tree.sh missing: REFUSE (restore: git show HEAD:scripts/require_clean_tree.sh > scripts/require_clean_tree.sh)"; exit 1; }   # fail closed (2026-11-16: the guard was found deleted, so source only warned)
 source scripts/require_clean_tree.sh "$HASH"           # committed code == pinned code
 DRV_LOG="logs/v13_sempty_${SCREEN}_driver_${HASH}.log"
 exec > >(tee -a "$DRV_LOG") 2>&1
