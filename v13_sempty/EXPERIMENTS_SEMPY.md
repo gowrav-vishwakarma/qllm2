@@ -6166,6 +6166,27 @@ worse than gdn by > 0.03 is stated next to any rule claim. Params and tokens are
   (default '') and uses it inside the `arch == 'transformer'` branch; the gdn / pam / nochrono / mamba2 paths are byte-identical. The gdn
   main's weights came from ONE trainer process launched 21:08 IST at 89aff04 (before that change; it resumed from the step-200 save of
   the 20:22 start), which ran to step 13,733 without restart, so its weights were produced entirely before the change.
+- 01:35-01:45 IST 2026-11-17: d_drive FULL + gdn READOUT FIXES (Lead; Argon found the readout issues, Lead verified (1) and (2)).
+  d_drive hit 100 % (from_6000 copies); the gdn decay crashed at its final save 3x, then finished at 01:37 after 43 GB were freed
+  (Library 17 GB of lib_ weights extractions; Mind 26 GB: four sci1_cont2/3 full saves whose weights equal their c2a/c2b/c3a/c3b
+  weights files tensor by tensor, step_138500_rw.pt, four ctl/cx main latest.pt byte-identical to stable_final.pt). Free-space gate
+  scripts/require_free_gb.sh (3c7ccb9): the chain refuses launches below 10 GB.
+  (1) readouts() ran every arm in .venv, which has no fla / mamba_ssm: gdn / mamba2 probes now run in ~/.venvs/qllm_gdn.
+  (2) fla's chunked GDN kernel refuses fp32, so EVERY in-training val of the gdn arm failed ("does not support float32": 14x main,
+  4x decay) and the fp32 probes would have crashed. Fix (26fd8c6): outside an active autocast, GDNLM runs its backbone under bf16
+  autocast and returns the hidden in fp32 (training path unchanged). Selftest on the decay latest, holdout 4 x 4096: fp32-call loss
+  3.2404 vs autocast 3.2405, argmax agreement 0.989.
+  gdn HOLDOUT NLL, COMPUTED AFTER TRAINING (POST_VAL=1: the trainer's own loaders and _val_loss, decay latest.pt, step 15,259, 1.000B
+  tokens; logs/v13_sempty_wio_gdn_postval_26fd8c65_20261117_0143.log): val 3.3854 (ppl 29.53) | wiki 4.0657 | dclm 3.3955 | fineweb
+  3.4312 | arxiv 1.7263 | pubmed 2.0862 | pes2o 3.1112 | cosmo 2.5242 | tools 0.7363 | pysci 1.1006 | chatmt 1.8812. The page says
+  "computed after training" for this row.
+  DTYPE NOTE: the trainer's val, run_learning_probe (s8) and run_memory_behavioral (t40) run the other arms in fp32 end to end; for
+  gdn the backbone runs in bf16 (the kernel has no fp32 path) with the head / CE in fp32. clk2 (skillpack) and mc_eval are bf16
+  autocast for every arm. The gdn s8 / t40 / NLL rows carry this label.
+  (3) run_skillpack_probe tagged gdn as mamba2 (it has .net); now tagged gdn. Its last logits were right; --dilate_where echo is a
+  no-op for gdn / mamba2 / tpp (it acts only on PAM's echo path), so their clk2 is the plain 8-dilated read: labelled so.
+  Step-save safety: each probe writes <out>.part, moved into place only on exit 0 AND a parse check; a decay step save is deleted
+  only after its json parses. Chain restarted 01:44 IST (readouts).
 
 ## chat-off natural experiment: does chat share push told 8k down? (PRE-REGISTERED 16:04 IST 2026-11-16, before any number; Lead agreed)
 

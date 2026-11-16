@@ -1,0 +1,57 @@
+=== wio_gdn_postval start 2026-11-16T20:13:32Z commit=26fd8c65 log=logs/v13_sempty_wio_gdn_postval_26fd8c65_20261117_0143.log ckpt=checkpoints_v13_sempty/wio_gdn_decay_227f3eb ===
+[decontam] index .cache/decontam/v1.npy sha256 08766210ac06dd67066aee27dc3c961f000fa078b62ee1c2991b3fa97bd2096d (4,371,599 13-grams)
+Streaming pretrain blend: sources=['dclm', 'fineweb', 'arxiv', 'pubmed', 'pes2o', 'cosmo', 'finemath', 'smoltalk2_mid', 'chatmt', 'tools', 'pysci', 'b2s', 'recall4k', 'proto4k', 'protoc', 'b2s_far', 'proto_far'] weights=[0.22341, 0.23099, 0.04942, 0.07532, 0.10153, 0.11154, 0.02428, 0.02231, 0.03302, 0.03252, 0.04883, 0.01715, 0.00379, 0.00478, 0.00112, 0.012, 0.008] edu>=3 budget=1 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=43 warmup=0 answer_weight=100.0 skips={'dclm': 172700, 'fineweb': 220307, 'arxiv': 4917, 'pubmed': 12288, 'pes2o': 15987, 'cosmo': 138879, 'finemath': 22504, 'smoltalk2_mid': 64370, 'chatmt': 22166, 'tools': 68101, 'pysci': 35458, 'b2s': 15068, 'recall4k': 8596, 'proto4k': 4873, 'protoc': 14999, 'b2s_far': 5033, 'proto_far': 2881}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[resume] stream re-opened at docs={'dclm': 172700, 'fineweb': 220307, 'arxiv': 4917, 'pubmed': 12288, 'pes2o': 15987, 'cosmo': 138879, 'finemath': 22504, 'smoltalk2_mid': 64370, 'chatmt': 22166, 'tools': 68101, 'pysci': 35458, 'b2s': 15068, 'recall4k': 8596, 'proto4k': 4873, 'protoc': 14999, 'b2s_far': 5033, 'proto_far': 2881, 'dclm@f': 0, 'dclm@r': 579529, 'fineweb@f': 0, 'fineweb@r': 542452, 'cosmo@f': 0, 'cosmo@r': 146146, 'pes2o@f': 0, 'pes2o@r': 17281, 'pubmed@f': 0, 'pubmed@r': 12922, 'arxiv@f': 0, 'arxiv@r': 5158, 'pysci@f': 0, 'pysci@r': 146838, 'chatmt@f': 0, 'chatmt@r': 23346, 'finemath@f': 0, 'finemath@r': 23787, 'smoltalk2_mid@f': 2, 'smoltalk2_mid@r': 5582, 'fineweb#decon': 210, 'cosmo#decon': 24, 'dclm#decon': 113, 'finemath#decon': 8, 'tools#decon': 7, 'chatmt#decon': 13, 'arxiv#decon': 2, 'smoltalk2_mid#decon': 15, 'pubmed#decon': 2, 'b2s_far#decon': 7} tokens_consumed=100,007,936 remaining_budget=1
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl4096.pt (248,461 tokens)
+Val chunks: 60
+[val_src] dclm: 262,144 holdout tokens
+[val_src] fineweb: 262,144 holdout tokens
+[val_src] arxiv: 262,144 holdout tokens
+[val_src] pubmed: 262,144 holdout tokens
+[val_src] pes2o: 262,144 holdout tokens
+[val_src] cosmo: 262,144 holdout tokens
+[val_src] tools: 262,144 holdout tokens
+[val_src] pysci: 262,144 holdout tokens
+[val_src] chatmt: 262,144 holdout tokens
+streaming pretrain: sources=('dclm', 'fineweb', 'arxiv', 'pubmed', 'pes2o', 'cosmo', 'finemath', 'smoltalk2_mid', 'chatmt', 'tools', 'pysci', 'b2s', 'recall4k', 'proto4k', 'protoc', 'b2s_far', 'proto_far') weights=(0.22341, 0.23099, 0.04942, 0.07532, 0.10153, 0.11154, 0.02428, 0.02231, 0.03302, 0.03252, 0.04883, 0.01715, 0.00379, 0.00478, 0.00112, 0.012, 0.008) target_tokens=100007936 steps=1526 cached=False chat_vocab=True wiki_val=True
+========================================================================
+  v13_sempty trainer  (real-arm PAM, O(1) memory)
+  wall clock start : 2026-11-17 01:43:39
+  commit           : 26fd8c65
+  preset / dataset : baseline_real_pm / mix
+  arch             : gdn
+========================================================================
+[env]
+  device=cuda gpu=NVIDIA GeForce RTX 4090 torch=2.8.0+cu128
+  fused_pam=True fused_ce=True ce_gemm_dtype=auto amp=bf16 grad_ckpt=False
+[geometry]
+  batch_size=16 seq_len=4096 tokens/step=65,536
+  steps=1,526 steps/epoch=None epochs_implied=n/a
+  planned_tokens=100,007,936  lr=0.0012 warmup=1000 wd=0.01 grad_clip=1.0
+  checkpoints: dir=checkpoints_v13_sempty/wio_gdn_decay_227f3eb latest_every=200 keep_every=500 keep_last=4 best=on val_every=2000 resume=auto
+[data]
+  train_chunks=None val_chunks=122 recall_frac=0.0 vocab=50261 tokenizer=gpt2
+[params]
+  total=102,508,944 (102.51M dense)
+[config] {'arch': 'gdn', 'vocab_size': 50261, 'd_model': 768, 'n_layer': 12, 'num_heads': 6, 'head_dim': 64, 'expand_v': 2.0, 'intermediate_size': 1280, 'conv_size': 4, 'pad_vocab': 50264}
+[args] {'preset': 'baseline_real_pm', 'dataset': 'mix', 'device': 'cuda', 'steps': 1526, 'epochs': 1, 'batch_size': 16, 'seq_len': 4096, 'lr': 0.0012, 'weight_decay': 0.01, 'dropout': 0.0, 'warmup_steps': 1000, 'lr_schedule': 'decay', 'continue_from': 'checkpoints_v13_sempty/wio_gdn_main_227f3eb/stable_final.pt', 'gradient_clip': 1.0, 'amp_dtype': 'bf16', 'fused_ce': True, 'no_fused_ce': False, 'fused_ce_chunk': 4096, 'ce_gemm_dtype': 'auto', 'fused_pam': True, 'max_samples': 64, 'seed': 43, 'target_tokens': 100007936, 'pretrain_sources': 'dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc,b2s_far,proto_far', 'pretrain_weights': '0.22341,0.23099,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112,0.01200,0.00800', 'edu_score_min': 3, 'fineweb_name': 'sample-10BT', 'holdout_pct': 5, 'blend_warmup_tokens': 0, 'ramp_weights': '', 'ramp_from_tokens': 0, 'ramp_tokens': 0, 'answer_weight': 100.0, 'num_workers': 2, 'no_wiki_val': False, 'val_sources': 'dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,chatmt', 'val_source_tokens': 262144, 'resume': 'auto', 'keep_every_steps': 500, 'keep_last': 4, 'no_chat_vocab': False, 'checkpoint_dir': 'checkpoints_v13_sempty/wio_gdn_decay_227f3eb', 'gradient_checkpointing': False, 'log_interval': 50, 'val_every': 2000, 'gen_every': 0, 'gen_prompt': 'In 1923, the University of', 'gen_max_tokens': 80, 'save_every_steps': 200, 'diag_every': 2000, 'max_val_batches': 0, 'recall_frac': 0.0, 'n_states': None, 'vault': False, 'delta': False, 'cond_mem': False, 'reset_at_eos': True, 'grad_accum': 4, 'chrono': False, 'out_gate': False, 'short_conv': False, 'swa_layers': '', 'swa_window': 128, 'pam_layers': '', 'mlp_hidden': 0, 'share_reads': False, 'echo': False, 'ngram_orders': '', 'echo_surprise_tau': 0.0, 'dim': 0, 'n_heads': 0, 'head_dim': 0, 'n_layers': 0, 'base_dt_bias': None, 'stream_worker': 1, 'prefetch': 64, 'arch': 'gdn', 'mamba_d_model': 768, 'tpp_geom': '', 'grove_spec': '', 'mamba_n_layer': 17, 'init_from': ''}
+========================================================================
+[accum] 4 micro-batches of 4 per step
+[resume] checkpoints_v13_sempty/wio_gdn_decay_227f3eb/latest.pt: step=15,259 tokens=1,000,013,824 lr=0.000e+00 best_val_ppl=inf cursor={'doc_counters': {'dclm': 172700, 'fineweb': 220307, 'arxiv': 4917, 'pubmed': 12288, 'pes2o': 15987, 'cosmo': 138879, 'finemath': 22504, 'smoltalk2_mid': 64370, 'chatmt': 22166, 'tools': 68101, 'pysci': 35458, 'b2s': 15068, 'recall4k': 8596, 'proto4k': 4873, 'protoc': 14999, 'b2s_far': 5033, 'proto_far': 2881, 'dclm@f': 0, 'dclm@r': 579529, 'fineweb@f': 0, 'fineweb@r': 542452, 'cosmo@f': 0, 'cosmo@r': 146146, 'pes2o@f': 0, 'pes2o@r': 17281, 'pubmed@f': 0, 'pubmed@r': 12922, 'arxiv@f': 0, 'arxiv@r': 5158, 'pysci@f': 0, 'pysci@r': 146838, 'chatmt@f': 0, 'chatmt@r': 23346, 'finemath@f': 0, 'finemath@r': 23787, 'smoltalk2_mid@f': 2, 'smoltalk2_mid@r': 5582, 'fineweb#decon': 210, 'cosmo#decon': 24, 'dclm#decon': 113, 'finemath#decon': 8, 'tools#decon': 7, 'chatmt#decon': 13, 'arxiv#decon': 2, 'smoltalk2_mid#decon': 15, 'pubmed#decon': 2, 'b2s_far#decon': 7}, 'token_counters': {'pysci': 92043264, 'arxiv': 71273556, 'chatmt': 30234701, 'dclm': 203444533, 'fineweb': 201276362, 'smoltalk2_mid': 29531812, 'pubmed': 88367173, 'recall4k': 3062954, 'cosmo': 87480533, 'pes2o': 89001153, 'tools': 37850175, 'finemath': 29851786, 'b2s': 14288812, 'proto4k': 3966275, 'proto_far': 6325830, 'b2s_far': 10792624, 'protoc': 1466425}}
+[resume] already at step 15259 >= 15259; nothing to do
+  [post-hoc val @ step 15259] val_loss=3.3854 val_ppl=29.53
+  [post-hoc wiki_val @ step 15259] val_loss=4.0657 val_ppl=58.30
+  [post-hoc dclm @ step 15259] val_loss=3.3955 val_ppl=29.83
+  [post-hoc fineweb @ step 15259] val_loss=3.4312 val_ppl=30.91
+  [post-hoc arxiv @ step 15259] val_loss=1.7263 val_ppl=5.62
+  [post-hoc pubmed @ step 15259] val_loss=2.0862 val_ppl=8.05
+  [post-hoc pes2o @ step 15259] val_loss=3.1112 val_ppl=22.45
+  [post-hoc cosmo @ step 15259] val_loss=2.5242 val_ppl=12.48
+  [post-hoc tools @ step 15259] val_loss=0.7363 val_ppl=2.09
+  [post-hoc pysci @ step 15259] val_loss=1.1006 val_ppl=3.01
+  [post-hoc chatmt @ step 15259] val_loss=1.8812 val_ppl=6.56
+
+Training complete. steps=15259 tokens=1,000,013,824 best_val_ppl=inf
+  [checkpoint] step 15259 -> checkpoints_v13_sempty/wio_gdn_decay_227f3eb/latest.pt
+=== wio_gdn_postval end 1794860073 exit=0 attempts=1 ===
