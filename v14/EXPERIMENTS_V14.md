@@ -5147,7 +5147,9 @@ the format habit from the reach.
 
 Reading: after_dot is 0 at every point, so Package._gen's digit-dot hold hides no unit. A bare "56.2." is a finished answer (the free
 read goes on "\n\nQuestion: ..."). unit_after equals the headline everywhere, so the pre-registered `right` measures the model and not
-the harness. (unit4 is a little higher, mostly a unit right after a wrong number.) The told-8k swings are real format choices: the
-mind answers in the bare-value format (the 20 % no-protocol proto4k docs train exactly " 56.2.", protocol_docs.py:177; Argon via
-Lead) or, at 39B, in a sentence. Which format wins moves between neighbouring checkpoints. Told 8k is a format-choice measure on
-top of reach; read single points with that in mind.
+the harness. (unit4 is a little higher, mostly a unit right after a wrong number.) CORRECTED reading (Library, same evening): the
+20 % no-protocol proto4k docs (protocol_docs.py:177) are the CONTRAST condition, which trains "no protocol -> the raw value", i.e.
+" 56.2.". So a bare answer at 8k is the mind answering as if no rule had been told. The told rule did not survive the distance:
+this is reach, not a competing format habit (my first message to Mind / Lead said habit and was withdrawn). Only the 39B sentence
+answers (41 %) are a separate format effect. Told 8k swings by checkpoint in whether the rule survives 8k; read single points
+with that in mind.
