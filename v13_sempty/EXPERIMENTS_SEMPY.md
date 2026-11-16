@@ -6242,6 +6242,10 @@ pure gate flip. A gate-only fix would cap near 0.5; carry strength is the target
 **Added secondary readout for 3d (reported, not a bar; the rule above is unchanged):** unit pick and gate_win at 41B / 42B / 43B. If 3d
 WORKS by the rule, gate_win should rise with it; a told 8k gain with flat gate_win is reported as unexplained.
 
+**CLARIFICATION of the 3d guards (21:34 IST 2026-11-16, Mind + Lead; recorded BEFORE any 3d number exists; the original rule text above is unchanged):**
+the 41B baseline landed on both guard floors (clk2 16k 0.85 = floor 0.85; s8 @8k 0.941 vs floor 0.94), so single-save jitter could trip
+them with no effect from 3d. Read them as: clk2 16k = the 42B / 43B MEAN >= 0.80 (41B − 0.05; n 50, SE ~0.05); s8 @8k = the 42B / 43B
+MEAN >= 0.91 (41B − 0.03; n 800, SE ~0.008, last six saves 0.941-0.986). The told 8k bars, bare count and HellaSwag guard are unchanged.
 **3d baseline, 41B (3c mix, step 625,619, CHECK done 21:02 IST):** s8 @8k 0.941 | skill @8k 0.610 | clk2 16k 0.85 | clk2 32k-run @16k 0.52 |
 t40 16k 0.919 | HS / ARC-e / PIQA acc 0.319 / 0.554 / 0.628 (386M PAM, 41.0B tokens). Told 8k + TOLD-MARGIN: Library (m41far).
 
