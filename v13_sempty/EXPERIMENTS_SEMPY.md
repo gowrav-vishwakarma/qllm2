@@ -6163,6 +6163,9 @@ as pass 2 at row 0, counters tuluif@pass 2 / @r 3 after 3 docs.
 **Checks:** the log shows `[cycle] ... pass 2` for all four sources within the first hour; window chat share back to ~20 %
 (Lead's window-mix readout); no source `finished pass N` before the next milestones. Probes at the milestones as before (the far /
 told / reach cells feed the recovery decision, a separate proposal).
+**Launched 16:11 IST 2026-11-16** (6000, worktree qllm_sci1c @ 3a8d7fb, tmux sci1s3c, log logs/v13_sempty_sci1_long3c_3a8d7fb_20261116_1041.log,
+from step 618,000 = 40.5B). All four `[cycle] ... re-opening from the start as pass 2` lines at the start (smoltalk2_mid after 4,779,894
+docs, chatmt2 391,187, chatsr 142,179, tuluif 28,433); step 618,050 loss 1.63. Check 1 met.
 **Closest prior work:** multi-epoch repetition of small high-quality sets (Muennighoff et al. 2023, "Scaling Data-Constrained LMs":
 up to ~4 epochs costs little); plumbing, no claim.
 
