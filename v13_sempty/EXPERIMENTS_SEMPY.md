@@ -6200,6 +6200,52 @@ hold. Most misses are a FORMAT flip (bare "56.2." with no unit; Library e6b66b1;
 (proto_far, all protocol) carry ~1/3 of proto4k's answer-token share (0.311 % vs 0.830 %, Argon) and ask 1-3 questions (line 253).
 (Reading corrected 20:18 IST: a bare answer = the told rule forgotten at 8k, a reach failure; see "CORRECTION" under segment 3d.) Next: segment 3d below.
 
+## b386: Transformer++ and Mamba-2 at SCI-1's size on SCI-1's early chain (PRE-REGISTERED 21:58 IST 2026-11-16, before any number; Lead accepted the shape)
+
+**Why:** the final-model page needs a same-size, same-data, same-token row beside SCI-1 (386M PAM). Every T++ / Mamba-2 we have is ~102M
+and none saw a SCI-1 mix except ctl (1.0B on cont2). A row at the release point (~43B) would cost ~7-9 days per baseline (extrapolated),
+so the fair rows are the early milestones, where SCI-1 already has full CHECKs.
+**Closest prior work:** our own ctl (102M, 1.0B, SCI-1's cont2 mix: PAM s8 0.523 vs T++ 0.074 / Mamba-2 0.149, holdout 3.427 / 3.440 /
+3.378). **Difference:** ~3.8x the size, SCI-1's own chain from scratch, read at four token counts (a curve, not one point).
+**Geometries (params within 1 % of SCI-1 PAM 385,817,038):** T++ d_model 1024, 24 layers, 16 heads (head 64), SwiGLU d_ff 3168 =
+385,751,040 (-0.02 %; TPP_GEOM=1024,24,16,3168); Mamba-2 d_model 1024, 51 layers, d_state 128, headdim 64, expand 2 = 388,125,216 (+0.60 %;
+MAMBA_D_MODEL=1024 MAMBA_N_LAYER=51). Plumbing b0b2426 (defaults unchanged: 101,916,864 / 102,613,960).
+**Recipe = SCI-1's chain exactly** (sci1_env.sh / sci1_chain.sh): stage A 0.5B (SOURCES_A, warmup 2,000, LR 8e-4 constant), then stage B
+on the stage-B mix with a 500-step re-warm to 4.0B, constant LR, no decay; SEQ 4096, 65,536 tokens per step, seed 43, ANSWER_W 100,
+decontam v1, RESET_AT_EOS, ANSWER_IN_WINDOW. Micro-batch may differ (grad accum) to fit the card; tokens per step do not.
+**Readouts at M1 / M2 / M3 / M4 (steps 15,259 / 30,518 / 45,777 / 61,036 = 1 / 2 / 3 / 4B), with the same CHECK as SCI-1:** holdout
+per source; HS (acc and acc_norm) / ARC-e / PIQA; s8 spread (0 / 2k / 4k / 8k); skill pack; clk2; t40 to 16k; told (Library FAR-TOLD).
+PAM side = SCI-1's existing CHECK at those steps (M1 s8 D 0.322, M4 s8 D 0.782, M4 holdout 3.218), rerun where a cell is missing.
+**Claim rule (pre-stated):** "PAM learns rules the baselines do not, at equal size and data" stands if PAM's s8 @8k beats BOTH baselines
+by >= 0.10 at >= 3 of the 4 milestones, and at M4. Language: PAM's M4 holdout within +0.03 of the better baseline counts as "matched"
+(bar 2 tolerance); worse by > 0.03 is stated next to any rule claim. Benchmarks are reported, not bars. Params and tokens in every row.
+**Limits stated:** LR 8e-4 is PAM's tuned LR, used unchanged for the baselines (ctl did the same at 1.2e-3); no per-baseline LR sweep.
+Rows end at 4B; beyond that the page uses a reference block with no claim.
+**Cost / order:** geometry smoke on the 4090 between wio arms (b386_smoke, tmux mindb386, after the gdn arm's readouts) measures params,
+peak VRAM and tok/s; the run's box and time are the user's call through Lead (after the release decay, or earlier).
+
+## SCI-1 segment table (21:58 IST 2026-11-16; steps / tokens from the checkpoints' own global_step / global_tokens, 65,536 tokens per step from step 0)
+
+| # | run dir | global steps | tokens | parent | mix | line |
+|---|---|---|---|---|---|---|
+| 1 | sci1_stageA_59c3cf5 | 0 -> 7,630 | 0 -> 0.50B | scratch | SOURCES_A (10 plain sources), warmup 2,000, LR 8e-4 constant, no rule docs | main |
+| 2 | sci1_main_59c3cf5 | 7,630 -> 61,036 | 0.5 -> 4.0B | stageA_final | stage-B mix (15 sources incl. think, b2s 2.3 %), 500-step re-warm; stopped at M4 | main |
+| 3 | sci1_cont1_59d098d | 61,036 -> 76,295 | 4 -> 5B | main step_061036 | cont1: think out, protoc in | main |
+| 4 | sci1_cont2_e61cd92 | 76,295 -> 106,813 | 5 -> 7B | cont1 step_076295 | cont2 (the ctl mix) | main |
+| 5 | sci1_cont3_449e320 | 106,813 -> 137,331 | 7 -> 9B | cont2 step_106813 | cont3 (14 sources, protoc out) | main |
+| 6 | sci1_cont4_8284510 | 137,331 -> 152,590 | 9 -> 10B | cont3 step_137331 | cont3 + worked ~2 % (M10-worked, failed) | side |
+| 7 | sci1_decay_m9_8290f7d | 137,331 -> 152,590 | 9 -> 10B | cont3 step_137331 | cont3, LR -> 0 | side |
+| 8 | sci1_c3_95498f3 | 137,331 -> 141,146 | 9 -> 9.25B | cont3 step_137331 | rule block x2, 0.25B decay | side |
+| 9 | sci1_long_3c2bf1f | 137,331 -> 167,849 | 9 -> 11B | cont3 step_137331 | cont3, 500-step re-warm | main |
+| 10 | sci1_c2_1b8607d | 152,590 -> 156,405 | 10 -> 10.25B | long step_152590 | rule block x2, 0.25B decay | side |
+| 11 | sci1_long2_4a97ca7 | 167,849 -> 427,252 | 11 -> 28B | long step_167849 | cont3 + far block ramped over 2B (b2s_far 1.2 %, proto_far 0.8 %); best_model = step 344,000 (22.5B) | main |
+| 12 | sci1_long3_91bdc49 | 427,252 -> 618,000 | 28 -> 40.5B | long2 step_427252 | fineweb100 + chat ramp 5.4 -> 19.9 % over 2B; chat sources ran dry 32.95-39.88B | main |
+| 13 | sci1_long3c_3a8d7fb | 618,000 -> 625,619 | 40.5 -> 41B | long3 seg3_end | ramp-target mix + CYCLE_SOURCES (chat pass 2) | main |
+| 14 | sci1_long3d_cf9dee1 | 625,619 -> running | 41B -> | long3c step_625619 | proto_far 1.6 % (from dclm / fineweb100) | main |
+
+Main line: 1 -> 2 -> 3 -> 4 -> 5 -> 9 -> 11 -> 12 -> 13 -> 14. Mixes: v13_sempty/tmp/sci1_*env.sh at each segment's hash. Checkpoints on d_drive
+(from_6000/checkpoints_v13_sempty/<run dir>/); the 6000 keeps only the running segment's saves and best_model.pt files.
+
 ## segment 3d: proto_far 0.8 % -> 1.6 % (PRE-REGISTERED 19:28 IST 2026-11-16, before any number; Lead agreed option 1, GO on the 6000 change pending)
 
 **Mechanism (stated):** the told 8k misses are mostly the bare-number format, not lost reach. Far protocol docs are the only far

@@ -100,3 +100,4 @@ wio_pam	ctl_pam	2026-11-16	wio: PAM M2 all on at the ctl recipe + far block (far
 wio_mamba2	ctl_mamba2	2026-11-16	wio: Mamba-2 at the ctl recipe + far block	pending (pre-registered)	-	-	logs/wio/	EXPERIMENTS_SEMPY "wio"
 wio_tpp	ctl_tpp	2026-11-16	wio: T++ at the ctl recipe + far block	pending (pre-registered)	-	-	logs/wio/	EXPERIMENTS_SEMPY "wio"
 seg3d_protofar	chatoff	2026-11-16	segment 3d: proto_far 0.8 -> 1.6 % (from dclm / fineweb100), chat kept 19.9 %; judged on told 8k + bare count at 42B / 43B vs 41B	pre-registered	-	-	-	EXPERIMENTS_SEMPY "segment 3d"
+b386	ctl_pam	2026-11-16	T++ (385.75M) and Mamba-2 (388.1M) on SCI-1 stage A + B to 4B, read at M1-M4 vs SCI-1 PAM	pre-registered	-	b0b2426	-	EXPERIMENTS_SEMPY "b386"

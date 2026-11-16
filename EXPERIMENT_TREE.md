@@ -80,6 +80,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
                                       - **lad_noread** (2026-11-05) ablation ladder rung: ctl PAM M2 at the ctl recipe, minus the M2 shared readers; 1.0B tokens, MLP re-matched to +-1 % params, on the 6000 after SCI-1's decay -> **planned (pre-registered; Lead decision)**; code at `pending`; -; EXPERIMENTS_SEMPY "lad"
                                       - **nkr_arc** (2026-11-05) notebook-key retrieval: rerank BM25 top-100 by the notebook query.key max-sim (pre-Chrono), top-3 prepended as BENCH-LIB, ARC-c on c3b -> **FAILED, closed: NK top-3 ARC-c 0.260 / ARC-e 0.484 vs BM25 0.278 / 0.526 vs random-of-100 0.266 / 0.501 (anti-informative); oracle 0.837 / 0.875**; run `b4b7499`; logs/v13_sempty_nkr_{nk,rand}_c3b_*.jsonl; EXPERIMENTS_SEMPY "nkr"
                                     - **re_plain** (2026-11-05) complex-vs-real PAM, plain body (all extras off): re_plain at the ctl recipe (1.0B tokens of the cont2 mix, SEQ 4096, seed 43); isolates the arithmetic, not the paper's body -> **cancelled before launch (user via Lead 08:02 IST 11-05): replaced by cx_m2 (complex head with the paper body's parts) after porting**; run `caa4da9`; logs/v13_sempty_cxre_re_plain_*; EXPERIMENTS_SEMPY "cxre"
+                                    - **b386** (2026-11-16) T++ (385.75M) and Mamba-2 (388.1M) on SCI-1 stage A + B to 4B, read at M1-M4 vs SCI-1 PAM -> **pre-registered**; run `-`, code at `b0b2426`; -; EXPERIMENTS_SEMPY "b386"
                                     - **wio_gdn** (2026-11-16) wio: Gated DeltaNet 102.51M (fla 0.3.2) at the ctl recipe + far block, 1.0B tokens -> **running**; run `227f3eb`; logs/wio/; EXPERIMENTS_SEMPY "wio"
                                     - **wio_nochrono** (2026-11-16) wio: PAM M2 with Chrono off (plain RoPE, readers on RoPE) at the ctl recipe + far block -> **pending (pre-registered)**; run `-`; logs/wio/; EXPERIMENTS_SEMPY "wio"
                                     - **wio_pam** (2026-11-16) wio: PAM M2 all on at the ctl recipe + far block (far-data equal-data control) -> **pending (pre-registered)**; run `-`; logs/wio/; EXPERIMENTS_SEMPY "wio"
@@ -219,4 +220,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-201 experiments: v13_sempty 101, v14 78, v15 10, v16 12.
+202 experiments: v13_sempty 102, v14 78, v15 10, v16 12.
