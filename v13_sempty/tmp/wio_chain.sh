@@ -33,12 +33,14 @@ busy() { userjobs && return 0; [ -f $HOME/.qllm_check_wants_gpu ] && return 0; p
 # other GPU jobs of ours beside the trainer (cwd / cmdline under ~/Development/qllm*, excluding the trainer $1): their tok/s is NOT an arm speed
 neighbours() { local q; for q in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits); do [ "$q" = "$1" ] && continue
   { readlink /proc/$q/cwd; tr '\0' ' ' </proc/$q/cmdline; } 2>/dev/null | grep -q 'Development/qllm' && echo -n "$q "; done; }
+# disk gate (Lead 2026-11-17: d_drive hit 100 %, the gdn decay crashed at its save): no launch with < 10 GB free under $C
+diskok() { bash scripts/require_free_gb.sh $C/ ${1:-10} 2>/dev/null; }
 memok() { [ "$(awk '/MemAvailable/{print int($2/1048576)}' /proc/meminfo)" -ge "${1:-12}" ]; }
 free_mb() { nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits | awk -F", " '{print $1-$2}'; }
 # gdn: smoke 2026-11-16 measured peak 11,522 MiB (nvidia-smi, solo, 25 min at the arm recipe) + 3 GB (user 4090 rule: free >= measured peak + 3 GB)
 declare -A NEED=([gdn]=${NEED_GDN:-14600} [nochrono]=18800 [pam]=18800 [tpp]=12600 [mamba2]=9000 [readouts]=12000)
 quiet() {  # $1 MB needed: not busy, RAM ok and VRAM free for 5 consecutive minutes; gives up (return 1) after $2 minutes (0 = never)
-  local ok=0 t=0; while [ $ok -lt 5 ]; do if ! busy && memok 20 && [ "$(free_mb)" -ge "$1" ]; then ok=$((ok + 1)); else ok=0; fi
+  local ok=0 t=0; while [ $ok -lt 5 ]; do if ! busy && memok 20 && diskok 10 && [ "$(free_mb)" -ge "$1" ]; then ok=$((ok + 1)); else ok=0; fi
     t=$((t + 1)); [ "${2:-0}" -gt 0 ] && [ $t -ge $2 ] && [ $ok -lt 5 ] && return 1; sleep 60; done; }
 # the arm's newest log under ANY launch hash: logs are named after HEAD at launch, not $H (2026-11-17: the glob on $H found nothing, so
 # the gdn main's "Training complete" was never seen, no .done was written and the chain relaunched a finished trainer for 2 h)
@@ -51,7 +53,7 @@ segment() {  # $1 tag, $2 ckpt dir, $3 env (arm spec + schedule), $4 arm name (V
   log=$(tag_log $tag)
   while true; do
     [ -f $dir/.done ] && return 0
-    local P=$(trainer_pid $dir) why="" lastnb=x
+    local P=$(trainer_pid $dir) why="" lastnb=x dwarn=""
     if [ -n "$P" ]; then echo "=== $tag: adopting running trainer $P $(date -u +%FT%TZ)"
     else
       quiet ${NEED[$arm]} 10 || { echo "=== $tag: blocked (VRAM / busy) 10 min, trying another arm $(date -u +%FT%TZ)"; return 2; }
@@ -66,6 +68,7 @@ segment() {  # $1 tag, $2 ckpt dir, $3 env (arm spec + schedule), $4 arm name (V
     while kill -0 $P 2>/dev/null; do
       busy && { why="yield to a CHECK / eval"; break; }
       memok 12 || { why="RAM < 12 GB"; break; }
+      diskok 10 || { [ -z "$dwarn" ] && echo "=== $tag: DISK < 10 GB free under $C (saves will fail) $(date -u +%FT%TZ)"; dwarn=1; }
       nb=$(neighbours $P); [ "$nb" != "${lastnb-x}" ] && { echo "=== $tag: GPU $([ -n "$nb" ] && echo "SHARED with pids $nb(tok/s not an arm speed)" || echo SOLO) from $(date -u +%FT%TZ)"; lastnb=$nb; }
       sleep 15
     done
