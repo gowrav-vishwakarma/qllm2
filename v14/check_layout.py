@@ -43,6 +43,7 @@ SKIP_FILES = frozenset({
     "benchlib_eval.py",  # BENCH-LIB scorer (ckpt meta)
     "a32_precheck.py",   # A32 pre-check (raw torch state copies)
     "a32b.py",           # A32b self-compiled demo forks (twin reads via a28_twin)
+    "a32c.py",           # A32c split-alpha / number-free demos (twin reads via a28_twin)
     "dil3.py",           # DIL3 slow-head clock dilation (raw torch state copies + Mind's clk3 hook)
     "ruler_pkg.py",      # BENCH-PKG RULER-style generator (bare vs package, raw torch state copies + ckpt meta)
     "a11_keyswap.py",    # A11: key-swap relevance eval (frozen-mind short reads, raw torch)
