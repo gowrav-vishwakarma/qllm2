@@ -6154,6 +6154,18 @@ worse than gdn by > 0.03 is stated next to any rule claim. Params and tokens are
   (.venv's exact pins on Py3.11 + fla 0.3.2 + mamba_ssm / causal_conv1d copied from qllm311; launcher default b0b2426). Within wio all arms
   share package pins (torch 2.8.0+cu128, datasets 4.0.0, pyarrow 21.0.0); a wio-vs-ctl number crosses environments and is labelled so.
   (Goes into wio_chain.sh's header at the next safe restart; not edited while the chain runs, since bash reads it incrementally.)
+- 00:35 IST 2026-11-17: CHAIN STALL + FIX (Lead caught it). The gdn main ended cleanly at ~23:54 IST 11-16 (logs/v13_sempty_wio_gdn_main_
+  89aff04_20261116_2108.log: "Training complete. steps=13733 tokens=900,005,888"), but the chain never wrote .done: segment() looked for
+  the arm's log as logs/v13_sempty_<tag>_227f3eb_*.log (the pin $H) while logs are named after HEAD at launch (89aff04), so the done
+  check grepped an empty path, read "crash?", and relaunched; each relaunch found "already at step 13733; nothing to do", exited inside
+  the 90 s wait, and the "no trainer after 90 s" branch skipped the done check: a loop from 00:00 to 00:35 IST, card idle ~40 min.
+  Fix (wio_chain.sh, this commit): tag_log() finds the arm's newest log under any launch hash; finished() is used both after a trainer
+  exit and in the "no trainer after 90 s" branch. .done touched by hand after the check above; the 5 no-op relaunch logs deleted;
+  chain restarted (same SCREEN_HASH=227f3eb). Env caveat moved into the chain header at this restart.
+  DRIFT: the restart lists v13_sempty/train.py changed since 227f3eb. That change (4699c66 / b0b2426, 21:58 IST) only adds --tpp_geom
+  (default '') and uses it inside the `arch == 'transformer'` branch; the gdn / pam / nochrono / mamba2 paths are byte-identical. The gdn
+  main's weights came from ONE trainer process launched 21:08 IST at 89aff04 (before that change; it resumed from the step-200 save of
+  the 20:22 start), which ran to step 13,733 without restart, so its weights were produced entirely before the change.
 
 ## chat-off natural experiment: does chat share push told 8k down? (PRE-REGISTERED 16:04 IST 2026-11-16, before any number; Lead agreed)
 

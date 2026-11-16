@@ -6,6 +6,8 @@
 # plus s8 on three decay saves (3-save mean). Readouts in logs/wio/.
 # gdn arm runs in ~/.venvs/qllm_gdn = .venv's exact pins (torch 2.8.0+cu128, datasets 4.0.0, pyarrow 21.0.0, transformers 4.57.6) on
 # Python 3.11 + fla 0.3.2 + einops (fla needs Python >= 3.10); every other arm in .venv. Arm speeds are quoted only from SOLO windows.
+# ENV CAVEAT (2026-11-16): ctl ran from ../qllm_ctl on ~/.venvs/qllm311 (datasets 3.6, pyarrow 26); mamba2 here also runs in qllm_gdn
+# (mamba_ssm 2.2.5 / causal_conv1d copied from qllm311). A wio-vs-ctl number crosses environments and is labelled so.
 #   tmux new-session -d -s mindwio "bash v13_sempty/tmp/wio_chain.sh 2>&1 | tee -a logs/v13_sempty_wio_chain_<hash>_<stamp>.log"
 cd "$(dirname "$0")/../.." || exit 1
 H=${SCREEN_HASH:-$(git rev-parse --short HEAD)}; C=checkpoints_v13_sempty; PY=.venv/bin/python; X="symbolic\|Warning\|warn"
@@ -38,11 +40,15 @@ declare -A NEED=([gdn]=${NEED_GDN:-14600} [nochrono]=18800 [pam]=18800 [tpp]=126
 quiet() {  # $1 MB needed: not busy, RAM ok and VRAM free for 5 consecutive minutes; gives up (return 1) after $2 minutes (0 = never)
   local ok=0 t=0; while [ $ok -lt 5 ]; do if ! busy && memok 20 && [ "$(free_mb)" -ge "$1" ]; then ok=$((ok + 1)); else ok=0; fi
     t=$((t + 1)); [ "${2:-0}" -gt 0 ] && [ $t -ge $2 ] && [ $ok -lt 5 ] && return 1; sleep 60; done; }
+# the arm's newest log under ANY launch hash: logs are named after HEAD at launch, not $H (2026-11-17: the glob on $H found nothing, so
+# the gdn main's "Training complete" was never seen, no .done was written and the chain relaunched a finished trainer for 2 h)
+tag_log() { ls -t logs/ 2>/dev/null | grep -E "^v13_sempty_${1}_[0-9a-f]{7,8}_[0-9]{8}_[0-9]{4}\.log$" | head -1 | sed 's|^|logs/|'; }
+finished() { local L; L=$(tag_log $1); [ -n "$L" ] && grep -qE "^Training complete\. steps=" "$L" && [ -s $2/latest.pt ]; }   # $1 tag, $2 dir
 trainer_pid() { pgrep -f "v13_sempty.train .*--checkpoint_dir $1( |$)" | head -1; }
 # run one segment to completion, yielding the card whenever a CHECK / eval needs it; resume = same CKPT_DIR + RESUME_LOG
 segment() {  # $1 tag, $2 ckpt dir, $3 env (arm spec + schedule), $4 arm name (VRAM gate)
   local tag=$1 dir=$2 spec=$3 arm=$4 log="" n=0
-  log=$(ls -t logs/v13_sempty_${tag}_${H}_*.log 2>/dev/null | head -1)
+  log=$(tag_log $tag)
   while true; do
     [ -f $dir/.done ] && return 0
     local P=$(trainer_pid $dir) why="" lastnb=x
@@ -51,8 +57,11 @@ segment() {  # $1 tag, $2 ckpt dir, $3 env (arm spec + schedule), $4 arm name (V
       quiet ${NEED[$arm]} 10 || { echo "=== $tag: blocked (VRAM / busy) 10 min, trying another arm $(date -u +%FT%TZ)"; return 2; }
       n=$((n + 1)); echo "=== $tag run $n $(date -u +%FT%TZ)"
       ( env $COMMON $spec TAG=$tag CKPT_DIR=$dir ${log:+RESUME_LOG=$log} setsid bash v13_sempty/tmp_pretrain_mix.sh ) &
-      sleep 90; [ -z "$log" ] && log=$(ls -t logs/v13_sempty_${tag}_${H}_*.log 2>/dev/null | head -1)
-      P=$(trainer_pid $dir); [ -z "$P" ] && { echo "=== $tag: no trainer after 90 s"; sleep 60; continue; }
+      sleep 90; [ -z "$log" ] && log=$(tag_log $tag)
+      P=$(trainer_pid $dir)
+      # a trainer that exits inside 90 s may have found the run complete ("already at step N >= N; nothing to do"): same done check
+      [ -z "$P" ] && finished $tag $dir && { touch $dir/.done; echo "=== $tag done (trainer found the run complete) $(date -u +%FT%TZ)"; return 0; }
+      [ -z "$P" ] && { echo "=== $tag: no trainer after 90 s"; sleep 60; continue; }
     fi
     while kill -0 $P 2>/dev/null; do
       busy && { why="yield to a CHECK / eval"; break; }
@@ -68,7 +77,7 @@ segment() {  # $1 tag, $2 ckpt dir, $3 env (arm spec + schedule), $4 arm name (V
     sleep 20   # the trainer exited by itself: done if its log shows the last step at 100 %, else a crash -> resume
     # done = the trainer's own final line (the step log prints every 50 steps, so "N/N 100%" is missing when N is not a multiple of 50:
     # the T++ main, 13,733 steps, was misread as a crash 2026-11-04 19:14 IST)
-    if grep -qE "^Training complete\. steps=" "$log" 2>/dev/null && [ -s $dir/latest.pt ]; then
+    if finished $tag $dir; then
       touch $dir/.done; echo "=== $tag done $(date -u +%FT%TZ)"; return 0; fi
     echo "=== $tag trainer exited before 100 % (crash?), resuming $(date -u +%FT%TZ)"; sleep 60
   done
