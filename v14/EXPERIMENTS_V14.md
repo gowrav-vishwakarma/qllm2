@@ -5207,3 +5207,27 @@ Reading: at 8k the told rule fades in degree, not all-or-none. The unit's identi
 but its margin over the no-protocol '.' answer collapses at the low checkpoints. For Mind's 3d this says the lever is the carry
 STRENGTH (a stronger margin), not identity; a pure gate fix would not rescue the 0.5-level identity. Closest prior work as
 pre-registered (function-vector probes).
+
+### A32c RESULT (2026-11-16 21:56 IST; fixed code 166a3d6; logs/v14_a32c_{m22best,m30}_166a3d6_20261116_2029.{log,jsonl}; 100 docs per cell)
+right (value / unit). The twin and a32b arms reproduce A32b exactly (same docs), which checks the rerun.
+
+| body | cell | twin | a32b | **split** | nonum | bar (split or nonum) | verdict |
+|---|---|---|---|---|---|---|---|
+| 344k | a26 2k | 0.31 (0.36 / 0.90) | 0.21 | **0.46** (0.47 / 0.95) | 0.17 (0.25 / 0.68) | ≥ 0.41 | met |
+| 344k | train 8k | 0.53 (0.88 / 0.59) | 0.82 | **0.83** (0.90 / 0.91) | 0.17 (0.82 / 0.22) | ≥ a32b − 0.05 = 0.77 | met |
+| 30B | a26 2k | 0.49 (0.65 / 0.80) | 0.42 | **0.69** (0.72 / 0.92) | 0.24 (0.46 / 0.59) | ≥ 0.59 | met |
+| 30B | train 8k | 0.31 (0.93 / 0.33) | 0.60 | **0.61** (0.92 / 0.67) | 0.18 (0.92 / 0.21) | ≥ 0.55 | met |
+
+**Verdict: MET (the split arm, both bodies, both cells).**
+- The mind writes three demos of a told rule into its own state; the read takes the number from the warm stream and the unit
+  from the state-fork contrast.
+- Gains over today's told read:
+  - held-out wording 2k: +0.15 / +0.20;
+  - trained wording 8k: +0.30 / +0.30.
+- The pre-registered cap estimate (0.41 on 344k) was beaten: split's value_ok is 0.47, above held's warm 0.44, because the demos
+  sit in the state the warm digits come from.
+- The number-free demos FAIL (unit 0.21-0.68): demos teach the convention only with values in them.
+- Package impact (to propose, not adopted): the told read = self-written demos + split read is a v0.4 candidate. It needs the
+  release body before PACKAGE.md changes.
+Closest prior work as pre-registered (CAD / AdaCAD, SG-ICL). Difference: a token-type-switched contrast inside a state-fork read
+whose demos the O(1) mind compiled itself.
