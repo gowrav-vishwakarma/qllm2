@@ -6606,6 +6606,17 @@ P_fu 8k <= 0.20 and scope_fu 8k <= 0.30; two saves in a row failing = stop and t
 are reported with NO verdict. Snapshot targets added at +1.5B (696,390) and +2.0B (704,020).
 **LESSON (general):** a mix change at constant LR is judged on a settled window (>= 1B after the switch), never on its first saves
 (3d's C swung 0.45 / 1.09 / 0.59 / 3.64 / 2.45 / 0.47 and its harm settled by 44B).
+**3f early saves (Library scope tuples, qllm_v14norm/logs/v14_fartold_watch.log; NO verdict by the amendment; recorded 01:05 IST 11-18):**
+
+| save | L | C | scope_fu | prec_u1 | P_fu | twin unit_acc | S_fu_held | R_u2 |
+|---|---|---|---|---|---|---|---|---|
+| 44B ref | 2k / 8k | 1.78 / 0.46 | 0.55 / 0.10 | | 0.00 / 0.05 | | | |
+| +0.25B (677,315) | 2k | +3.303 | 0.90 | 0.72 | 0.03 | 0.98 | 0.16 | 0.28 |
+| | 8k | +0.744 | 0.17 | 0.00 | 0.09 | 0.79 | 0.03 | 0.98 |
+| +0.5B (681,130) | 2k | +1.635 | 0.51 | 0.48 | 0.01 | 0.96 | 0.01 | 0.52 |
+| | 8k | +0.413 | 0.02 | 0.01 | 0.02 | 0.66 | 0.01 | 0.97 |
+
+Excursion guard (P_fu 8k <= 0.20, scope_fu 8k <= 0.30) passes at both saves. Settled window = +0.75B (684,945), +1.0B, 45B.
 *3e re-armed on the patched v2 (12:32 IST 2026-11-17, Lead (b): the held-out scope direction "asked volume, mass protocol" removed
 from proto_far2; Library 4ece7bb5):* re-checks on 4ece7bb5: (a) packer 400 chunks identical, hook test OK, and proto_far v1 + proto4k
 streams identical pre- vs post-patch (300 docs each); (b) Library check(): own 65.4 / none 29.5 / other 5.2 %, leak-free, 0 shared
