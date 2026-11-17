@@ -5361,6 +5361,26 @@ The twin's gate is B + 5C (alpha 4).
 
 **Closest prior work:** contrastive decoding (Li et al. 2023), CFG (Sanchez et al. 2023). The difference: only the emit decision is taken from the contrast term, and the number is taken warm.
 
+### DECAY B / C split (PRE-REGISTERED 2026-11-17 07:51 IST, Lead's step-back 95ae29f5; no training)
+Question: is the release blocker "a decay erases the far rule first" the same thing as the told-8k swing, i.e. does the decay
+move B (the body's no-protocol '.' prior) while the carry C stays?
+Method: TOLD-MARGIN 8k, n 100, A28 docs (seed 26000), on each decay checkpoint and its pre-decay parent (pairs named by Mind
+from what is on d_drive). Report per pair dB = B(decay) - B(parent), dC = C(decay) - C(parent) with SE, tau0, twin unit_acc / gate_win.
+Reading, fixed now:
+- dB <= -1.0 nat and |dC| <= 0.05: the decay hurts the READ, not the carry -> the contrast gate (tau 0 / v04) should restore
+  told 8k on the decayed model (checked by cgate on that pair after).
+- dC <= -0.10 (any dB): the decay erases the CARRY -> the gate cannot fix it; the recipe must change.
+- otherwise: no clear reading at n 100; say so.
+Queued after the pending 3d snapshots and the cgate 41B body, inside Mind's windows only.
+Pairs (Mind ~07:51 IST, D = d_drive from_6000/checkpoints_v13_sempty): M9 (step 137,331) -> decay_M9 (9->10B, 8290f7d);
+M10 (152,590, the constant-LR twin over the same 1B tokens) as the third point; LAWA L1 = mean(M9, 138,500) vs M9. C2 / C3 are
+on the 6000 only, so they are copied only if the four local saves give a reading. Addendum 07:52 IST, before any number (Mind):
+these bodies saw proto4k only inside 4k (no proto_far yet), so C at 8k may sit near 0 everywhere. So BOTH 2k and 8k are read,
+2k is the PRIMARY cell for this reading, and 8k is reported beside it. Logs: logs/v14_told_margin_decay_<tag>_n100_<hash>_<stamp>.
+Closest prior work: contrastive decoding (Li et al. 2022), classifier-free guidance for LMs (Sanchez et al. 2023), context-aware
+decoding (Shi et al. 2023). Difference: our contrast forks an O(1) recurrent state thousands of tokens before the question
+(state with vs without the protocol sentence), not two prompts in a KV context. These citations go into the v0.4 spec.
+
 ### A32c RESULT (2026-11-16 21:56 IST; fixed code 166a3d6; logs/v14_a32c_{m22best,m30}_166a3d6_20261116_2029.{log,jsonl}; 100 docs per cell)
 right (value / unit). The twin and a32b arms reproduce A32b exactly (same docs), which checks the rerun.
 
