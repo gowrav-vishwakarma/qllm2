@@ -5369,6 +5369,16 @@ The twin's gate is B + 5C (alpha 4).
 | 648508 | 42.5B | 100 | +0.588 (0.037) | -3.86 | 0.73 | 0.73 / 0.29 | 0.00 |
 | 652322 | 42.75B | 100 | +3.644 (0.176) | +0.63 | 0.98 | 0.98 / 1.00 | 0.55 |
 | 656137 | 43B | 100 | +2.452 (0.136); 2k +9.884 (0.526) | -2.03; 2k -2.30 | 0.94; 2k 1.00 | 0.94 / 0.94 | 0.18; 2k fu 0.14 |
+| 659952 (snap_661500) | 43.35B | 100 | +0.859 (0.054); 2k +3.684 | -1.93; 2k -2.55 | 0.76; 2k 0.99 | 0.76 / 0.80 | 0.21; 2k 0.10 |
+| 668500 (extra) | 43.80B | 100 | +0.581 (0.031); 2k +2.433 | -4.60; 2k -5.25 | 0.76; 2k 0.99 | 0.76 / 0.18 | 0.00; 2k 0.00 |
+| 671396 | 44B | 300 | +0.471 (0.016); 2k +1.810 | -4.29; 2k -5.01 | 0.66; 2k 0.96 | 0.66 / 0.18 | 0.01; 2k 0.01 |
+3d VERDICT ({t} IST), on the revised 8-save series: mean C 8k 1.268 (SD 1.16, SE 0.41), so dC = +0.84 >= +0.10, WORKS on the
+pre-registered primary. Median 0.72. Without the 42.75B / 43B peaks, dC is +0.25 (still WORKS, but much smaller). The HARM trigger
+never fired (fu 8k 0.55 / 0.18 / 0.21 / 0.00 / 0.01, never two in a row >= 0.30).
+That verdict is incomplete. The SCOPE readout at 42.75B / 43B shows that the C peaks ARE the over-application (P_fu 0.89 / 0.50,
+scope_fu 1.00 / 0.94, against 41B 0.18 / 0.17). The high-C saves are the "unit by default" saves, so 3d's carry gain and its
+scope damage are the same event. Read 3d as: the carry rises, scope falls, and the swing settles back by 44B. The main run already
+moved to 3f (scoped contrasts) at 44.14B, by the scope rule.
 Pre-3d mean C 0.427. Running dC over 4 of 9 saves: +1.02. After 43B (5 of 9): +1.22.
 dC SERIES REVISED (Lead 19:02 IST, recorded 19:03 IST before 43.35B / 43.80B / 44B are scored): the 43.5B / 43.75B snapshots were lost
 in the 15:53 IST reboot (.skipped). The primary dC mean is over 42 / 42.25 / 42.5 / 42.75 / 43 / 43.35 / 43.80 (off-grid extra,
@@ -5424,6 +5434,11 @@ A 44B scope 4-tuple is queued in this window, to see whether the scope damage sw
 | 42.75B | 8k | +0.63 | +3.644 | 1.00 | 0.69 | 0.89 | 0.98 | 0.99 | 1.00 | 0.31 |
 | 43B | 2k | -2.30 | +9.884 | 1.00 | 0.95 | 0.42 | 1.00 | 0.84 | 0.88 | 0.05 |
 | 43B | 8k | -2.03 | +2.452 | 0.94 | 0.44 | 0.50 | 0.94 | 0.59 | 0.64 | 0.56 |
+| 44B (last pure 3d) | 2k | -4.97 | +1.780 | 0.55 | 0.42 | 0.00 | 0.97 | 0.09 | 0.13 | 0.58 |
+| 44B | 8k | -3.91 | +0.461 | 0.10 | 0.02 | 0.05 | 0.75 | 0.09 | 0.09 | 0.97 |
+44B: the scope damage swung back as fully as C did, and 44B is slightly BETTER than 41B on every axis. 42.75B / 43B were a
+transient. The 3f rule fired on the 43B peak; 44B (scope_fu 2k 0.55) would also have fired it, but only barely. Note for the 3f
+fallback: its "P_fu 8k <= 0.20" arm is already met at 44B (0.05) before any 3f data, so it can't show that 3f works (raised to Lead).
 Checks: B / C reproduce each save's TOLD-MARGIN (m41, 3d 652322, 3d 656137); 41B scope_fu 2k 0.73 matches the cgate mismatch twin
 decode, 0.74.
 MIX RULE (71127a3c): 43B scope_fu 2k = 1.00 >= 0.50 -> the main run switches to 3f (proto_far3 + proto4k2) at the next save.
