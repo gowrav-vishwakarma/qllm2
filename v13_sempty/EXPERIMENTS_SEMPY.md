@@ -6168,6 +6168,31 @@ Reading (no verdict until pam): without the clock, PAM still holds far shift (8k
 trails GDN on affine at every distance (0.711 vs 0.973 at 0). s8 @8k averages the two and lands near gdn (+0.019). Argon's
 phase hypothesis: a nochrono shift of 0.345 is far above gdn, so the phase-reference story needs pam's shift to be compared against it
 (refuted if pam ~= nochrono). Rule 2 needs pam - nochrono >= 0.10 -> pam >= 0.527 and pam >= 0.508 (rule 1).
+**pam ARM RESULT + VERDICT (23:31 IST 2026-11-17; 102,884,948 params, 1.000B tokens (900,005,888 main + 100,007,936 decay), solo
+~64k tok/s; logs/wio/*pam*):**
+
+| arm | params | tokens | s8 @8k 3-save (14,500 / 15,000 / end) | shift 0 / 2k / 4k / 8k | affine 0 / 2k / 4k / 8k | t40 2k / 8k / 16k | clk2 8k / 16k | HS / ARC-e / PIQA | val / wiki NLL |
+|---|---|---|---|---|---|---|---|---|---|
+| gdn | 102.51M | 1.0B | **0.408** | 0.897 / 0.511 / 0.326 / 0.136 | 0.973 / 0.894 / 0.820 / 0.681 | 0.681 / 0.458 / 0.325 | 0.17 / 0.06 | 0.275 / 0.440 / 0.594 | **3.385** / 4.066 |
+| nochrono | 102.87M | 1.0B | **0.427** | 0.873 / 0.709 / 0.558 / 0.345 | 0.711 / 0.660 / 0.628 / 0.510 | 0.478 / 0.408 / 0.353 | 0.54 / 0.06 | 0.273 / 0.464 / 0.592 | 3.427 / 4.144 |
+| pam | 102.88M | 1.0B | **0.343** (0.359 / 0.328 / 0.343) | 0.796 / 0.610 / 0.440 / 0.233 | 0.656 / 0.571 / 0.529 / 0.453 | **0.900 / 0.817 / 0.803** | 0.42 / 0.10 | 0.274 / 0.451 / 0.597 | 3.425 / 4.136 |
+
+Per-source val (pam / nochrono / gdn): dclm 3.434 / 3.436 / 3.396, fineweb 3.467 / 3.469 / 3.431, chatmt 1.911 / 1.909 / 1.881.
+**Checks before the verdict (Lead, 23:31):** (1) config: the [args] of pam main vs nochrono main differ ONLY in `chrono` (and the
+checkpoint dir); lr 1.2e-3, seed 43, mix + far block, steps 13,733, decay 1,526 all equal; all 4 [args] blocks in the pam log identical.
+(2) resumes: pam main ran fresh twice (killed within 1 min, no save) then resumed at 9,400 (after the reboot) and 13,200 (the 44B gap);
+each resume restored the doc cursors and the step / token count from latest.pt and replayed from there (the steps after the save were
+redone; the packer's partial window is not saved, so a few docs at the cut can shift); LR constant 1.2e-3 throughout the main
+(wsd_stable), the decay continued from stable_final; total 1,000,013,824 tokens. Loss at the replayed steps (9,450: 2.72 -> 2.50;
+13,250: 2.99 -> 2.56) is within the 50-step log noise (2.45-2.99 between consecutive lines). Val NLL at every 2,000 steps matches nochrono
+within 0.007 (2k 4.042 / 4.035 ... 13,733 3.563 / 3.565): no damage from the resumes. (3) ctl's "PAM s8 D 0.523" is s8 D = mean of 2k
+and 4k (scored), not @8k. On that metric wio pam = (0.610 + 0.440 + 0.571 + 0.529) / 4 = **0.538**, i.e. the same as ctl: the far
+block did not lower it. On the same 2k / 4k metric nochrono 0.639, gdn 0.638.
+**VERDICT (claim rule as pre-registered): claim NOT met.** Rule 1 fails: pam s8 @8k 0.343 < gdn + 0.10 (0.508), and pam < gdn
+(0.408) and < nochrono (0.427); rule 2 is moot. **"The clock is what is ours" is not supported at 100M / 1B tokens with far docs: the
+Chrono clock LOWERS rule carry at every distance on both tasks vs nochrono** (shift 8k 0.233 vs 0.345; affine 8k 0.453 vs 0.510).
+Language: pam = nochrono (3.425 vs 3.427), both 0.04 behind GDN. **What the clock DOES buy: needles** (t40 16k 0.803 vs nochrono 0.353,
+gdn 0.325; 2k 0.900 vs 0.478 / 0.681): verbatim recall at distance, not rules.
 **Claim rule (pre-stated):** "the clock is what is ours" stands only if BOTH
 1. `pam` beats `gdn`: s8 @8k 3-save mean >= gdn + 0.10 AND told 8k >= gdn + 0.10 (n 100, ~±0.07); and
 2. `nochrono` loses that gap: pam − nochrono >= 0.10 on s8 @8k, and nochrono's lead over gdn is <= half of pam's.
