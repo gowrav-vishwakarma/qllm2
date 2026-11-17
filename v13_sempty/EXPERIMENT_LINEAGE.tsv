@@ -97,7 +97,7 @@ chatoff	sci1_seg3	2026-11-16	chat-off natural experiment: told 8k at 39B / 40B /
 wio_gdn	ctl_pam	2026-11-16	wio: Gated DeltaNet 102.51M (fla 0.3.2) at the ctl recipe + far block, 1.0B tokens	done: s8@8k 0.408, val 3.385	227f3eb	227f3eb	logs/wio/	EXPERIMENTS_SEMPY "wio"
 wio_nochrono	ctl_pam	2026-11-16	wio: PAM M2 with Chrono off (plain RoPE, readers on RoPE) at the ctl recipe + far block	done: s8@8k 0.427, val 3.427	227f3eb	227f3eb	logs/wio/	EXPERIMENTS_SEMPY "wio"
 wio_pam	ctl_pam	2026-11-16	wio: PAM M2 all on at the ctl recipe + far block (far-data equal-data control)	CLAIM NOT MET: s8@8k 0.343 < gdn 0.408 (bar 0.508); clock lowers rules, raises needles (t40 16k 0.80 vs 0.35)	227f3eb	227f3eb	logs/wio/	EXPERIMENTS_SEMPY "wio"
-wio_mamba2	ctl_mamba2	2026-11-16	wio: Mamba-2 at the ctl recipe + far block	pending (pre-registered)	-	-	logs/wio/	EXPERIMENTS_SEMPY "wio"
+wio_mamba2	ctl_mamba2	2026-11-16	wio: Mamba-2 at the ctl recipe + far block	done: s8 @8k 3-save 0.259 (shift ~0.02 at every distance > 0; affine 0.555 @8k); t40 16k 0.419; val 3.381 (best of the 4 arms); 102.61M, 1.0B tok	227f3eb	227f3eb	logs/wio/*wio_mamba2_227f3eb*	EXPERIMENTS_SEMPY "wio"
 wio_tpp	ctl_tpp	2026-11-16	wio: T++ at the ctl recipe + far block	pending (pre-registered)	-	-	logs/wio/	EXPERIMENTS_SEMPY "wio"
 seg3d_protofar	chatoff	2026-11-16	segment 3d: proto_far 0.8 -> 1.6 % (from dclm / fineweb100), chat kept 19.9 %; judged on told 8k + bare count at 42B / 43B vs 41B	pre-registered	-	-	-	EXPERIMENTS_SEMPY "segment 3d"
 b386	ctl_pam	2026-11-16	T++ (385.75M) and Mamba-2 (388.1M) on SCI-1 stage A + B to 4B, read at M1-M4 vs SCI-1 PAM	pre-registered	-	b0b2426	-	EXPERIMENTS_SEMPY "b386"

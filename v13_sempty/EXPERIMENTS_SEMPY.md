@@ -6176,6 +6176,7 @@ phase hypothesis: a nochrono shift of 0.345 is far above gdn, so the phase-refer
 | gdn | 102.51M | 1.0B | **0.408** | 0.897 / 0.511 / 0.326 / 0.136 | 0.973 / 0.894 / 0.820 / 0.681 | 0.681 / 0.458 / 0.325 | 0.17 / 0.06 | 0.275 / 0.440 / 0.594 | **3.385** / 4.066 |
 | nochrono | 102.87M | 1.0B | **0.427** | 0.873 / 0.709 / 0.558 / 0.345 | 0.711 / 0.660 / 0.628 / 0.510 | 0.478 / 0.408 / 0.353 | 0.54 / 0.06 | 0.273 / 0.464 / 0.592 | 3.427 / 4.144 |
 | pam | 102.88M | 1.0B | **0.343** (0.359 / 0.328 / 0.343) | 0.796 / 0.610 / 0.440 / 0.233 | 0.656 / 0.571 / 0.529 / 0.453 | **0.900 / 0.817 / 0.803** | 0.42 / 0.10 | 0.274 / 0.451 / 0.597 | 3.425 / 4.136 |
+| mamba2 (added 04:55 IST 11-18) | 102.61M | 1.0B | **0.259** (0.206 / 0.283 / 0.288) | 0.270 / 0.020 / 0.018 / 0.020 | 0.968 / 0.625 / 0.598 / 0.555 | 0.753 / 0.433 / 0.419 | 0.02 / 0.01 | 0.275 / 0.459 / 0.587 | **3.381** / 4.060 |
 
 Per-source val (pam / nochrono / gdn): dclm 3.434 / 3.436 / 3.396, fineweb 3.467 / 3.469 / 3.431, chatmt 1.911 / 1.909 / 1.881.
 **Checks before the verdict (Lead, 23:31):** (1) config: the [args] of pam main vs nochrono main differ ONLY in `chrono` (and the
@@ -6618,7 +6619,22 @@ are reported with NO verdict. Snapshot targets added at +1.5B (696,390) and +2.0
 | +0.75B (684,945; window 1 of 3) | 2k | +2.056 | 0.72 | | 0.03 | 0.97 | | |
 | | 8k | +0.548 | 0.12 | | 0.06 | 0.70 | | |
 
-Excursion guard (P_fu 8k <= 0.20, scope_fu 8k <= 0.30) passes at both saves. Settled window = +0.75B (684,945), +1.0B, 45B.
+| **45B (686,655; window 2 of 3)** | 2k | +3.859 | 0.72 | 0.67 | 0.26 | 0.98 | 0.32 | 0.33 |
+| | 8k | +0.775 | **0.36** | 0.10 | **0.33** | 0.71 | 0.24 | 0.90 |
+
+Excursion guard (P_fu 8k <= 0.20, scope_fu 8k <= 0.30) passes at +0.25 / +0.5 / +0.75B and **FAILS at 45B (excursion #1)**: P_fu 8k
+0.33, scope_fu 8k 0.36. First settled-window read (Library 82bd02bd, Lead): **WORKS NOT MET** (scope_fu 2k 0.72 / 0.72 >> 0.30).
+Settled window = +0.75B (684,945), +1.0B, 45B. **+1.0B (688,760) was NOT snapshotted:** the copier skipped it at 04:29 IST (6000 below
+its 30 GB gate). Substitute (Lead 04:32): `grab_689500.pt` = latest.pt at step **689,500 (45.19B tokens)**, slimmed on the 6000
+(tensor-equal), sha-verified on d_drive (4d635a2d...), pointed to by ~/.qllm_lib_688760; scored in Library's SOLO window after tpp,
+labelled by its real step. "Two in a row" is read on it. The 6000's 45B copy was removed after a sha match (d75c3895..., kept full on
+d_drive). +1.5B / +2.0B copier re-armed 04:48 IST (tmux mind3fsnap2).
+**45B CHECK (step 686,655, 45.0B tokens; 03:27-03:48 IST 11-18 on the 4090; outputs logs/*/v13_sempty_*sci1_step_686655_91a87ed*,
+from ../qllm_sci1check):** s8 @8k **0.945** (shift 0.9125, affine 0.9775; 44B 0.977), skill @8k (A_state) **0.71** (44B 0.735),
+t40 16k **0.939** (44B 0.808; t40 8k 0.981), clk2 8k **0.92** / 32k-run @16k 0.68 (44B 0.79 / 0.48), HS / ARC-e / PIQA 0.322 /
+0.550 / 0.639 (44B 0.316 / 0.553 / 0.643). Guards vs 44B (single save; the 3-save means come at the verdict): s8 0.945 >= 0.927 OK;
+HS +0.006, ARC-e -0.003 OK; clk2 0.92 >= 0.78 OK. Generations: units only where the prompt gives them (protocol "12.48 g", tool
+"78.4 C"); chat answers unit-free; the protocol greedy rounds wrongly (12.48 / 8.48 for 12.347 / 8.912).
 *3e re-armed on the patched v2 (12:32 IST 2026-11-17, Lead (b): the held-out scope direction "asked volume, mass protocol" removed
 from proto_far2; Library 4ece7bb5):* re-checks on 4ece7bb5: (a) packer 400 chunks identical, hook test OK, and proto_far v1 + proto4k
 streams identical pre- vs post-patch (300 docs each); (b) Library check(): own 65.4 / none 29.5 / other 5.2 %, leak-free, 0 shared
