@@ -5420,6 +5420,12 @@ Standing 4-tuple per milestone: (B, C, scope_fu, prec_u1) at 2k and 8k, plus P_f
 Bars: the SCOPE segment's, above (scope_fu 2k <= 0.30 within 0.5B, <= 0.15 by 1B; C 8k >= 0.427; P_fu 8k <= 0.10; twin unit_acc
 not down by more than 0.05). R has no bar yet; a first baseline is read on 41B / 42B when the card allows (the CPU smoke is n 3
 and is not a result).
+MIX DECISION RULE (ADDENDUM 12:49 IST, before any scope number; Argon 12:49 IST via Lead, adopted). The four-cell probe on 41B / 42.75B /
+43B decides:
+- If scope_fu at 2k on 43B (plain twin, S cell, held-out direction) is >= 0.50, the main run switches at the next save to
+  proto_far3 + proto4k2 (segment 3f, which Mind prepares).
+- If it is < 0.50 and HARM stays < 0.30, 3d finishes its addendum window to 44B and is then replaced by far3 + 4k2 in one step.
+- The 41B and 42.75B tuples are the pre-3d reference and the 3d-effect reading, not triggers.
 
 ### SCOPE (PRE-REGISTERED 2026-11-17 12:20 IST; Lead's decisions after the cgate 41B verdict; commit 4ece7bb5)
 Decisions (Lead 12:1x IST):
