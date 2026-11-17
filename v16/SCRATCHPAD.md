@@ -173,6 +173,20 @@ Opposite moves in 2 of 3 intervals (M6->M7 within one mix: told 0.81 -> 0.49, in
 
 ## Decisions (organiser)
 
+**2026-11-17 07:50 IST - step back (user asked: re-read memory, think in the void).** One night went into one cell (told rule @8k).
+What it really said: (1) the mind carries the told rule (C steady 0.3-0.5 nats) and the READ loses it to a drifting prior (B swings
+4-5 nats at constant LR): "the state knows, the readout does not ask". (2) Reading a state against its own counterfactual fork is cheap
+only for an O(1) mind (a fork = MBs, not a context-sized KV cache); closest prior work = contrastive decoding (Li et al. 2022),
+classifier-free guidance for LMs (Sanchez et al. 2023), context-aware decoding (Shi et al. 2023); ours differs by forking a recurrent
+state thousands of tokens before the question. Candidate general mechanism, not only for units: read ANY carried skill (s8, skill pack)
+by contrast. (3) Unasked link: "a decay erases the far rule first" (release blocker) may be the SAME thing - the decay settles B toward
+the majority '.' prior while C stays. Zero-training test: TOLD-MARGIN B / C on the decay checkpoints we already have (decay_m9, C2, C3).
+If B falls and C holds, the release problem is a read problem and the contrast gate may unblock the release. (4) Risk seen from far:
+GDN with far docs reaches s8 @8k 0.41 at 100M / 1B, while our old 0.52 vs 0.07 / 0.15 was on a mix WITHOUT far docs. The far block may
+lift every body; the wio pam arm (bar 0.508) and nochrono decide whether the rule edge is the architecture or the data. That, not told
+8k, is the result that carries the claim. (5) C halved since 344k (0.87 -> ~0.43): the carry itself thins with training; 3d targets it.
+Order of importance from here: wio pam / nochrono verdict > B / C on decay saves (release) > cgate guards (v0.4) > b386 > 3d addendum.
+
 **2026-11-16 21:49 IST - user asks "do we have a decent model?": ONE combined readout page at the release point.** The user wants the
 whole picture on the final model, not single cells, and will wait for it. At the release point (picked by Lead + Mind after segment 3d's
 42B / 43B verdict and the release decay), one page, grouped by tokens trained, our T++ / Mamba-2 at the same tokens beside every row,
