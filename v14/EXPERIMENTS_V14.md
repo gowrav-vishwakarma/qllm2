@@ -5377,6 +5377,25 @@ removes B by construction, and that is the case for the gate. The same overshoot
 rate must sit beside every 3d reading. Training-side angle for Mind: keep the protocol / no-protocol contrast pairs balanced in the
 3d mix, so the body is never paid for a unit it was not told.
 
+### 3d HARM readout (ADDENDUM 2026-11-17 11:58 IST, written AFTER seeing 42.75B; Lead's decision)
+Readout: plain no-protocol false-unit rate fu = noprot gate_win (the body without any protocol prefers a unit over '.'), at 8k AND
+2k, on every save. Pre-3d reference, recomputed from the existing jsonls (same four saves as for dC: 39B / 40B / 40.5B / 41B):
+8k 0.04, 2k 0.015. All pre-3d saves: 8k mean 0.08, max 0.34 (m27, 2k 0.30; later saves returned to ~0, so one high save has
+happened before).
+| save | fu 2k | fu 8k |  | save | fu 2k | fu 8k |
+|---|---|---|---|---|---|---|
+| m11 | 0.00 | 0.02 | | m40 | 0.03 | 0.10 |
+| m22best | 0.06 | 0.16 | | m40.5 | 0.01 | 0.02 |
+| m26 | 0.00 | 0.00 | | m41 | 0.01 | 0.04 |
+| m27 | 0.30 | 0.34 | | 42B (n100 / n300) | 0.00 | 0.00 / 0.00 |
+| m30 | 0.08 | 0.12 | | 42.25B | - | 0.11 |
+| m39 | 0.01 | 0.00 | | 42.5B | - | 0.00 |
+| | | | | 42.75B | - | 0.55 |
+TRIGGER (fixed now): if fu 8k >= 0.30 at TWO CONSECUTIVE 3d saves (42.75B counts as the first), 3d is judged HARMFUL whatever dC
+says, and the mix changes at the next save (remedy prepared: proto_far v2 with no-protocol and other-quantity docs, below).
+43B (656137) is read in this window at n 100, 2k + 8k, so the trigger is decided today. From 43B on, every 3d save reads 2k + 8k.
+The 42.25B / 42.5B snapshots have no 2k; backfill only if the file is kept (645000 and 652500 kept by Mind).
+
 ### CONTRAST GATE amendment (2026-11-17 11:52 IST, BEFORE any cgate 41B number; Argon via Lead 11:50 IST)
 Argon's independent audit of B / C: the identity is exact to 4e-6; Spearman(gate_win, B) 0.979, (gate_win, C) 0.717.
 (2) The decode shape, stated exactly from v14/cgate.py gate_read (arm v04; cgate is the same without demos):

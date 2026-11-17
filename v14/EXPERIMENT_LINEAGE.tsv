@@ -83,3 +83,4 @@ CONTRAST GATE tau 0	GATE-FREE told read	2026-11-17	emit the told unit iff the (h
 CGATE guards v0.4	CONTRAST GATE tau 0	2026-11-17	real decoding: twin / split (A32c) / cgate / v04 (self-demos + split + contrast gate) on 41B + 42B; mismatch false-unit, 2k, a26 2k guards	running	-	current	logs/v14_cgate_*	"""CONTRAST GATE guards"""
 DECAY B/C split	CONTRAST GATE tau 0	2026-11-17	TOLD-MARGIN 8k n100 on decay ckpts vs pre-decay parents: does decay move B or C	running	-	-	-	DECAY B / C split
 CGATE false-unit guards e/f	CGATE guards v0.4	2026-11-17	guards (e) same-quantity wrong unit, (f) no-protocol + distractors with a detector-chosen fork; required before v0.4 adoption	pre-registered	-	-	-	CONTRAST GATE amendment
+3d HARM readout	3d ADDENDUM	2026-11-17	plain no-protocol false-unit (noprot gate_win) 2k+8k per save; trigger fu8k>=0.30 at 2 consecutive 3d saves = HARMFUL	running	-	-	logs/v14_fartold_watch.log	3d HARM readout
