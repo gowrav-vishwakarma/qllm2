@@ -4,6 +4,15 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
+## Step back 2026-11-17 23:32 IST: Mind's chrono EUREKA (ffc22422) next to SCOPE
+- Mind: a content-driven phase makes keys position-specific: needles up, rules averaged across offset shots down.
+- SCOPE (ours): a told rule is bound to "a rule exists", not to its quantity. Both are about what a rule is KEYED on. A rule wants a
+  key that is free of position (Mind) and bound to its scope (ours): key = the slot it governs (quantity / symbol family),
+  not where it was said.
+- A testable angle, no run yet: the scope probe on the wio pam vs nochrono vs gdn saves. If phase-free keys over-generalise
+  (P_fu / scope_fu up on nochrono) while phased keys under-generalise (s8 down on pam), the right key is content-scoped,
+  neither phased nor flat. That would be a design claim for the mind: index rules by what they govern.
+
 ## STATE NOW (Library, 2026-11-06 23:35 IST) — read first
 - **Package is v0.3.1 (324cb6c).**
   - The default read is warm.
