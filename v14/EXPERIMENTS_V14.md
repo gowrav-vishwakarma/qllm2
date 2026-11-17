@@ -5676,7 +5676,7 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
-### 3f GUARD on CPU, low power (PRE-REGISTERED 2026-11-18 04:55 IST, before any number; Lead 05:02 IST)
+### 3f GUARD on CPU, low power (PRE-REGISTERED 2026-11-18 04:54 IST by the clock, before any number; Lead message stamped 05:02 IST, received ~04:50)
 Why: tpp keeps the 4090 until ~10:10 IST, so the GPU read of +1.0B / +1.5B may not happen before the user's day, while the 6000
 trains ~2B more on 3f. This settles only the EXCURSION pair (45B = #1).
 Method: scope_probe.py --guard_only (P + C + S cells, no R), --lengths 8192, n 40 (= the first 40 docs of the n-100 run, same rngs),
