@@ -5333,6 +5333,34 @@ The twin's gate is B + 5C (alpha 4).
 
 **Closest prior work and difference** as for the GATE-FREE read: contrastive decoding (Li et al. 2023), but the emit decision uses only the contrast term.
 
+### CONTRAST GATE guards: real decoding + composition with A32c (PRE-REGISTERED 2026-11-17 05:46 IST, before any GPU number; Lead 05:43 IST adds guard (d) and asks for ONE v0.4 candidate)
+**Composition:**
+- It is the same read with a different gate, not a competitor. A32c's split read takes the number from the warm stream and every other token from the α-4 contrast. At the unit step that contrast is B + 5C, so B still votes on unit vs '.'.
+- The contrast gate replaces only that one emit decision: emit t* (the twin's best non-stop token) iff (la − lb)[t*] − (la − lb)['.'] > 0.
+- The self-demos raise the contrast (CPU smoke, 2 docs: gate margin 5.2 / 5.5 with demos vs 2.2 / 2.5 without), so the two parts stack.
+- **The v0.4 candidate = arm v04:** self-demos + split number + contrast gate.
+
+**Code:** v14/cgate.py, arms twin / split (A32c) / cgate (gate without demos) / v04.
+- The gate fires once, right after a complete decimal number; this also covers answers that start as a sentence.
+
+**Mismatch cell:**
+- A train-wording doc whose protocol sentence is swapped for one about the other trained quantity, using its own rng.
+- The right answer is the bare value. false_unit = any mass / volume unit in the answer.
+
+**Run:** bodies 41B (step_625619) and 42B (step_640878); cells train 8k, mis 8k, a26 2k, train 2k, mis 2k; 100 docs each; one GPU job after the snapshot scoring catches up.
+
+**Bars** (v04 is adopted as the v0.4 told read only if ALL hold on BOTH bodies):
+- (a) train 8k: v04 and cgate ≥ the offline τ-0 prediction − 0.10, i.e. ≥ 0.58 at 41B and ≥ 0.61 at 42B. twin today is 0.35 / 0.09.
+- (b) mismatch false_unit, 2k and 8k: v04 and cgate ≤ twin + 0.05.
+- (c) train 2k: v04 ≥ twin − 0.05.
+- (d) a26 2k: v04 ≥ split (A32c) − 0.05.
+
+**Prior to this run:**
+- CPU smoke, 2 docs per cell, not a number: on mis 2k the gate wrote the protocol's unit on the wrong quantity in 2 of 2 docs (twin 1 of 2).
+- So (b) is the real risk. Removing B's vote also removes what blocked a wrong-quantity unit.
+
+**Closest prior work:** contrastive decoding (Li et al. 2023), CFG (Sanchez et al. 2023). The difference: only the emit decision is taken from the contrast term, and the number is taken warm.
+
 ### A32c RESULT (2026-11-16 21:56 IST; fixed code 166a3d6; logs/v14_a32c_{m22best,m30}_166a3d6_20261116_2029.{log,jsonl}; 100 docs per cell)
 right (value / unit). The twin and a32b arms reproduce A32b exactly (same docs), which checks the rerun.
 
