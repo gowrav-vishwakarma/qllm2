@@ -4,6 +4,18 @@ Read this first if you are picking up the real-arm training. Everything below
 is committed (`git log --oneline 4740d65..HEAD -- v13_sempty/`); the lab
 notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
+## Step back (Mind, 23:31 IST, 2026-11-17, after the wio pam verdict: claim NOT met)
+- Surprise: the clock we called "ours" lowers rule carry (s8 @8k 0.343 vs 0.427 without it) and raises needles 2.3x. ctl's 0.523 was the
+  2k/4k metric (pam 0.538 on it here), so ctl never tested 8k against an equal recipe; the old "PAM >> T++ / Mamba-2" gap is real but
+  is the notebook + far data, not the clock.
+- From far away: three mechanisms each win one axis (GDN: affine / language; PAM-RoPE: far shift / clk2; PAM-clock: needles). The goal
+  (rules beyond recall) wants the rule axis; the release body (386M, clock on) still scores s8 @8k 0.98 at 44B, so scale may hide it.
+- Bold angles (not proposals yet): (a) split key geometry, phase-free rule heads + phased episode heads, one O(1) state; (b) GDN-style
+  tied erase in our notebooks (4 write sites vs GDN's 12) as the affine fix; (c) test whether the clock's rule cost shrinks with scale
+  (a 386M wio pair is ~2 x 47 h; only if it can change the release decision). (d) the claim we CAN make: at equal data, PAM-RoPE notebooks
+  carry far shift 2.5x GDN and keep clk2 3x; that is a mechanism result, smaller than "the clock".
+- Next per Lead: mamba2 / tpp arms continue; no proposal before Lead reads this.
+
 ## Step back (Mind, 08:29 IST, 2026-11-04; user via Lead: "read the meditation memory, step back, see all again, discuss")
 
 Since SCI-1 began: 5 milestones; think tried and dropped; cont1 lost s8 (0.78 → 0.44 in 1B); A26 compact 0.40 → 0.00 (M4, old

@@ -7,6 +7,18 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-17 23:31 IST (Mind): at 100M / 1B the Chrono clock TRADES rules for needles; it is not what carries rules
+- Saw (wio, 227f3eb; logs/wio/*; EXPERIMENTS_SEMPY "pam ARM RESULT"): three ~103M arms, same 1.0B data + far block, only one flag apart
+  for pam vs nochrono. s8 @8k 3-save: gdn 0.408, nochrono 0.427, pam (clock on) 0.343; pam is lowest on shift and affine at EVERY
+  distance. Needles t40 16k: pam 0.803 vs nochrono 0.353 vs gdn 0.325. Language: pam = nochrono (3.425 / 3.427), gdn 3.385.
+- Says: a content-driven phase on q / k makes stored keys position-specific: exact retrieval at distance improves, but averaging a rule
+  over shots at different offsets gets harder (each example is stored under a different phase). Rule carry and verbatim recall pull the
+  key geometry in opposite directions. GDN's tied replace-on-write wins affine (an online map update); our notebook layout with plain
+  RoPE wins far shift (2.5x GDN). No single mechanism wins all.
+- For v14 / Library: a mind that does both may need two key geometries: phase-free notebooks for rules, phased ones for episodes
+  (split heads or split layers), plus a replace-on-write erase for map-like rules. Caveat: at 386M / 44B (SCI-1, clock on) s8 @8k is
+  0.98, so the cost may shrink with scale; this is a 100M / 1B finding.
+
 ## 2026-11-17 12:16 IST (Library): told rules are not SCOPED; our data trains rule presence, never rule scope
 - Saw (1a786a4e, logs/v14_cgate_m41_e1d7749c_20261117_1156.*): on 41B mismatch docs (protocol about volume, question about
   mass, right answer = the bare value), the plain twin appends the protocol's unit 74 % of the time at 2k ("66.2 μL"); the
