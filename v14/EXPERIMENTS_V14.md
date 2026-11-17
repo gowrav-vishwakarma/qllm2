@@ -5442,7 +5442,15 @@ A 44B scope 4-tuple is queued in this window, to see whether the scope damage sw
 | +0.25B 677315 (f2644b2f) | 3.30 / 0.74 | 0.90 / 0.17 | 0.03 / 0.09 | - | - | pass |
 | +0.5B 681130 (ab5caff4) | 1.635 / 0.413 | 0.51 / 0.02 | 0.01 / 0.02 | 0.48 / 0.01 | 0.96 / 0.66 | pass |
 | +0.75B 684945 (ab5caff4) | 2.056 / 0.548 | 0.72 / 0.12 | 0.03 / 0.06 | 0.50 / 0.01 | 0.97 / 0.70 | pass |
-No verdict yet (settled window = +0.75B + 45B + +1.0B). scope_fu 2k swings 0.90 -> 0.51 -> 0.72, all above the 0.30 WORKS bar.
+(superseded by the 45B row and verdict below) (settled window = +0.75B + 45B + +1.0B). scope_fu 2k swings 0.90 -> 0.51 -> 0.72, all above the 0.30 WORKS bar.
+| 45B 686655 (ab5caff4) | 3.859 / 0.775 | 0.72 / 0.36 | 0.26 / 0.33 | 0.67 / 0.10 | 0.98 / 0.71 | EXCURSION #1 |
+45B breaks the guard (P_fu 8k 0.33 > 0.20, scope_fu 8k 0.36 > 0.30). Same shape as the 3d peaks: C up, B up (-3.18 vs -4.5), the unit
+fires with no protocol, and the leak is in the plain state (S_fu_held 2k 0.32 / 8k 0.24), not only the twin.
++1.0B (688760) was skipped at 04:30 IST (Mind's .skipped flag, so tpp could start by 04:30). Lead 04:31 IST: score it later beside tpp
+(SHARED, under the VRAM gate) from its snapshot, or the nearest latest.pt labelled by its real step; the window stays as written.
+FIRST-WINDOW VERDICT (Lead, recorded 04:31 IST with 2 of 3 points): WORKS NOT MET. scope_fu 2k is 0.72 at +0.75B and 45B; a mean
+<= 0.30 would need the third point <= -0.54. NO EFFECT (within +-0.10 of 0.55) vs WORSE is decided when the +1.0B point lands.
+Excursion pair: 45B = #1; the next scored save (+1.0B, else +1.5B) decides "two in a row = stop and talk".
 
 ### SCOPE probe RESULT: 41B / 42.75B / 43B (2026-11-17 20:38 IST; logs/v14_scope_m4*_19f2d088_20261117_*; plain twin, n 100)
 | save | L | B | C | scope_fu | prec_u1 | P_fu | twin unit_acc | S_fu_held | S_bound_fu | R_u2 |
