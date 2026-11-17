@@ -5676,7 +5676,7 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
-### DECAY REMEDY PARTIAL: C3 at 2k only (2026-11-18 04:42 IST; logs/v14_scope_dec_C3_82bd02bd_20261118_0434.*)
+### DECAY REMEDY PARTIAL: C3 at 2k only (2026-11-18 04:40 IST; logs/v14_scope_dec_C3_82bd02bd_20261118_0434.*)
 Run SHARED beside tpp (Lead's split far window); the 55 % speed guard stopped it at 04:39 IST (tpp 82.8k -> 42.4k / 42.8k tok/s,
 ~52 % of solo, two lines in a row). 2k is complete (100 docs), 8k has 6 docs (not read). Paired per doc (same quantity + unit
 checked) with the TOLD-MARGIN decay jsonls:
