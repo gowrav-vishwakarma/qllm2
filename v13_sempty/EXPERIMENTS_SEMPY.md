@@ -6497,7 +6497,7 @@ has not passed when the trigger fires: segment 3r = 3c's weights (proto_far 0.8 
 generic `sci1_seg_switch.sh` (waits for the next latest.pt, stops sci1s3d, starts from that save). Nothing launches without Lead's GO.
 *Collateral check (43B CHECK):* skill-pack answers, generations and chat probes scanned for spurious units / changed answer formats
 vs the 42B CHECK; HS / ARC as usual.
-*3e READY state (12:13 IST 2026-11-17):* hook f2fcd675 (v7/data.py `proto_far2` -> protocol_text_iter(far=True, far_version=2),
+*3e READY state (12:04 IST 2026-11-17):* hook f2fcd675 (v7/data.py `proto_far2` -> protocol_text_iter(far=True, far_version=2),
 whole-window, own cursor) + `v13_sempty/tmp/sci1_long3e_env.sh` (3d's weights, proto_far -> proto_far2 at 1.6 %). (a) packer: 400 chunks
 identical to HEAD, and proto_far's stream identical HEAD vs hook at skip 0 / 1000 (test_proto_far2_hook.py); proto_far2 own cursor +
 exact resume. (b) Library check(far_version=2): leak-free, held-out hits 0, shared 5-grams with A26 0, answer share 0.0012 (= v1),
