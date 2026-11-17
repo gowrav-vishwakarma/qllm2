@@ -5377,6 +5377,24 @@ removes B by construction, and that is the case for the gate. The same overshoot
 rate must sit beside every 3d reading. Training-side angle for Mind: keep the protocol / no-protocol contrast pairs balanced in the
 3d mix, so the body is never paid for a unit it was not told.
 
+### SCOPE probe (PRE-REGISTERED 2026-11-17 12:25 IST, before any number; Argon's 4-cell design via Lead 12:19 IST)
+v14/scope_probe.py: one FAR-TOLD doc skeleton (A28's make_doc, trained wording), no new prose; teacher-forced like TOLD-MARGIN
+(logits at the step after the gold number; units by first token; twin = held + 4 (held - noprot)); 2k + 8k, n 100.
+- P presence: no protocol. B = mean l(gold) - l('.') on noprot; P_fu = any unit of either quantity beats '.'.
+- C strength: own protocol, TOLD-MARGIN's docs and rng (C reproduces told_margin.py: checked on 41B, 3 docs at 2k, CPU vs GPU,
+  B / C / twin M_id equal within 1e-3).
+- S scope: the protocol is about the OTHER quantity, with its real units. ONLY the held-out direction (asked volume, protocol
+  about mass; in no training source). Right = bare value; scope_fu = any unit beats '.' on the twin. Diagnostics, no bar:
+  S_fu_held (plain held read) and S_bound_fu (only the asked quantity's units count: a binding in the state vs a decode
+  that cannot suppress it).
+- R precedence: own protocol u1, and the asked row states value + u2 (same quantity). Right = u2. prec_u1 = u1 is the top
+  token of {all units, '.'} on the twin; R_u2 likewise.
+Standing 4-tuple per milestone: (B, C, scope_fu, prec_u1) at 2k and 8k, plus P_fu and twin unit_acc. Cost ~3x a TOLD-MARGIN
+(six reads per doc).
+Bars: the SCOPE segment's, above (scope_fu 2k <= 0.30 within 0.5B, <= 0.15 by 1B; C 8k >= 0.427; P_fu 8k <= 0.10; twin unit_acc
+not down by more than 0.05). R has no bar yet; a first baseline is read on 41B / 42B when the card allows (the CPU smoke is n 3
+and is not a result).
+
 ### SCOPE (PRE-REGISTERED 2026-11-17 12:20 IST; Lead's decisions after the cgate 41B verdict; commit 4ece7bb5)
 Decisions (Lead 12:1x IST):
 - v0.4 (contrast gate) is NOT adoptable.

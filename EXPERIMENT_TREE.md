@@ -198,6 +198,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
                 - **CGATE guards v0.4** (2026-11-17) real decoding: twin / split (A32c) / cgate / v04 (self-demos + split + contrast gate) on 41B + 42B; mismatch false-unit, 2k, a26 2k guards -> **v04 NOT adoptable: guard (b) false_unit 0.86 vs 0.30 at 8k on 41B (protocol unit not bound to quantity); a,c,d met**; run `-`, code at `current`; logs/v14_cgate_*; "CONTRAST GATE guards"
                   - **CGATE false-unit guards e/f** (2026-11-17) guards (e) same-quantity wrong unit, (f) no-protocol + distractors with a detector-chosen fork; required before v0.4 adoption -> **pre-registered**; run `-`; -; CONTRAST GATE amendment
                   - **SCOPE sources** (2026-11-17) proto_far3 (55/25/20) + proto4k2 (20% other-quantity at short gaps), held-out direction asked-volume/mass-protocol; bars scope_fu 2k<=0.30 in 0.5B -> **ready (not in stream)**; run `-`, code at `4ece7bb5`; v14/test_proto_far2.py; SCOPE
+                    - **SCOPE probe** (2026-11-17) 4-cell teacher-forced probe P/C/S/R at 2k+8k (held-out direction for S); standing 4-tuple (B,C,scope_fu,prec_u1) -> **built, CPU smoke OK**; run `-`; v14/scope_probe.py; SCOPE probe
                 - **DECAY B/C split** (2026-11-17) TOLD-MARGIN 8k n100 on decay ckpts vs pre-decay parents: does decay move B or C -> **running**; run `-`; -; DECAY B / C split
   - **PKG-SUITE per-milestone package suite** (2026-11-05) bare vs package at every SCI-1 milestone from 137,331: R x K, rewrite, told rule (twin / fork), recall to 32k (kv / kvupd / hop2), MB held -> **running (rows per milestone) | checkpoint 9 (137,331, 9.0B): R x K 0.67 / 0.42 vs bare 0.01; rewrite 0.92 / 0.85 vs 0.01; told twin 0.83 / 0.22 vs 0.13 / 0.05; recall 32k 20-way 1.00 x3 vs 0.10-0.45; 3.67 MB state**; run `c93e3b7`, code at `current`; logs/v14_pkg_suite_c3b_c93e3b7_20261105_1347.jsonl; "PKG-SUITE"
     - **BENCH-PKG BABILong + RULER-style with the package** (2026-11-05) final SCI-1 model, bare vs package, BABILong qa1-5 to 32k + RULER-style (our generator: niah single / multikey, VT) to 32k, MB per row -> **running (pre-registered, descriptive; after the Nov 6 decay)**; code at `current`; -; "BENCH-PKG"
@@ -229,4 +230,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-211 experiments: v13_sempty 102, v14 87, v15 10, v16 12.
+212 experiments: v13_sempty 102, v14 88, v15 10, v16 12.
