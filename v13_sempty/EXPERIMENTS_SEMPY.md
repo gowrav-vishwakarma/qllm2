@@ -6490,6 +6490,11 @@ saves by state).
 | 42.5B snap | 649,000 | 100 | 0.588 (0.037) | -3.86 | 0.73 / 0.29 | 0.73 | v14_told_margin_3d_648508_n100_9d5f43de_20261117_1146.jsonl (noprot gate_win 0.00) |
 | 42.75B snap | 652,500 | 100 | **3.644 (0.176)** | **+0.63** | 0.98 / 1.00 | 0.98 | v14_told_margin_3d_652322_n100_9d5f43de_20261117_1150.jsonl (**noprot gate_win 0.55**, unit_acc 0.34 at chance 0.27) |
 | 43B | 656,137 | 100 | 2.452 (0.136) | -2.03 | 0.94 / 0.94 | 0.94 | Library 07:16:45Z line (fu 8k **0.18**, 2k: C 9.884 (0.526), B -2.30, fu 0.14) |
+**SERIES REDUCED (18:10 IST 2026-11-17, Lead):** the 43.5B / 43.75B snapshots (targets 663,767 / 667,581) were MISSED: the 6000 link
+dropped 12:46-14:33 IST (a VPN on the 4090 box took all routes; the 6000's firewall drops the new exit IP) and the 4090 was rebooted
+at 15:53 IST, killing the copier; by 18:05 the run was at 668,350. The 43.25B point is the late snapshot step 661,500 (43.35B,
+moved aside 14:33, copied from 18:05). So the addendum's 9-save series has at most **7 points** (42, 42.25, 42.5, 42.75, 43, 43.35,
+44B); the verdict rule is applied to those 7, stated as such. HARM and SCOPE rules unchanged.
 (Snapshot names: Library's targets 644693 / 648508 / 652322 = the first latest.pt at or past them, steps 645,000 / 649,000 / 652,500.
 Kept on d_drive: keep_snap_645000_C1092.pt, keep_snap_652500_C3644_falseunit.pt (the false-unit test case); 649,000 deleted.)
 
