@@ -190,18 +190,57 @@ def build_doc(rng, with_meta: bool = False, max_gap: int = 150, compact_only: bo
             text += f'\n{rv.split()[0]} ->' + _ans(f' {ap}')
             meta['parts'].append(f'{rv} -> {ap}')
         return (text + '\n', dict(meta, style='compact')) if with_meta else text + '\n'
+    return _natural_body(rng, q, sub, fam_key, wording.format(**slots) if has_proto else '', has_proto, max_gap, meta, with_meta)
+
+
+SCOPE_SHARE = 0.20                  # proto4k2 (PRE-REGISTERED 11-17): share of OTHER-quantity docs (scope contrast) at short gaps
+
+
+SCOPE_HELD_ASKED = 'volume'          # Argon / Lead 11-17: the unit direction "asked volume, mass protocol" is HELD OUT of all scope
+                                     # training (the scope probe scores it); training sees only "asked mass, volume protocol"
+
+
+def _scoped_family(rng):
+    """a family whose protocol names a quantity (unit / convert), and the protocol of its OTHER quantity. Unit family: the asked
+    quantity is never SCOPE_HELD_ASKED (held-out direction). Convert (not probed): both directions."""
+    while True:
+        fam, q, sub, slots, wording = _family(rng)
+        if fam == 'convert' or (fam == 'unit' and q != SCOPE_HELD_ASKED):
+            break
+    if fam == 'unit':
+        oq = next(k for k in UNIT_Q if k != q); qp, Qp, units = UNIT_Q[oq]
+        return fam, q, sub, oq, rng.choice(UNIT_W).format(q=oq, qp=qp, Qp=Qp, u=rng.choice(units))
+    oq = next(k for k in CONVERT if k != q); qp, Qp, u1, u2 = CONVERT[oq]
+    return fam, q, sub, oq, rng.choice(CONVERT_W).format(q=oq, qp=qp, Qp=Qp, u1=u1, u2=u2)
+
+
+def build_doc_v2(rng, with_meta: bool = False, max_gap: int = 300):
+    """proto4k2 (2026-11-17, SCOPE): SCOPE_SHARE of docs are natural-style docs whose ONE protocol is about the OTHER quantity of
+    the family (unit / convert); the asked quantity has no convention, so the answers are the raw values (unit: bare number, then
+    '.'). The rest are build_doc's docs unchanged (its own 80 / 20 protocol / no-protocol and compact / natural mix)."""
+    if rng.random() >= SCOPE_SHARE:
+        out = build_doc(rng, with_meta=with_meta, max_gap=max_gap)
+        if with_meta:
+            out[1].setdefault('mode', 'own' if out[1].get('protocol') else 'none')
+        return out
+    fam, q, sub, oq, proto = _scoped_family(rng)
+    meta = dict(family=fam, quantity=q, sub=sub, parts=[], mode='other', other_q=oq)
+    return _natural_body(rng, q, sub, q if fam == 'convert' else fam, proto, False, max_gap, meta, with_meta)
+
+
+def _natural_body(rng, q, sub, fam_key, proto, conv, max_gap, meta, with_meta):
+    """build_doc's natural-style body (rng use unchanged). proto '' = no protocol sentence; conv False = raw answers."""
     n_rows = rng.randint(3, 6)
     ids = _sample_ids(rng, n_rows); mats = rng.sample(MATERIALS, n_rows)
     rows, answers = [], []
     for i in range(n_rows):
         rv, ap, raw = item(rng, fam_key, sub)
         rows.append(rng.choice(ROW_T).format(s=ids[i], m=mats[i], q=q, v=rv))
-        answers.append(ap if has_proto else raw)
-    proto = wording.format(**slots)
+        answers.append(ap if conv else raw)
     parts = []
     if rng.random() < 0.5:
         parts.append(_filler(rng, rng.randint(1, 3)))
-    if has_proto:
+    if proto:
         parts.append(proto)
     parts.append(_filler(rng, _gap(rng, hi=max_gap)))
     for r in rows:
@@ -211,12 +250,12 @@ def build_doc(rng, with_meta: bool = False, max_gap: int = 150, compact_only: bo
     parts.append(_filler(rng, rng.randint(0, 40)) if rng.random() < 0.7 else '')
     text = ' '.join(p for p in parts if p)
     qa = rng.choice(QA_FORMS)
-    meta['parts'] += ([proto] if has_proto else []) + rows
+    meta['parts'] += ([proto] if proto else []) + rows
     for i in rng.sample(range(n_rows), rng.randint(1, min(3, n_rows))):
         question = rng.choice(QUESTIONS).format(q=q, s=ids[i])
         text += qa.format(q=question) + _ans(f' {answers[i]}') + '.'
         meta['parts'] += [question, answers[i]]
-    meta.update(style='natural', protocol=has_proto)
+    meta.update(style='natural', protocol=bool(proto) and conv)
     return (text + '\n', meta) if with_meta else text + '\n'
 
 
@@ -244,6 +283,22 @@ def build_far_doc(rng, with_meta: bool = False):
 FAR2_SHARES = (0.65, 0.25, 0.10)    # proto_far2 modes: own protocol / no protocol / OTHER-quantity protocol (PRE-REGISTERED 11-17)
 
 
+FAR3_SHARES = (0.55, 0.25, 0.20)    # proto_far3 (SCOPE, PRE-REGISTERED 11-17): own / none / other; 'other' redraws round -> ~20 % realized
+
+
+def build_far_doc_v3(rng, with_meta: bool = False):
+    """proto_far3 (2026-11-17, SCOPE): proto_far2's design with FAR3_SHARES; an 'other' draw takes a family whose protocol names a
+    quantity (unit / convert, never round), so the other-quantity share is the full 20 %. Own rng stream (far_version 3)."""
+    r = rng.random()
+    mode = 'own' if r < FAR3_SHARES[0] else 'none' if r < FAR3_SHARES[0] + FAR3_SHARES[1] else 'other'
+    if mode == 'other':
+        fam, q, sub, oq, proto = _scoped_family(rng)
+        return _far_body(rng, fam, q, sub, proto, False, dict(mode='other', other_q=oq), with_meta)
+    fam, q, sub, slots, wording = _family(rng)
+    return _far_body(rng, fam, q, sub, wording.format(**slots) if mode == 'own' else '', mode == 'own',
+                     dict(mode=mode, other_q=None), with_meta)
+
+
 def build_far_doc_v2(rng, with_meta: bool = False):
     """proto_far2 (2026-11-17, Lead after the 42.75B no-protocol false units): proto_far's far docs, but only 65 % carry the
     protocol for the asked quantity. 25 % have NO protocol, and 10 % a protocol for the OTHER quantity of the same family. Those 35 %
@@ -252,8 +307,8 @@ def build_far_doc_v2(rng, with_meta: bool = False):
     r = rng.random()
     mode = 'own' if r < FAR2_SHARES[0] else 'none' if r < FAR2_SHARES[0] + FAR2_SHARES[1] else 'other'
     fam, q, sub, slots, wording = _family(rng)
-    if mode == 'other' and fam == 'round':
-        mode = 'none'
+    if mode == 'other' and (fam == 'round' or (fam == 'unit' and q == SCOPE_HELD_ASKED)):
+        mode = 'none'                                                # round names no quantity; asked-volume is the held-out direction
     proto, other_q = '', None
     if mode == 'own':
         proto = wording.format(**slots)
@@ -299,20 +354,29 @@ def _far_body(rng, fam, q, sub, proto, conv, extra, with_meta):
 
 def protocol_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters: Optional[Dict[str, int]] = None,
                        counter_key: str = 'proto', bump=None, max_gap: Optional[int] = None,
-                       compact_only: bool = False, far: bool = False, far_version: int = 1) -> Iterator[str]:
+                       compact_only: bool = False, far: bool = False, far_version: int = 1,
+                       scope_version: int = 1) -> Iterator[str]:
     """Infinite, deterministic stream of protocol docs (marked answer spans). max_gap = the largest prose gap in filler
     sentences (log-uniform from 2; ~12 tokens each): 150 = the T 2048 recipe, 300 = 'proto4k' (protocol -> rows up to
     ~3.5-4k tokens, for SEQ 4096). compact_only = 'protoc': ONLY the compact "Report rule." style (demos + 1-3 queries, the converted
     value as the marked answer), prose gap <= 20 sentences unless max_gap is given; trained families only. far = 'proto_far':
     build_far_doc only (protocol -> first answer 2,048-3,000 tokens, doc <= 3,200), its own rng stream. far_version 2 =
-    'proto_far2' (build_far_doc_v2: 25 % no protocol, 10 % other-quantity protocol), its own rng stream (offset 8888)."""
+    'proto_far2' (build_far_doc_v2: 25 % no protocol, 10 % other-quantity protocol), its own rng stream (offset 8888).
+    far_version 3 = 'proto_far3' (build_far_doc_v3, SCOPE: 55 / 25 / 20), offset 9999. scope_version 2 (not far) = 'proto4k2'
+    (build_doc_v2: 20 % other-quantity docs at short gaps, the rest build_doc's), offset 5555."""
     if max_gap is None:
         max_gap = 20 if compact_only else 150
-    far2 = far and far_version == 2
-    rng = random.Random((seed * 2654435761 + SEED_OFFSET + 31337 + ((8888 if far2 else 7777) if far else 0)) & 0xFFFFFFFF)
+    far2, far3, sc2 = far and far_version == 2, far and far_version == 3, not far and scope_version == 2
+    off = (9999 if far3 else 8888 if far2 else 7777) if far else (5555 if sc2 else 0)
+    rng = random.Random((seed * 2654435761 + SEED_OFFSET + 31337 + off) & 0xFFFFFFFF)
     n = 0
     while True:
-        doc = (build_far_doc_v2(rng) if far2 else build_far_doc(rng)) if far else build_doc(rng, max_gap=max_gap, compact_only=compact_only)
+        if far:
+            doc = build_far_doc_v3(rng) if far3 else build_far_doc_v2(rng) if far2 else build_far_doc(rng)
+        elif sc2:
+            doc = build_doc_v2(rng, max_gap=max_gap)
+        else:
+            doc = build_doc(rng, max_gap=max_gap, compact_only=compact_only)
         n += 1
         if n <= skip_docs:
             continue
@@ -332,7 +396,7 @@ def _ngrams(t: str, n=5):
     return {' '.join(w[i:i + n]) for i in range(len(w) - n + 1)}
 
 
-def check(n_docs: int = 20000, far: bool = False, far_version: int = 1) -> dict:
+def check(n_docs: int = 20000, far: bool = False, far_version: int = 1, scope_version: int = 1) -> dict:
     """leak check against A26's held-out families and wordings (on the generated protocol / rows / questions / answers,
     not on filler prose) + the share of answer characters. far = the proto_far docs (build_far_doc)."""
     from v7.data import ANSWER_MARK as AM
@@ -346,7 +410,8 @@ def check(n_docs: int = 20000, far: bool = False, far_version: int = 1) -> dict:
     rng = random.Random(1)
     bad, fams, styles, modes, chars_ans, chars = [], {}, {}, {}, 0, 0
     for _ in range(n_docs):
-        d, m = ((build_far_doc_v2 if far_version == 2 else build_far_doc)(rng, with_meta=True) if far
+        FB = {1: build_far_doc, 2: build_far_doc_v2, 3: build_far_doc_v3}[far_version]
+        d, m = (FB(rng, with_meta=True) if far else build_doc_v2(rng, with_meta=True) if scope_version == 2
                 else build_doc(rng, with_meta=True))
         modes[m.get('mode', '-')] = modes.get(m.get('mode', '-'), 0) + 1
         k = f"{m['family']}:{m['quantity']}:{m['sub'][0] if m['family'] == 'round' else m['sub']}"
