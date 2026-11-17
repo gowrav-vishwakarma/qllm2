@@ -6511,6 +6511,12 @@ latest.pt save without waiting, then reports. 3r is the fallback only if 3e fail
 (B) fu 8k at 43B < 0.30 -> no switch; 3d continues per the addendum (to 44B, 9 saves), fu watched at every snapshot, trigger armed
 (any two consecutive saves >= 0.30). At the end of the addendum window 3e replaces 3d anyway if dC WORKS (v2 is the better-designed
 source), as a separate GO.
+*3e re-armed on the patched v2 (12:32 IST 2026-11-17, Lead (b): the held-out scope direction "asked volume, mass protocol" removed
+from proto_far2; Library 4ece7bb5):* re-checks on 4ece7bb5: (a) packer 400 chunks identical, hook test OK, and proto_far v1 + proto4k
+streams identical pre- vs post-patch (300 docs each); (b) Library check(): own 65.4 / none 29.5 / other 5.2 %, leak-free, 0 shared
+5-grams; my count over 20,000 v2 docs: unit-family "asked volume, mass protocol" = 0 (asked mass / volume protocol 334; convert both
+directions 334 / 331, not probed); (c) v2 patched 2,580 +- 271 tokens (pre-patch 2,600, v1 2,584). 6000 worktree qllm_sci1e moved to
+4ece7bb5 and smoke-opened; the 43B watcher launches from it. S (the probed direction) is untrained in 3e.
 Snapshot 42.25B = snap_645000.pt (hard-linked as snap_644693.pt after a name mismatch made Library's watcher log it "skipped";
 scored in the next window). Window mix logged per snapshot in logs/v13_sempty_3d_snapshots_*.log.
 
