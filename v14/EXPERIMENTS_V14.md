@@ -5676,6 +5676,16 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
+### 3f GUARD on CPU, low power (PRE-REGISTERED 2026-11-18 04:55 IST, before any number; Lead 05:02 IST)
+Why: tpp keeps the 4090 until ~10:10 IST, so the GPU read of +1.0B / +1.5B may not happen before the user's day, while the 6000
+trains ~2B more on 3f. This settles only the EXCURSION pair (45B = #1).
+Method: scope_probe.py --guard_only (P + C + S cells, no R), --lengths 8192, n 40 (= the first 40 docs of the n-100 run, same rngs),
+--device cpu, 16 of 32 threads, nice 10; stop if RAM available < 12 GB. Labelled "low power, CPU, guard only".
+Saves: +1.0B substitute grab_689500 (step 689,500 = 45.19B; the 688,760 snapshot was never taken), then +1.5B snap_696390 when it
+lands. Smoke (2 docs) 120 s wall incl. load, peak RSS 4.6 GB -> ~35 min per save.
+Reading (fixed now), per save, on P_fu 8k and scope_fu 8k: either >= 0.35 -> GUARD BROKEN; both <= 0.15 -> CLEAR; else UNCLEAR
+(wait for the GPU read at n 100). A GPU read, when it comes, supersedes this one.
+
 ### DECAY REMEDY PARTIAL: C3 at 2k only (2026-11-18 04:40 IST; logs/v14_scope_dec_C3_82bd02bd_20261118_0434.*)
 Run SHARED beside tpp (Lead's split far window); the 55 % speed guard stopped it at 04:39 IST (tpp 82.8k -> 42.4k / 42.8k tok/s,
 ~52 % of solo, two lines in a row). 2k is complete (100 docs), 8k has 6 docs (not read). Paired per doc (same quantity + unit
