@@ -5377,6 +5377,79 @@ removes B by construction, and that is the case for the gate. The same overshoot
 rate must sit beside every 3d reading. Training-side angle for Mind: keep the protocol / no-protocol contrast pairs balanced in the
 3d mix, so the body is never paid for a unit it was not told.
 
+### S8-SCOPE probe (DESIGN ONLY, 2026-11-17 12:26 IST; Lead: CPU design, not run)
+Question: does in-context rule learning (s8: a hidden rule from 8 examples, memory_probes/rules.py, spread across held-out filler)
+bind each learned rule to its own symbol family, or does the last / strongest rule leak onto every query?
+Design: one prompt with TWO letter_shift rules of the same kind for two symbol families, lowercase (shift k1) and UPPERCASE
+(shift k2), with k1 != k2 drawn from 1-3. Header "Letter rule." as in s8 (no new prose). 4 + 4 examples, interleaved in random
+order, then spread across filler exactly as s8 (memory_probes/spread.py, 0 / 2k / 8k). Query: a symbol of ONE family, never
+shown with its answer.
+Candidates (8, single-token, like s8): target = query + k_own; scope error = query + k_other; copy = query; the rest are
+random letters of the query's case.
+Scores:
+- acc (chance 1/8);
+- scope_err = rate of query + k_other being top (the rule applied to the wrong family);
+- a one-rule control: the same prompt without the other family's 4 examples (4 shots); scope cost = control acc - acc.
+Cells: query family = the FIRST-shown or the LAST-shown family (recency), at 0 / 2k / 8k; n 200 per cell.
+Held-out (anti-shortcut): case pairs never decide k: k1 / k2 are re-drawn per prompt, and an UPPERCASE-query, k2 > k1 cell is
+reported apart.
+Reading (to fix before any run): scope_err > 2x its chance share (1/8) with acc below the control by >= 0.10 means s8 rules are
+not scoped. Same failure as units; the remedy is scoped contrasts in the rule data (b2s / s8 training sets).
+Closest prior work: the s8 / b2s suites themselves (ours), entity binding (Feng & Steinhardt 2023), multi-task ICL interference
+studies. Difference: two rules held at once across 2-8k tokens of filler in an O(1) state, scope scored per family.
+Cost: no decoding; one forward per prompt, about like an s8 run. Code: ~60 lines as a new task in memory_probes/rules.py
+(two_family_shift) + a --suite flag; not written until Lead / Mind ask for the run.
+
+### SCOPE probe (PRE-REGISTERED 2026-11-17 12:25 IST, before any number; Argon's 4-cell design via Lead 12:19 IST)
+v14/scope_probe.py: one FAR-TOLD doc skeleton (A28's make_doc, trained wording), no new prose; teacher-forced like TOLD-MARGIN
+(logits at the step after the gold number; units by first token; twin = held + 4 (held - noprot)); 2k + 8k, n 100.
+- P presence: no protocol. B = mean l(gold) - l('.') on noprot; P_fu = any unit of either quantity beats '.'.
+- C strength: own protocol, TOLD-MARGIN's docs and rng (C reproduces told_margin.py: checked on 41B, 3 docs at 2k, CPU vs GPU,
+  B / C / twin M_id equal within 1e-3).
+- S scope: the protocol is about the OTHER quantity, with its real units. ONLY the held-out direction (asked volume, protocol
+  about mass; in no training source). Right = bare value; scope_fu = any unit beats '.' on the twin. Diagnostics, no bar:
+  S_fu_held (plain held read) and S_bound_fu (only the asked quantity's units count: a binding in the state vs a decode
+  that cannot suppress it).
+- R precedence: own protocol u1, and the asked row states value + u2 (same quantity). Right = u2. prec_u1 = u1 is the top
+  token of {all units, '.'} on the twin; R_u2 likewise.
+Standing 4-tuple per milestone: (B, C, scope_fu, prec_u1) at 2k and 8k, plus P_fu and twin unit_acc. Cost ~3x a TOLD-MARGIN
+(six reads per doc).
+Bars: the SCOPE segment's, above (scope_fu 2k <= 0.30 within 0.5B, <= 0.15 by 1B; C 8k >= 0.427; P_fu 8k <= 0.10; twin unit_acc
+not down by more than 0.05). R has no bar yet; a first baseline is read on 41B / 42B when the card allows (the CPU smoke is n 3
+and is not a result).
+
+### SCOPE (PRE-REGISTERED 2026-11-17 12:20 IST; Lead's decisions after the cgate 41B verdict; commit 4ece7bb5)
+Decisions (Lead 12:1x IST):
+- v0.4 (contrast gate) is NOT adoptable.
+- A32c (self-demos + split, no gate) is NOT adoptable either until scope is trained: its mismatch false-unit is worse than the
+  twin's (8k 0.51 vs 0.25, 2k 0.96 vs 0.74), so guard (b) applies to it.
+- v0.3.1 stays the package.
+- 42B cgate run dropped.
+STANDING READOUT from now on: the SCOPE 4-tuple (B, C, scope_fu, prec_u1) on the plain twin at 2k + 8k, for every milestone told line,
+in MLB and on the release page. Probe: v14/scope_probe.py (pre-registered separately, below, before any number). Today's baseline
+from the cgate mismatch cell, 41B: twin false-unit 0.74 at 2k, 0.25 at 8k. An honest limitation for the paper: the body carries
+"a rule exists", not "what it is about".
+Held-out direction (Argon): the unit direction "asked volume, protocol about mass" is in NO scope training data; the probe scores it.
+proto_far2 patched to match (Lead (b)): an 'other' draw with asked = volume becomes 'none'. v2 hash 884452eec7730950 (pre-patch
+1295aa3bf38d0450 stays armed until Mind's three re-checks pass). Patched v2 realized: own 65.4 / none 29.5 / other 5.2 %. If 3e
+starts on the pre-patch v2, S is a TRAINED direction for units from then on, and the 3e notes say so.
+Scope data (CPU, ready; its own segment after Mind's three checks):
+- proto_far3 = far_version 3 (own 55 / none 25 / other 20; 'other' takes unit / convert only; realized 55.9 / 25.7 / 18.3 %).
+- proto4k2 = scope_version 2 (short gaps, max_gap 300: 20 % natural docs with the OTHER quantity's protocol and raw answers; the
+  rest build_doc's own 80 / 20 + compact mix; realized other 20.2 %).
+- Both are leak_free (0 shared 5-grams with A26), and both hold out the direction above.
+- Old streams bit-identical by hash (proto_far v1 68a702f3fe73c0f8, build_doc 62ae4850c80d73fc).
+- Tests: python -m v14.test_proto_far2 ALL PASS.
+Bars for the scope segment (on the plain twin, scope probe, held-out direction):
+- (1) scope_fu 2k <= 0.30 within 0.5B tokens and <= 0.15 by 1B (41B baseline 0.74 on the cgate mis cell);
+- (2) C 8k mean >= 0.427 (the carry is kept);
+- (3) B-cell false-unit <= 0.10 at 8k (the no-protocol half stays fixed);
+- (4) twin unit_acc 8k not lower than the pre-segment mean - 0.05.
+Closest prior work: contrast sets (Gardner et al. 2020); counterfactually augmented data (Kaushik et al. 2020); binding / scope
+tests of which entity an instruction or attribute applies to (entity-binding probes in LMs, e.g. Feng & Steinhardt 2023, "How do
+language models bind entities in context?"). Difference: the rule sits 2-8k tokens before the question in an O(1) recurrent
+state, and we train and score its scope at that distance, with one direction held out against a lexical shortcut.
+
 ### CONTRAST GATE guards RESULT, 41B (2026-11-17 12:15 IST; logs/v14_cgate_m41_e1d7749c_20261117_1156.*; peak 5,072 MiB)
 | cell | twin | split (A32c) | cgate | v04 |
 |---|---|---|---|---|
