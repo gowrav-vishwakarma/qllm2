@@ -6504,6 +6504,13 @@ exact resume. (b) Library check(far_version=2): leak-free, held-out hits 0, shar
 modes own 64.7 / none 28.2 / other 7.2 %. (c) realized share: v2 docs 2,600 +- 275 tokens vs v1 2,584 +- 286 (400 docs each), so the
 token share at 1.6 % equals 3d's proto_far share; the trainer's [mix] line at 3e's first val confirms it in the log. Library's bars if
 it enters: fu 8k <= 0.10 within 0.5B and <= 0.05 by 1B; mean C 8k >= 0.427; twin unit_acc >= the pre-switch mean - 0.05.
+**DECISION RULE at 43B (Lead, recorded 12:05 IST 2026-11-17, BEFORE the 43B fu number exists):** fu = noprot gate_win at 8k in
+Library's line "3d 656137 told_margin8k n ... fu x".
+(A) fu 8k at 43B >= 0.30 -> trigger fired; Lead's GO for 3e given in advance: Mind launches sci1_seg_switch.sh (3d -> 3e) at the next
+latest.pt save without waiting, then reports. 3r is the fallback only if 3e fails to start or its first-val [mix] line is wrong.
+(B) fu 8k at 43B < 0.30 -> no switch; 3d continues per the addendum (to 44B, 9 saves), fu watched at every snapshot, trigger armed
+(any two consecutive saves >= 0.30). At the end of the addendum window 3e replaces 3d anyway if dC WORKS (v2 is the better-designed
+source), as a separate GO.
 Snapshot 42.25B = snap_645000.pt (hard-linked as snap_644693.pt after a name mismatch made Library's watcher log it "skipped";
 scored in the next window). Window mix logged per snapshot in logs/v13_sempty_3d_snapshots_*.log.
 
