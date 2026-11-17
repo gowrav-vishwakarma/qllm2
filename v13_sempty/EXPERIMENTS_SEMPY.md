@@ -6521,6 +6521,13 @@ latest.pt save without waiting, then reports. 3r is the fallback only if 3e fail
 (any two consecutive saves >= 0.30). At the end of the addendum window 3e replaces 3d anyway if dC WORKS (v2 is the better-designed
 source), as a separate GO.
 **43B RESULT of the rule (12:48 IST 2026-11-17): (B).** fu 8k 0.18 < 0.30 (2k 0.14): no switch; 3d continues to 44B; 3e stays armed (trigger: any two consecutive saves >= 0.30; fu above the pre-3d 0.04, watched at every snapshot).
+**SCOPE SWITCH RULE (Argon 12:49 IST, adopted by Lead; recorded 12:50 IST 2026-11-17, BEFORE any scope number exists):** switching off
+3d is gated on Library's four-cell scope probe (41B / 42.75B / 43B, next 4090 window), not on the clock. Cell S = the held-out direction
+(asked volume, mass protocol), plain twin, false-unit rate at 2k, on 43B.
+- S-cell false-unit 2k (43B) >= 0.50 -> switch at the next save to the scope-aware sources: segment **3f** = 3d's mix with
+  proto_far -> proto_far3 and proto4k -> proto4k2 at the same shares, own cursors (not v2).
+- < 0.50 AND HARM (fu 8k) stays < 0.30 -> finish the addendum to 44B, then replace 3d by 3f in one step.
+- 3e (v2) stays armed only for the HARM trigger. Nothing launches on the 6000 without Lead's GO; pam has priority on the 4090.
 *3e re-armed on the patched v2 (12:32 IST 2026-11-17, Lead (b): the held-out scope direction "asked volume, mass protocol" removed
 from proto_far2; Library 4ece7bb5):* re-checks on 4ece7bb5: (a) packer 400 chunks identical, hook test OK, and proto_far v1 + proto4k
 streams identical pre- vs post-patch (300 docs each); (b) Library check(): own 65.4 / none 29.5 / other 5.2 %, leak-free, 0 shared
