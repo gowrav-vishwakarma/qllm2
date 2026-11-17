@@ -5436,6 +5436,13 @@ on every axis".
 44B (step_671396, last pure-3d save), TOLD-MARGIN n300: C 8k +0.471 (se 0.016) / 2k +1.810, B -4.29 / -5.01, fu 0.01 / 0.01, twin
 gate_win 0.18. That is back near 42B (0.453): the 3d C series swings (0.45, 1.09, 0.59, 3.64, 2.45, 0.47), it does not climb.
 A 44B scope 4-tuple is queued in this window, to see whether the scope damage swung back too.
+3f per-save SCOPE tuples (n 100, plain twin; logs/v14_scope_3f_<step>_*; 2k / 8k):
+| save | C | scope_fu | P_fu | prec_u1 | unit_acc | guard |
+|---|---|---|---|---|---|---|
+| +0.25B 677315 (f2644b2f) | 3.30 / 0.74 | 0.90 / 0.17 | 0.03 / 0.09 | - | - | pass |
+| +0.5B 681130 (ab5caff4) | 1.635 / 0.413 | 0.51 / 0.02 | 0.01 / 0.02 | 0.48 / 0.01 | 0.96 / 0.66 | pass |
+| +0.75B 684945 (ab5caff4) | 2.056 / 0.548 | 0.72 / 0.12 | 0.03 / 0.06 | 0.50 / 0.01 | 0.97 / 0.70 | pass |
+No verdict yet (settled window = +0.75B + 45B + +1.0B). scope_fu 2k swings 0.90 -> 0.51 -> 0.72, all above the 0.30 WORKS bar.
 
 ### SCOPE probe RESULT: 41B / 42.75B / 43B (2026-11-17 20:38 IST; logs/v14_scope_m4*_19f2d088_20261117_*; plain twin, n 100)
 | save | L | B | C | scope_fu | prec_u1 | P_fu | twin unit_acc | S_fu_held | S_bound_fu | R_u2 |
