@@ -5433,6 +5433,8 @@ Held-out direction (Argon): the unit direction "asked volume, protocol about mas
 proto_far2 patched to match (Lead (b)): an 'other' draw with asked = volume becomes 'none'. v2 hash 884452eec7730950 (pre-patch
 1295aa3bf38d0450 stays armed until Mind's three re-checks pass). Patched v2 realized: own 65.4 / none 29.5 / other 5.2 %. If 3e
 starts on the pre-patch v2, S is a TRAINED direction for units from then on, and the 3e notes say so.
+UPDATE 12:33 IST: Mind re-checked 4ece7bb5 (v1 / proto4k identical, 0 of 20,000 v2 docs in the held-out direction, length
+parity). The watcher and the 6000 worktree are on the PATCHED v2, so S stays a held-out read through 3e.
 Scope data (CPU, ready; its own segment after Mind's three checks):
 - proto_far3 = far_version 3 (own 55 / none 25 / other 20; 'other' takes unit / convert only; realized 55.9 / 25.7 / 18.3 %).
 - proto4k2 = scope_version 2 (short gaps, max_gap 300: 20 % natural docs with the OTHER quantity's protocol and raw answers; the
