@@ -6413,7 +6413,7 @@ NO EFFECT if <= 0.38; otherwise decide at 44B.
 | told 2k / 8k (Library jsonl, Lead's read; Library's report pending) | 0.84 / 0.35 (bare 45) | 0.66 / 0.09 (bare 70) |
 Verdict waits for 43B by the rule. To reach WORKS the 43B told 8k would need >= 0.81; to avoid NO EFFECT, > 0.67.
 
-**3d ADDENDUM: powered readout (Mind + Library + Lead, 05:45 IST 2026-11-17; MADE AFTER SEEING 42B: told 8k 0.09, twin M_gate -2.69,
+**3d ADDENDUM: powered readout (Mind + Library + Lead, 05:38 IST 2026-11-17; MADE AFTER SEEING 42B: told 8k 0.09, twin M_gate -2.69,
 C 0.42; recorded before any snapshot is scored).** The ORIGINAL 42B / 43B rule above is still evaluated and reported as written (it will
 probably read NO EFFECT; that is not hidden). The addendum decides what we DO: 3d runs to 44B regardless of the original verdict, then
 this rule is applied.
