@@ -7,6 +7,15 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-17 05:35 IST: single-save told 8k mostly measures the body's no-protocol '.' prior, not the told-rule carry
+**What we saw:** TOLD-MARGIN jsonl at 10 points (M11 … 42B; code b4f1bc9 / 41ba344 / 41ba3448, logs/v14_told_margin_*), paired per doc at 8k.
+- The protocol's own effect C = mean(held − noprot) M_gate is steady at 0.31–0.54 nats (344k 0.87), SE 0.02–0.03 per save.
+- The no-protocol gate B (the body's pull to end a number with '.') swings from −1.1 to −5.9.
+- Spearman(told 8k, B) = 0.96; Spearman(told 8k, C) = 0.73.
+- 42B: told 8k 0.09 with C 0.42 (41B 0.49), and B fell to −4.79.
+**What it says:** the ±0.3 save-to-save swings in told 8k come mostly from a format prior that moves with each save. The carry the far block trains moves little.
+**For Mind / Lead:** judge 3d by C (Δ ≥ 0.10 nats is about 3 SE), with B reported beside it. A told read that does not have to out-vote the '.' prior would be steadier (A32c split, 0.61–0.83 at 8k). EXPERIMENTS_V14 "TOLD-MARGIN re-read".
+
 ## 2026-11-12 12:23 IST: rule carry trained at 1.8-3.2k generalises to 8k (beyond the window): s8 @8k 0.19 -> 0.97
 **What we saw:** SCI-1 386M, segment 2 of the long run (`sci1_long2_4a97ca7`, code `4a97ca7`; far block = b2s_far 1.2 % + proto_far 0.8 %
 ramped in from M11 over 2B, `8b2679d` / `b502422`). s8 @8k (pre-registered headline, untrained): M11 0.186 (margin −1.1) -> 22.5B 0.979
