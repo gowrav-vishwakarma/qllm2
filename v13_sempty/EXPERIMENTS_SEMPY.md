@@ -6551,6 +6551,16 @@ resume. (b) Library check(): leak-free, held_out_hits 0, 0 shared 5-grams (far3 
 direction 0 / 20,000 in both; modes far3 own .549 / none .251 / other .200, 4k2 own .447 / none .353 / other .200. (c) tokens far3 2,593
 vs proto_far 2,588; 4k2 914 vs proto4k 992 (weights are token shares, v7/data.py l.1751, so the share holds; the [mix] line confirms).
 Launch = sci1_seg_switch.sh with the 3f env from a 6000 worktree at >= 9753ce39, on Lead's GO.
+**3f GO + LAUNCH (20:17 IST 2026-11-17, Lead GO by the scope rule fe241a0c / 71127a3c):** 43B scope tuple (Library): scope_fu 2k
+**1.00** (>= 0.50), 8k 0.94; S_bound_fu 0.88 / 0.64; precedence u1 over the row's unit 95 % at 2k; P_fu (any unit, no protocol) 0.42 /
+0.50. Switch launched 20:17 IST on the 6000 (worktree qllm_sci1e @ 91a87ed, tmux sci1s3f, sci1_seg_switch.sh + sci1_long3f_env.sh): waits
+for 3d's next latest.pt, stops sci1s3d, keeps it as seg3d_end.pt, starts 3f with all cursors.
+**3f BARS (Library pre-registration 4f28acfa + Lead):** scope_fu 2k <= 0.30 within 0.5B and <= 0.15 by 1B; C 8k >= 0.427; P_fu 8k <=
+0.10; twin unit_acc not down by more than 0.05. **Guards vs the 44B CHECK** (as 3d): s8 @8k 3-save mean >= 0.977 - 0.05; HS / ARC-e
+not below 44B by > 0.01; **clk2 16k 3-save mean >= 0.78** (floor SET AT 44B: clk2 slid 0.87 -> 0.84 -> 0.79 over 42 / 43 / 44B).
+Snapshots weights-only at +0.25 / +0.5 / +0.75 / +1.0B from the start (slimmed on the 6000), plus the 45B milestone; Library scores scope
++ TOLD-MARGIN on each. Fallback 3r if 3f fails to start. The 3d addendum closes with its saves (42 .. 44B, 8 points); verdict when
+Library has scored 43.35 / 43.80 / 44B.
 *3e re-armed on the patched v2 (12:32 IST 2026-11-17, Lead (b): the held-out scope direction "asked volume, mass protocol" removed
 from proto_far2; Library 4ece7bb5):* re-checks on 4ece7bb5: (a) packer 400 chunks identical, hook test OK, and proto_far v1 + proto4k
 streams identical pre- vs post-patch (300 docs each); (b) Library check(): own 65.4 / none 29.5 / other 5.2 %, leak-free, 0 shared
