@@ -5205,7 +5205,9 @@ with that in mind.
 - The warm read (held) carries almost no identity at 8k (0.31-0.44, about noprot). Only the state-fork contrast recovers it.
 Reading: at 8k the told rule fades in degree, not all-or-none. The unit's identity survives partly and the twin can still read it,
 but its margin over the no-protocol '.' answer collapses at the low checkpoints. For Mind's 3d this says the lever is the carry
-STRENGTH (a stronger margin), not identity; a pure gate fix would not rescue the 0.5-level identity. Closest prior work as
+STRENGTH (a stronger margin), not identity; a pure gate fix would not rescue the 0.5-level identity.
+**[CORRECTED 2026-11-17 05:35 IST, "TOLD-MARGIN re-read" below: the carry C is steady across saves; the told-8k swing
+tracks the no-protocol '.' prior B (Spearman 0.96). The lever is the read's exposure to B, not the carry strength.]** Closest prior work as
 pre-registered (function-vector probes).
 
 ### FAR-TOLD 3d: 41B and 42B (2026-11-17 05:35 IST; code 41ba344 (41B) / 41ba3448 (42B); logs/v14_fartold_m4{1,2}far_*_{41ba344_20261116_2156,41ba3448_20261117_0452}.jsonl, logs/v14_told_margin_m4{1,2}_*; 100 docs per cell, all files whole)
@@ -5252,6 +5254,34 @@ The twin's gate is B + 5C (alpha 4).
 - Keep the told 8k headline, read as B + 5C.
 - **Cost per save:** TOLD-MARGIN at 2k + 8k is 6.5 min at a 4.5 GB peak (8k alone about 4.5 min). FAR-TOLD's three cells add 11 min. The slimmed weight copy takes 1.5 GB of disk, deleted after the point.
 - Multi-save would need intermediate saves, and 3d only writes milestones. 300 docs per save (about 13 min) would bring the SE to about 0.017 if wanted.
+
+### GATE-FREE told read, offline (PRE-REGISTERED 2026-11-17 05:40 IST, before any number; Lead's decision (2) of 05:37 IST, made after seeing 42B)
+**Question:** if B (the no-protocol '.' prior) is a nuisance, does a read that gives B less vote make told 8k stable across saves?
+
+**Data.** The existing told_margin jsonl at 8k, 100 docs per save (no GPU).
+- Selection saves (≤ 41B): M11, 26B, 27B, 344k, 30B, 39B, 40B, 40.5B, 41B.
+- Held-out: 42B and the 3d snapshots as they come.
+
+**Reads**, per doc:
+- `h_g`, `n_g` = held / noprot M_gate; `h_i`, `n_i` = held / noprot M_id.
+- **twin(α):** gate = h_g + α(h_g − n_g) (exact, fixed tokens). Identity ≈ h_i + α(h_i − n_i), approximate because the max over the other units can change token. Its error is checked against the stored twin_m_id at α 4 and reported. α ∈ {4, 8, 16}.
+- **contrast gate(τ):** emit the unit iff C_doc = h_g − n_g > τ; the unit is the twin(4) identity. τ is chosen from {0, 0.1, …, 1.0}.
+- **Predicted told 8k** = fraction of docs with identity > 0 AND gate > 0 (resp. C_doc > τ). The number is teacher-forced, so this is a unit-step proxy.
+- **Calibration check:** twin(4)'s predicted told vs FAR-TOLD's measured told 8k per save, as Spearman + mean gap, reported.
+
+**Selection rule** (selection saves only): pick the one read (α or τ) with the highest mean predicted told over the 9 saves; ties go to the lower SD across saves.
+
+**Held-out success** (all must hold):
+1. At 42B, predicted told 8k ≥ 0.45.
+2. Across all saves, the SD of predicted told is ≤ ½ of twin(4)'s SD.
+3. Spearman of predicted told with B is ≤ 0.5. Today twin(4) measures 0.96.
+
+**Guards, which need a real run before any adoption:**
+- (a) Real greedy decoding at the chosen read on FAR-TOLD's train 8k docs at 41B and 42B. The value must still be right (alpha 16 may break the number, as A32b's decimals did). Bar: told 8k ≥ the predicted − 0.10.
+- (b) False unit: a mismatch cell. The protocol states the unit for one quantity; the rows and question are about the other trained quantity, so the right answer is the bare value. Bar: false-unit rate ≤ twin(4)'s + 0.05.
+- On sessions with no protocol, the contrast read is 0 by construction (no protocol is detected, so there is no twin); that is not counted as a guard.
+
+**Closest prior work:** classifier-free guidance / contrastive decoding (Li et al. 2023) set the guidance weight globally. The difference here: the emit decision depends only on the contrast term, so the base model's own format prior gets no vote.
 
 ### A32c RESULT (2026-11-16 21:56 IST; fixed code 166a3d6; logs/v14_a32c_{m22best,m30}_166a3d6_20261116_2029.{log,jsonl}; 100 docs per cell)
 right (value / unit). The twin and a32b arms reproduce A32b exactly (same docs), which checks the rerun.
