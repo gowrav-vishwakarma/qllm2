@@ -6453,6 +6453,12 @@ sampled continuations past <|endoftext|> fall into a repeat loop ("extreme extre
 (sampling past the end, not the answer). The skill pack scores number tokens only (no text), so it cannot show a unit; its A_free @8k
 rose. The no-protocol false-unit question is Library's fu line (43B told-margin), not visible in these probes. Original 42B/43B told 8k
 rule: pending m43far.
+**44B CHECK (step 671,396, 44.0B tokens; 19:4x-20:03 IST 2026-11-17 on the 4090; outputs logs/*/v13_sempty_*sci1_step_671396_cf9dee1*,
+recorded 20:04 IST):** s8 @8k **0.977** (shift 0.975, affine 0.978; 43B 0.984), skill @8k **0.735** (43B 0.845), t40 16k **0.808** (43B
+0.978; t40 8k 0.972), clk2 0.79 / 32k-run @16k 0.48 (43B 0.84 / 0.60), HS / ARC-e / PIQA 0.316 / 0.553 / 0.643 (43B 0.317 / 0.566 /
+0.636). The far rule holds; needles / skill / clock fall back to about the 42B level (single save; the 43B values were the high point).
+Generations: units only on the measured-quantity prompts (protocol "12.347 g", tool "78.4 C", "2.0 L" restated from the prompt); chat
+answers unit-free; formats as at 42B / 43B. Told 8k + fu: Library's 44B TM (this window).
 
 **3d ADDENDUM: powered readout (Mind + Library + Lead, 05:38 IST 2026-11-17; MADE AFTER SEEING 42B: told 8k 0.09, twin M_gate -2.69,
 C 0.42; recorded before any snapshot is scored).** The ORIGINAL 42B / 43B rule above is still evaluated and reported as written (it will
