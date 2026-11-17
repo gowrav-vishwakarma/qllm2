@@ -5406,6 +5406,37 @@ studies. Difference: two rules held at once across 2-8k tokens of filler in an O
 Cost: no decoding; one forward per prompt, about like an s8 run. Code: ~60 lines as a new task in memory_probes/rules.py
 (two_family_shift) + a --suite flag; not written until Lead / Mind ask for the run.
 
+### 3f readout + fallback rule (recorded 20:51 IST before any 3f number; Lead / Mind)
+3f = proto_far3 + proto4k2, started at step 673,500 (44.14B), run sci1_long3f_91a87ed. Snapshot targets 677315 / 681130 / 684945 / 688760
+(+0.25 / +0.5 / +0.75 / +1.0B); 45B milestone step_686655. On each save: the SCOPE probe at 2k + 8k, n 100 (it also gives B and C;
+logs/v14_scope_3f_<step>_*).
+FALLBACK DECISION at +0.5B (681130): 3f continues if scope_fu 2k <= 0.30 OR P_fu 8k <= 0.20; else the run restarts from 41B.
+44B (step_671396, last pure-3d save), TOLD-MARGIN n300: C 8k +0.471 (se 0.016) / 2k +1.810, B -4.29 / -5.01, fu 0.01 / 0.01, twin
+gate_win 0.18. That is back near 42B (0.453): the 3d C series swings (0.45, 1.09, 0.59, 3.64, 2.45, 0.47), it does not climb.
+A 44B scope 4-tuple is queued in this window, to see whether the scope damage swung back too.
+
+### SCOPE probe RESULT: 41B / 42.75B / 43B (2026-11-17 20:38 IST; logs/v14_scope_m4*_19f2d088_20261117_*; plain twin, n 100)
+| save | L | B | C | scope_fu | prec_u1 | P_fu | twin unit_acc | S_fu_held | S_bound_fu | R_u2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 41B (pre-3d) | 2k | -3.49 | +2.315 | 0.73 | 0.49 | 0.06 | 0.97 | 0.09 | 0.18 | 0.51 |
+| 41B | 8k | -2.60 | +0.494 | 0.17 | 0.02 | 0.18 | 0.68 | 0.13 | 0.15 | 0.97 |
+| 42.75B | 2k | +0.22 | +13.641 | 1.00 | 0.99 | 0.95 | 1.00 | 1.00 | 1.00 | 0.01 |
+| 42.75B | 8k | +0.63 | +3.644 | 1.00 | 0.69 | 0.89 | 0.98 | 0.99 | 1.00 | 0.31 |
+| 43B | 2k | -2.30 | +9.884 | 1.00 | 0.95 | 0.42 | 1.00 | 0.84 | 0.88 | 0.05 |
+| 43B | 8k | -2.03 | +2.452 | 0.94 | 0.44 | 0.50 | 0.94 | 0.59 | 0.64 | 0.56 |
+Checks: B / C reproduce each save's TOLD-MARGIN (m41, 3d 652322, 3d 656137); 41B scope_fu 2k 0.73 matches the cgate mismatch twin
+decode, 0.74.
+MIX RULE (71127a3c): 43B scope_fu 2k = 1.00 >= 0.50 -> the main run switches to 3f (proto_far3 + proto4k2) at the next save.
+What it says:
+- 3d raised the carry C (2k 2.3 -> 9.9, 8k 0.49 -> 2.45), and the over-application grew on every axis: other quantity,
+  explicit row unit and no protocol.
+- At 41B the wrong binding was mostly the twin's amplification (plain held 0.09, bound 0.18). At 42.75B / 43B it is in the plain
+  state (held 1.00 / 0.84; bound 1.00 / 0.88): the rule leaks to the other quantity with that quantity's OWN units.
+- 42.75B is a "unit by default" body (P_fu 0.95 with no protocol).
+- The HARM fu (gold unit only) understated it: 42.75B fu 0.55 vs P_fu 0.89; 43B 0.18 vs 0.50. Later bars use P_fu.
+Step back: more "told rule" data, with no contrast, makes the rule stronger and less scoped at the same time. C alone is a
+misleading success metric. A carry claim needs the 4-tuple beside it, or the mind looks better as it gets worse.
+
 ### SCOPE probe (PRE-REGISTERED 2026-11-17 12:25 IST, before any number; Argon's 4-cell design via Lead 12:19 IST)
 v14/scope_probe.py: one FAR-TOLD doc skeleton (A28's make_doc, trained wording), no new prose; teacher-forced like TOLD-MARGIN
 (logits at the step after the gold number; units by first token; twin = held + 4 (held - noprot)); 2k + 8k, n 100.
