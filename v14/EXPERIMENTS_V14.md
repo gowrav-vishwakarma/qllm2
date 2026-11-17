@@ -5625,6 +5625,24 @@ RWKV. Ours: a held-vs-noprot fork of the O(1) session state for a far rule, read
 vector added to the state. Also cited: contrastive decoding (Li et al. 2022), CFG for LMs (Sanchez et al. 2023), context-aware
 decoding (Shi et al. 2023).
 
+### WIO SCOPE test (PRE-REGISTERED 2026-11-17 23:35 IST, before any number; Lead GO via Mind; DIAGNOSTIC ONLY)
+Question (Mind's chrono EUREKA ffc22422 + SCOPE): does a phased key (pam, chrono on) vs a flat key (nochrono) vs GDN change how a
+told rule is scoped? Bodies: checkpoints_v13_sempty/wio_{pam,nochrono,gdn}_decay_227f3eb/latest.pt (100M, 1B tokens; only the
+chrono flag differs between pam and nochrono).
+Read path (the same for all three; Lead): scope_probe.py --fullctx = two plain full-context passes (held doc / noprot doc) +
+the GOLD asked row + question + number, last-position logits (run_skillpack_probe.Body; GDN in the qllm_gdn venv, GPU only:
+fla kernels). This C is not comparable to the package-path C of the 386M bodies. Check: on the CPU smoke, nochrono's fullctx read
+equals its package-path read on the same doc (B -6.58, C +0.663).
+Cells: 2k + 8k, n 100. Reported per body: B, C, scope_fu, prec_u1, P_fu, twin unit_acc, twin gate_win (told 8k), S_fu_held,
+S_bound_fu, R_u2. FAR-TOLD decode right is not run (not cheap with --fullctx); told 8k is reported as C + twin gate_win.
+VALIDITY (fixed now): a body whose C at 2k is < 0.10 (about 0: no told skill at 100M / 1B) has UNREADABLE scope cells; they
+are reported as such, with no reading.
+Reading (diagnostic; no design conclusion from one n100 run at 100M):
+- If nochrono's P_fu / scope_fu are higher than pam's by >= 0.15 while pam's s8 is lower (Mind's numbers), it supports
+  "phase-free keys over-generalise, phased keys under-generalise", i.e. rules want scope-keyed keys.
+- Otherwise, no support. GDN is reported beside them.
+Queue: Mind's far window, after C3 / C2 / M9 / M10, before m43far / m44far.
+
 ### DECAY REMEDY: rule x2 inside the decay window (PRE-REGISTERED 2026-11-17 21:34 IST; Lead after the DECAY B / C result)
 Question: does keeping / up-weighting the rule data INSIDE the LR-decay window keep the carry that a plain decay erases (2k dC -0.37)?
 Bodies (M9-era, pre-far-block, so this is a RECIPE test, not the release body):
