@@ -6489,6 +6489,7 @@ saves by state).
 | 42.25B snap | 645,000 | 100 | 1.092 (0.079) | -2.97 | 0.81 / 0.73 | 0.81 | v14_told_margin_3d_644693_n100_9d5f43de_20261117_1141.jsonl (noprot gate_win 0.11) |
 | 42.5B snap | 649,000 | 100 | 0.588 (0.037) | -3.86 | 0.73 / 0.29 | 0.73 | v14_told_margin_3d_648508_n100_9d5f43de_20261117_1146.jsonl (noprot gate_win 0.00) |
 | 42.75B snap | 652,500 | 100 | **3.644 (0.176)** | **+0.63** | 0.98 / 1.00 | 0.98 | v14_told_margin_3d_652322_n100_9d5f43de_20261117_1150.jsonl (**noprot gate_win 0.55**, unit_acc 0.34 at chance 0.27) |
+| 43B | 656,137 | 100 | 2.452 (0.136) | -2.03 | 0.94 / 0.94 | 0.94 | Library 07:16:45Z line (fu 8k **0.18**, 2k: C 9.884 (0.526), B -2.30, fu 0.14) |
 (Snapshot names: Library's targets 644693 / 648508 / 652322 = the first latest.pt at or past them, steps 645,000 / 649,000 / 652,500.
 Kept on d_drive: keep_snap_645000_C1092.pt, keep_snap_652500_C3644_falseunit.pt (the false-unit test case); 649,000 deleted.)
 
@@ -6519,6 +6520,7 @@ latest.pt save without waiting, then reports. 3r is the fallback only if 3e fail
 (B) fu 8k at 43B < 0.30 -> no switch; 3d continues per the addendum (to 44B, 9 saves), fu watched at every snapshot, trigger armed
 (any two consecutive saves >= 0.30). At the end of the addendum window 3e replaces 3d anyway if dC WORKS (v2 is the better-designed
 source), as a separate GO.
+**43B RESULT of the rule (12:48 IST 2026-11-17): (B).** fu 8k 0.18 < 0.30 (2k 0.14): no switch; 3d continues to 44B; 3e stays armed (trigger: any two consecutive saves >= 0.30; fu above the pre-3d 0.04, watched at every snapshot).
 *3e re-armed on the patched v2 (12:32 IST 2026-11-17, Lead (b): the held-out scope direction "asked volume, mass protocol" removed
 from proto_far2; Library 4ece7bb5):* re-checks on 4ece7bb5: (a) packer 400 chunks identical, hook test OK, and proto_far v1 + proto4k
 streams identical pre- vs post-patch (300 docs each); (b) Library check(): own 65.4 / none 29.5 / other 5.2 %, leak-free, 0 shared
