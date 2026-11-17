@@ -7,6 +7,16 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-17 12:16 IST (Library): told rules are not SCOPED; our data trains rule presence, never rule scope
+- Saw (1a786a4e, logs/v14_cgate_m41_e1d7749c_20261117_1156.*): on 41B mismatch docs (protocol about volume, question about
+  mass, right answer = the bare value), the plain twin appends the protocol's unit 74 % of the time at 2k ("66.2 μL"); the
+  contrast gate v0.4 does it 86-97 % of the time. Same family as 42.75B's no-protocol false units (noprot gate_win 0.55).
+- Says: the body has learned "a protocol exists -> append a unit", not "a protocol for quantity X -> that unit for X". The
+  proto4k contrast is protocol vs none; proto_far is 100 % protocol; nothing trains the other-quantity case.
+- For Mind: any rule data needs scoped contrasts (rule for another slot, answer unchanged), at short AND far gaps. proto_far2
+  (e670df5a, hook f2fcd675) has 7.2 % other-quantity docs; ~20 % + a short-gap version is proposed. Likely true for s8 / the skill pack.
+- For Library: no decode-time gate can fix an unbound rule (the quantity-bound lookup still fails at 8k); v0.4 is not adoptable.
+
 ## 2026-11-17 05:35 IST: single-save told 8k mostly measures the body's no-protocol '.' prior, not the told-rule carry
 **What we saw:** TOLD-MARGIN jsonl at 10 points (M11 … 42B; code b4f1bc9 / 41ba344 / 41ba3448, logs/v14_told_margin_*), paired per doc at 8k.
 - The protocol's own effect C = mean(held − noprot) M_gate is steady at 0.31–0.54 nats (344k 0.87), SE 0.02–0.03 per save.
