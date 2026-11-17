@@ -6401,6 +6401,17 @@ t40 16k 0.919 | HS / ARC-e / PIQA acc 0.319 / 0.554 / 0.628 (386M PAM, 41.0B tok
 told 2k 0.84 | told 8k 0.35 (bare count 45, verbose 2) | a26 2k 0.43 | TOLD-MARGIN 8k: unit pick 0.68, gate_win 0.46 (noprot 0.34; chance
 0.27). So the 3d bars resolve to: WORKS needs the 42B / 43B told 8k mean >= 0.45 (both 0.45 and 41B + 0.10 = 0.45) with bare count <= 35;
 NO EFFECT if <= 0.38; otherwise decide at 44B.
+**3d @ 42B (step 640,878, 42.0B tokens; CHECK 04:30-04:51 IST 2026-11-17 on the 4090, outputs logs/*/v13_sempty_*sci1_step_640878_cf9dee1*):**
+| cell | 41B (3c) | 42B (3d) |
+|---|---|---|
+| s8 @8k | 0.941 | 0.926 (shift_wide 0.895, affine 0.958) |
+| skill @8k | 0.610 | 0.735 |
+| clk2 16k | 0.85 | 0.87 |
+| clk2 32k-run @16k | 0.52 | 0.66 |
+| t40 16k | 0.919 | 0.919 (t40 8k 0.969 vs 1.0) |
+| HS / ARC-e / PIQA acc | 0.319 / 0.554 / 0.628 | 0.318 / 0.559 / 0.635 |
+| told 2k / 8k (Library jsonl, Lead's read; Library's report pending) | 0.84 / 0.35 (bare 45) | 0.66 / 0.09 (bare 70) |
+Verdict waits for 43B by the rule. To reach WORKS the 43B told 8k would need >= 0.81; to avoid NO EFFECT, > 0.67.
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
