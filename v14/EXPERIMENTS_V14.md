@@ -5434,6 +5434,11 @@ A 44B scope 4-tuple is queued in this window, to see whether the scope damage sw
 | 42.75B | 8k | +0.63 | +3.644 | 1.00 | 0.69 | 0.89 | 0.98 | 0.99 | 1.00 | 0.31 |
 | 43B | 2k | -2.30 | +9.884 | 1.00 | 0.95 | 0.42 | 1.00 | 0.84 | 0.88 | 0.05 |
 | 43B | 8k | -2.03 | +2.452 | 0.94 | 0.44 | 0.50 | 0.94 | 0.59 | 0.64 | 0.56 |
+| 44B (last pure 3d) | 2k | -4.97 | +1.780 | 0.55 | 0.42 | 0.00 | 0.97 | 0.09 | 0.13 | 0.58 |
+| 44B | 8k | -3.91 | +0.461 | 0.10 | 0.02 | 0.05 | 0.75 | 0.09 | 0.09 | 0.97 |
+44B: the scope damage swung back as fully as C did, and 44B is slightly BETTER than 41B on every axis. 42.75B / 43B were a
+transient. The 3f rule fired on the 43B peak; 44B (scope_fu 2k 0.55) would also have fired it, but only barely. Note for the 3f
+fallback: its "P_fu 8k <= 0.20" arm is already met at 44B (0.05) before any 3f data, so it can't show that 3f works (raised to Lead).
 Checks: B / C reproduce each save's TOLD-MARGIN (m41, 3d 652322, 3d 656137); 41B scope_fu 2k 0.73 matches the cgate mismatch twin
 decode, 0.74.
 MIX RULE (71127a3c): 43B scope_fu 2k = 1.00 >= 0.50 -> the main run switches to 3f (proto_far3 + proto4k2) at the next save.
