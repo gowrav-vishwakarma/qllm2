@@ -6441,6 +6441,12 @@ of saves in the high state (twin M_gate > -1.0): baseline 2/4 (39-41B), 3d k/9; 
 window mix = the diff of consecutive saves. Test: does B (or C) move with the last-0.25B share of no-protocol proto4k docs or of
 bare-number answers (cosmo / finemath / tools)? If B aligns with a data cycle, that is a EUREKA for the release recipe (average or pick
 saves by state).
+*Addendum series (Library TOLD-MARGIN at 8k; C = carry contrast, B = noprot '.' prior):*
+| save | step | n | C (se) | B | twin unit / gate_win | tau0 pred told 8k | log |
+|---|---|---|---|---|---|---|---|
+| 42B | 640,878 | 300 | 0.453 (0.016) | -5.02 | 0.69 / 0.13 | 0.69 | logs/v14_told_margin_3d_640878_n300_4db71183_20261117_0541.jsonl (Library repo) |
+Snapshot 42.25B = snap_645000.pt (hard-linked as snap_644693.pt after a name mismatch made Library's watcher log it "skipped";
+scored in the next window). Window mix logged per snapshot in logs/v13_sempty_3d_snapshots_*.log.
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
