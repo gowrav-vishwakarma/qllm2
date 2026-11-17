@@ -6497,6 +6497,13 @@ has not passed when the trigger fires: segment 3r = 3c's weights (proto_far 0.8 
 generic `sci1_seg_switch.sh` (waits for the next latest.pt, stops sci1s3d, starts from that save). Nothing launches without Lead's GO.
 *Collateral check (43B CHECK):* skill-pack answers, generations and chat probes scanned for spurious units / changed answer formats
 vs the 42B CHECK; HS / ARC as usual.
+*3e READY state (12:13 IST 2026-11-17):* hook f2fcd675 (v7/data.py `proto_far2` -> protocol_text_iter(far=True, far_version=2),
+whole-window, own cursor) + `v13_sempty/tmp/sci1_long3e_env.sh` (3d's weights, proto_far -> proto_far2 at 1.6 %). (a) packer: 400 chunks
+identical to HEAD, and proto_far's stream identical HEAD vs hook at skip 0 / 1000 (test_proto_far2_hook.py); proto_far2 own cursor +
+exact resume. (b) Library check(far_version=2): leak-free, held-out hits 0, shared 5-grams with A26 0, answer share 0.0012 (= v1),
+modes own 64.7 / none 28.2 / other 7.2 %. (c) realized share: v2 docs 2,600 +- 275 tokens vs v1 2,584 +- 286 (400 docs each), so the
+token share at 1.6 % equals 3d's proto_far share; the trainer's [mix] line at 3e's first val confirms it in the log. Library's bars if
+it enters: fu 8k <= 0.10 within 0.5B and <= 0.05 by 1B; mean C 8k >= 0.427; twin unit_acc >= the pre-switch mean - 0.05.
 Snapshot 42.25B = snap_645000.pt (hard-linked as snap_644693.pt after a name mismatch made Library's watcher log it "skipped";
 scored in the next window). Window mix logged per snapshot in logs/v13_sempty_3d_snapshots_*.log.
 
