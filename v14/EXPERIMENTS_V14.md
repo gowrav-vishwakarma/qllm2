@@ -5208,6 +5208,51 @@ but its margin over the no-protocol '.' answer collapses at the low checkpoints.
 STRENGTH (a stronger margin), not identity; a pure gate fix would not rescue the 0.5-level identity. Closest prior work as
 pre-registered (function-vector probes).
 
+### FAR-TOLD 3d: 41B and 42B (2026-11-17 05:35 IST; code 41ba344 (41B) / 41ba3448 (42B); logs/v14_fartold_m4{1,2}far_*_{41ba344_20261116_2156,41ba3448_20261117_0452}.jsonl, logs/v14_told_margin_m4{1,2}_*; 100 docs per cell, all files whole)
+
+| point | train 2k | train 8k (bare / verbose) | a26 2k | plain train 2k | TM twin unit_acc 8k | gate_win 8k | twin M_id 8k | twin M_gate 8k |
+|---|---|---|---|---|---|---|---|---|
+| 41B (step_625619, sci1_long3c_3a8d7fb) | 0.84 | 0.35 (45 / 2) | 0.43 | 0.23 | 0.68 | 0.46 | +1.26 ±0.20 | −0.13 ±0.23 |
+| 42B (step_640878, sci1_long3d_cf9dee1) | 0.66 | **0.09** (71 / 8) | 0.48 | **0.00** | 0.71 | 0.13 | +0.82 ±0.20 | −2.69 ±0.24 |
+
+At 42B the plain / a9 / noprot arms score 0.00 in all three cells; at 41B plain was 0.23 / 0.04 / 0.05.
+
+### TOLD-MARGIN re-read: the told-8k swing is the body's own '.' prior, not the carry (2026-11-17 05:35 IST; same jsonl, no new run)
+Per doc, paired over 100 docs at 8k, all 10 points:
+- carry C = mean(held − noprot) M_gate, in nats;
+- the no-protocol gate B = noprot M_gate (the body's preference for ending the answer with '.').
+The twin's gate is B + 5C (alpha 4).
+
+| point | told 8k | B (noprot M_gate) | C (carry, ±SE) |
+|---|---|---|---|
+| M11 | 0.10 | −3.84 | +0.31 ±0.02 |
+| 26B | 0.03 | −5.85 | +0.44 ±0.02 |
+| 27B | 0.45 | −1.08 | +0.48 ±0.03 |
+| 344k | 0.53 | −2.24 | +0.87 ±0.06 |
+| 30B | 0.31 | −3.09 | +0.48 ±0.03 |
+| 39B | 0.06 | −4.34 | +0.35 ±0.02 |
+| 40B | 0.37 | −2.91 | +0.54 ±0.04 |
+| 40.5B | 0.12 | −3.70 | +0.32 ±0.02 |
+| 41B | 0.35 | −2.60 | +0.49 ±0.03 |
+| 42B | 0.09 | −4.79 | +0.42 ±0.03 |
+
+- Spearman(told 8k, B) = 0.96 (p < 0.001); Spearman(told 8k, C) = 0.73 (0.63 without 344k).
+- B spans 4.8 nats across saves; 5C spans about 1.2 (without 344k).
+- So most of the save-to-save swing in told 8k is the body's no-protocol format prior. The protocol's own effect is steady at 0.3–0.5 nats, with SE 0.02–0.03 per save.
+- **Correction of the TOLD-MARGIN RESULT reading above** ("the lever is carry STRENGTH"): the carry varies less than the prior it has to beat. A told read that does not depend on beating the '.' prior would be steadier. A32c's split read is one; a gate on the unit given the carry is another.
+- This is correlational (10 saves).
+- 42B: C is 0.42 (41B 0.49, −0.07 ±0.04) and B fell to −4.79, so the headline collapsed mostly through B.
+
+**Proposed higher-power 3d readout** (for Lead / Mind to adopt before 43B; no new run needed, it is in the told_margin jsonl):
+- **Primary:** C at 8k, mean of 42B and 43B vs 41B (0.49 ±0.03).
+  - WORKS: ≥ 0.59 (+0.10, about 3 SE of the difference).
+  - NO EFFECT: within ±0.05.
+  - WORSE: ≤ 0.39.
+- **Report B beside it** (not a verdict).
+- Keep the told 8k headline, read as B + 5C.
+- **Cost per save:** TOLD-MARGIN at 2k + 8k is 6.5 min at a 4.5 GB peak (8k alone about 4.5 min). FAR-TOLD's three cells add 11 min. The slimmed weight copy takes 1.5 GB of disk, deleted after the point.
+- Multi-save would need intermediate saves, and 3d only writes milestones. 300 docs per save (about 13 min) would bring the SE to about 0.017 if wanted.
+
 ### A32c RESULT (2026-11-16 21:56 IST; fixed code 166a3d6; logs/v14_a32c_{m22best,m30}_166a3d6_20261116_2029.{log,jsonl}; 100 docs per cell)
 right (value / unit). The twin and a32b arms reproduce A32b exactly (same docs), which checks the rerun.
 
