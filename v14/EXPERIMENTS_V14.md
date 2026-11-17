@@ -5361,6 +5361,22 @@ The twin's gate is B + 5C (alpha 4).
 
 **Closest prior work:** contrastive decoding (Li et al. 2023), CFG (Sanchez et al. 2023). The difference: only the emit decision is taken from the contrast term, and the number is taken warm.
 
+### 3d snapshots, TOLD-MARGIN 8k (results as they land; verdict after all 9 saves)
+| save | tokens | n | C (se) | B | tau0 | twin unit_acc / gate_win | noprot gate_win |
+|---|---|---|---|---|---|---|---|
+| 640878 | 42B | 300 | +0.453 (0.016) | -5.02 | 0.69 | 0.69 / 0.13 | 0.00 |
+| 644693 (snap_645000) | 42.25B | 100 | +1.092 (0.079) | -2.97 | 0.81 | 0.81 / 0.73 | 0.11 |
+| 648508 | 42.5B | 100 | +0.588 (0.037) | -3.86 | 0.73 | 0.73 / 0.29 | 0.00 |
+| 652322 | 42.75B | 100 | +3.644 (0.176) | +0.63 | 0.98 | 0.98 / 1.00 | 0.55 |
+Pre-3d mean C 0.427. Running dC over 4 of 9 saves: +1.02. The series jumps (1.09, 0.59, 3.64), so no verdict yet.
+NEW at 42.75B: B > 0. Without any protocol, the body prefers a unit over '.' on 55 % of docs, at chance unit identity (0.34 vs
+0.27). The body drifts toward "always append a unit". That is a false-unit risk in PLAIN decoding, independent of the gate.
+Step back: B is not just a drifting '.' prior that hides the carry. It can overshoot to the other side, where plain decoding
+over-applies a convention that was never given. Any told read that rides on B is unreliable in both directions. The contrast
+removes B by construction, and that is the case for the gate. The same overshoot is also why guard (f) and a no-protocol false-unit
+rate must sit beside every 3d reading. Training-side angle for Mind: keep the protocol / no-protocol contrast pairs balanced in the
+3d mix, so the body is never paid for a unit it was not told.
+
 ### CONTRAST GATE amendment (2026-11-17 11:52 IST, BEFORE any cgate 41B number; Argon via Lead 11:50 IST)
 Argon's independent audit of B / C: the identity is exact to 4e-6; Spearman(gate_win, B) 0.979, (gate_win, C) 0.717.
 (2) The decode shape, stated exactly from v14/cgate.py gate_read (arm v04; cgate is the same without demos):
