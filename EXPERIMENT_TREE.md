@@ -196,6 +196,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
             - **GATE-FREE told read** (2026-11-17) offline twin(alpha 4/8/16) and contrast-only gate(tau) from told_margin jsonl; chosen on saves <= 41B, held out 42B + 3d snapshots; guards need a real run -> **NOT met offline: twin16 chosen (42B 0.68) but SD 0.124 vs 0.193 and Spearman with B 0.79; post-hoc contrast gate tau 0 passes (0.71 / 0.088 / 0.39), re-registered on 3d snapshots**; run `0a54b9ba`, code at `current`; logs/v14_told_margin_*; "GATE-FREE told read"
               - **CONTRAST GATE tau 0** (2026-11-17) emit the told unit iff the (held - noprot) gate contrast > 0; offline on the 3d snapshots + real guards (decoding 41B/42B, mismatch false-unit, 2k cells) -> **running**; run `-`, code at `current`; logs/v14_told_margin_*; "CONTRAST GATE τ 0 on the 3d snapshots"
                 - **CGATE guards v0.4** (2026-11-17) real decoding: twin / split (A32c) / cgate / v04 (self-demos + split + contrast gate) on 41B + 42B; mismatch false-unit, 2k, a26 2k guards -> **running**; run `-`, code at `current`; logs/v14_cgate_*; "CONTRAST GATE guards"
+                  - **CGATE false-unit guards e/f** (2026-11-17) guards (e) same-quantity wrong unit, (f) no-protocol + distractors with a detector-chosen fork; required before v0.4 adoption -> **pre-registered**; run `-`; -; CONTRAST GATE amendment
                 - **DECAY B/C split** (2026-11-17) TOLD-MARGIN 8k n100 on decay ckpts vs pre-decay parents: does decay move B or C -> **running**; run `-`; -; DECAY B / C split
   - **PKG-SUITE per-milestone package suite** (2026-11-05) bare vs package at every SCI-1 milestone from 137,331: R x K, rewrite, told rule (twin / fork), recall to 32k (kv / kvupd / hop2), MB held -> **running (rows per milestone) | checkpoint 9 (137,331, 9.0B): R x K 0.67 / 0.42 vs bare 0.01; rewrite 0.92 / 0.85 vs 0.01; told twin 0.83 / 0.22 vs 0.13 / 0.05; recall 32k 20-way 1.00 x3 vs 0.10-0.45; 3.67 MB state**; run `c93e3b7`, code at `current`; logs/v14_pkg_suite_c3b_c93e3b7_20261105_1347.jsonl; "PKG-SUITE"
     - **BENCH-PKG BABILong + RULER-style with the package** (2026-11-05) final SCI-1 model, bare vs package, BABILong qa1-5 to 32k + RULER-style (our generator: niah single / multikey, VT) to 32k, MB per row -> **running (pre-registered, descriptive; after the Nov 6 decay)**; code at `current`; -; "BENCH-PKG"
@@ -225,4 +226,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-207 experiments: v13_sempty 102, v14 83, v15 10, v16 12.
+208 experiments: v13_sempty 102, v14 84, v15 10, v16 12.
