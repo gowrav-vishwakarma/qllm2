@@ -5377,6 +5377,39 @@ removes B by construction, and that is the case for the gate. The same overshoot
 rate must sit beside every 3d reading. Training-side angle for Mind: keep the protocol / no-protocol contrast pairs balanced in the
 3d mix, so the body is never paid for a unit it was not told.
 
+### CONTRAST GATE guards RESULT, 41B (2026-11-17 12:15 IST; logs/v14_cgate_m41_e1d7749c_20261117_1156.*; peak 5,072 MiB)
+| cell | twin | split (A32c) | cgate | v04 |
+|---|---|---|---|---|
+| train 8k right | 0.35 | 0.69 | 0.54 | 0.76 |
+| mis 8k right / false_unit | 0.67 / 0.25 | 0.42 / 0.51 | 0.35 / 0.57 | 0.11 / 0.86 |
+| a26 2k right | 0.43 | 0.49 | 0.51 | 0.49 |
+| train 2k right | 0.84 | 0.91 | 0.86 | 0.91 |
+| mis 2k right / false_unit | 0.23 / 0.74 | 0.04 / 0.96 | 0.04 / 0.94 | 0.03 / 0.97 |
+Guards (v04): (a) 0.76 >= 0.58 MET (cgate 0.54 not met); (b) false_unit 8k 0.86 vs twin+0.05 = 0.30 FAILED, 2k 0.97 vs 0.79
+FAILED; (c) 0.91 >= 0.79 MET; (d) 0.49 >= A32c split 0.49 - 0.05 MET.
+VERDICT: v0.4 (v04) is NOT adoptable. Guard (b) fails by a wide margin on the pre-3d body, so the 42B body cannot change the
+decision; the 42B cgate run is dropped (run-only-superior), pending Lead.
+What it says: the protocol's unit is not BOUND to its quantity. On a mismatch doc (protocol about volume, question about mass)
+every read appends the protocol's unit: "66.2 μL", "93.4 mL mass". Even the plain twin does this 74 % of the time at 2k. The
+contrast gate makes it worse: it reads "the protocol raised a unit over '.'", which is true on a mismatch doc too. So the gate
+amplifies an unbound rule, it does not create the error. The training data never asked the body to bind it: proto4k's contrast
+is protocol vs no protocol, never protocol for the other quantity.
+Next (no GPU first):
+- (i) proto_far2's other-quantity mode (realized 7.2 %) is the trained counterpart. Proposal to Mind / Lead: raise it, e.g.
+  own 55 / none 25 / other 20, and add other-quantity docs at short gaps (a proto4k v2), since the failure is worst at 2k.
+- (ii) A quantity-bound gate as a package rule: emit t* only if t* is a unit of the ASKED quantity, by the package's unit table.
+  It is plumbing (a lookup, no model ability), so no claim, but it would fix the product read now. Check it offline on these
+  rows first: does v04 + bound pass (b)?
+- (iii) (e) and (f) stay required.
+- (ii) checked OFFLINE on the 41B rows (post-hoc, no claim): a quantity-bound gate (an other-quantity unit -> '.') gives
+  mis 2k v04 right 0.83 / false_unit 0.00 (twin+bound 0.81 / 0.05): it would pass (b) at 2k. At 8k: 0.54 / 0.40 vs twin+bound
+  0.77 / 0.15: (b) still FAILS. The rest at 8k are invented compound units ("μg/cm^3", "mg/kg") and units of the asked quantity,
+  so the gate still emits a unit where no convention exists. A lookup does not fix it; the body has to learn scope.
+  train / a26 cells unchanged (0.76 / 0.91 / 0.49).
+Step back: the B / C split taught us to separate "is there a rule" (C) from "what does the body do by default" (B). This result
+adds a third axis, WHICH quantity the rule is about. A far-rule mind needs the scope of a rule, not only its presence. That is a
+claim about the data (rules need scoped contrasts), and it holds for s8 and the skill pack as well as for units.
+
 ### proto_far2: far docs with a no-protocol contrast (PRE-REGISTERED 2026-11-17 12:00 IST; Lead's remedy, ready for the HARM trigger)
 Likely cause of the 42.75B no-protocol false units: proto_far is 100 % protocol docs, so doubling it pays the body for "far row +
 question -> a unit" unconditionally. The no-protocol contrast exists only in proto4k (20 % of a ~0.85 % share, short gaps).
