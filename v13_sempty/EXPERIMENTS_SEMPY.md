@@ -6135,6 +6135,39 @@ tpp readout; no new bar):** every wio arm reports shift_wide_new and affine_map_
 beside the s8 3-save mean. gdn 3-save: shift_wide_new 0.897 / 0.511 / 0.326 / 0.136 (chance 0.125 by 8k); affine_map_new 0.973 / 0.894
 / 0.820 / 0.681. HYPOTHESIS (Argon, not a claim): shift needs a phase reference that GDN lacks. TEST: nochrono vs pam on shift_wide_new
 @8k; a nochrono arm that holds shift_wide (near pam's level) REFUTES it; a nochrono drop toward gdn's while pam holds supports it.
+**SECONDARY READOUT 2 (12:06 IST 2026-11-17, Argon via Lead; recorded after nochrono's readouts and BEFORE any pam readout; no new
+bar):** (a) **affine_map_new @0** for pam. nochrono 3-save 0.711, gdn 0.973. If pam ~= nochrono and still trails gdn, the affine gap
+is the write / erase dynamics, not the clock. HYPOTHESIS (Argon, not a claim): GDN's gated erase on the delta write acts as an online
+map update. (b) **shift_wide 2k / 4k / 8k** stays the Chrono stress test (nochrono 0.709 / 0.558 / 0.345, gdn 0.511 / 0.326 / 0.136).
+**The precise erase comparison** (code-checked: v13_sempty/model.py PAMLayer delta path ~l.549 / 878-905, triton_kernels.pam_delta_batched;
+fla 0.3.2 fla/layers/gated_deltanet.py ~l.150-270). Both use the same recurrence form S_t = g_t S_{t-1} (I - b_e k k^T) + b_w v k^T with
+unit-norm keys and a per-token, per-head decay g_t. The differences:
+- **Erase and write gates.** GDN has one tied beta = sigmoid(b_proj x) per head per token, so erase strength = write strength
+  (allow_neg_eigval off: beta in (0,1)). PAM has two untied gates: write b_w = sigmoid(W_w x), and erase b_e = sigmoid(W_e x - 3),
+  capped at 0.95. Erase starts at ~0.05 (near-additive at init) and must learn to erase; GDN replaces in full whenever it writes.
+- **Decay.** GDN: alpha = exp(-exp(A_log) * softplus(a_proj x + dt_bias)) per head (Mamba-2 style, per-head A, dt_bias init).
+  PAM: g = exp(-softplus(dt_proj x + bias)) per head, one shared initial bias.
+- **Where the delta state lives.** GDN: every one of 12 layers has its own delta state (6 heads x 64 keys x 128 values,
+  expand_v 2). PAM M2 (wio pam / nochrono): notebooks only in blocks 3 / 7 / 11 / 15 of 16; the other 12 blocks are cheap readers
+  of the nearest notebook below (SHARE_READS). So PAM has 4 write / erase sites, GDN has 12.
+- **q / k path.** GDN: short conv (k = 4) + SiLU on q / k / v and an output gate (gated RMSNorm). wio PAM: no short conv
+  (SHORT_CONV=0), RoPE (nochrono) or the Chrono clock (pam) on q / k, and the N4 output gate.
+Reading for (a): if the affine gap is the erase, the candidates are the tied-vs-untied gates (GDN's replace-on-write) and the 3x more
+write sites. Neither is touched in this screen; a follow-up would be a v14-lane question (new mechanism), not a v13 tune.
+**nochrono ARM RESULT (12:06 IST 2026-11-17; 102,870,812 params, 1.000B tokens, solo avg 45.4k tok/s; logs/wio/*nochrono*):**
+
+| arm | params | tokens | s8 @8k 3-save (14,500 / 15,000 / end) | shift_wide 0 / 2k / 4k / 8k | affine_map 0 / 2k / 4k / 8k | clk2 8k / 16k | HS / ARC-e / PIQA | val / wiki_val NLL |
+|---|---|---|---|---|---|---|---|---|
+| gdn | 102.51M | 1.0B | **0.408** (0.374 / 0.408 / 0.444) | 0.897 / 0.511 / 0.326 / 0.136 | 0.973 / 0.894 / 0.820 / 0.681 | 0.17 / 0.06 | 0.275 / 0.440 / 0.594 | **3.385** / 4.066 |
+| nochrono | 102.87M | 1.0B | **0.427** (0.384 / 0.446 / 0.453) | 0.873 / 0.709 / 0.558 / 0.345 | 0.711 / 0.660 / 0.628 / 0.510 | 0.54 / 0.06 | 0.273 / 0.464 / 0.592 | 3.427 / 4.144 |
+
+NLL: the same val loader at step 15,259 (nochrono: the trainer's own [val] line; gdn: POST_VAL post hoc, since its in-trainer val
+failed in fp32). **GDN leads on language: val 3.385 vs 3.427 (+0.042 for nochrono, above the 0.03 stated limit), worse on every source
+(dclm 3.436 vs 3.396, fineweb 3.469 vs 3.431, chatmt 1.909 vs 1.881).** The PAM claim, if any, is rules at distance, not language.
+Reading (no verdict until pam): without the clock, PAM still holds far shift (8k 0.345 vs gdn 0.136, 2.5x; 2k 0.709 vs 0.511) but
+trails GDN on affine at every distance (0.711 vs 0.973 at 0). s8 @8k averages the two and lands near gdn (+0.019). Argon's
+phase hypothesis: a nochrono shift of 0.345 is far above gdn, so the phase-reference story needs pam's shift to be compared against it
+(refuted if pam ~= nochrono). Rule 2 needs pam - nochrono >= 0.10 -> pam >= 0.527 and pam >= 0.508 (rule 1).
 **Claim rule (pre-stated):** "the clock is what is ours" stands only if BOTH
 1. `pam` beats `gdn`: s8 @8k 3-save mean >= gdn + 0.10 AND told 8k >= gdn + 0.10 (n 100, ~±0.07); and
 2. `nochrono` loses that gap: pam − nochrono >= 0.10 on s8 @8k, and nochrono's lead over gdn is <= half of pam's.
