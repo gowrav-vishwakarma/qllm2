@@ -236,17 +236,47 @@ def build_far_doc(rng, with_meta: bool = False):
     """proto_far (2026-11-07, Mind's far block): ONE protocol (natural style, trained families / wordings only, always stated),
     then a filler gap sized so the FIRST marked answer sits FAR_Q tokens after the protocol, then 3-6 rows (short filler
     between) and 1-3 questions; the whole doc <= FAR_MAX tokens. Lengths are measured with the chat tokenizer while building
-    (exact, deterministic given rng)."""
+    (exact, deterministic given rng). The stream is bit-identical to 2026-11-07's (v14/test_proto_far2.py checks a hash)."""
     fam, q, sub, slots, wording = _family(rng)
+    return _far_body(rng, fam, q, sub, wording.format(**slots), True, dict(mode='own'), with_meta)
+
+
+FAR2_SHARES = (0.65, 0.25, 0.10)    # proto_far2 modes: own protocol / no protocol / OTHER-quantity protocol (PRE-REGISTERED 11-17)
+
+
+def build_far_doc_v2(rng, with_meta: bool = False):
+    """proto_far2 (2026-11-17, Lead after the 42.75B no-protocol false units): proto_far's far docs, but only 65 % carry the
+    protocol for the asked quantity. 25 % have NO protocol, and 10 % a protocol for the OTHER quantity of the same family. Those 35 %
+    answer with the raw value (unit family: the bare number, then '.'), the form proto4k's no-protocol docs use. Round wordings
+    name no quantity, so a round doc that draws 'other' becomes 'none'. Same gap / length rules as proto_far; own rng stream."""
+    r = rng.random()
+    mode = 'own' if r < FAR2_SHARES[0] else 'none' if r < FAR2_SHARES[0] + FAR2_SHARES[1] else 'other'
+    fam, q, sub, slots, wording = _family(rng)
+    if mode == 'other' and fam == 'round':
+        mode = 'none'
+    proto, other_q = '', None
+    if mode == 'own':
+        proto = wording.format(**slots)
+    elif mode == 'other' and fam == 'unit':
+        other_q = next(k for k in UNIT_Q if k != q); qp, Qp, units = UNIT_Q[other_q]
+        proto = rng.choice(UNIT_W).format(q=other_q, qp=qp, Qp=Qp, u=rng.choice(units))
+    elif mode == 'other':                                            # convert: the other CONVERT quantity
+        other_q = next(k for k in CONVERT if k != q); qp, Qp, u1, u2 = CONVERT[other_q]
+        proto = rng.choice(CONVERT_W).format(q=other_q, qp=qp, Qp=Qp, u1=u1, u2=u2)
+    return _far_body(rng, fam, q, sub, proto, mode == 'own', dict(mode=mode, other_q=other_q), with_meta)
+
+
+def _far_body(rng, fam, q, sub, proto, conv, extra, with_meta):
+    """the far doc after the family draw (proto_far's original body; rng use unchanged). proto '' = no protocol sentence;
+    conv False = answers are the raw values (no convention applied)."""
     fam_key = q if fam == 'convert' else fam
     n_rows = rng.randint(3, 6)
     ids = _sample_ids(rng, n_rows); mats = rng.sample(MATERIALS, n_rows)
     rows, answers = [], []
     for i in range(n_rows):
-        rv, ap, _ = item(rng, fam_key, sub)
+        rv, ap, raw = item(rng, fam_key, sub)
         rows.append(rng.choice(ROW_T).format(s=ids[i], m=mats[i], q=q, v=rv).strip())
-        answers.append(ap)
-    proto = wording.format(**slots)
+        answers.append(ap if conv else raw)
     lead = _filler(rng, rng.randint(1, 3)) if rng.random() < 0.5 else ''
     tail_rows = ' '.join(r + (' ' + _filler(rng, rng.randint(1, 4)) if rng.random() < 0.6 else '') for r in rows)
     qa = rng.choice(QA_FORMS)
@@ -262,24 +292,27 @@ def build_far_doc(rng, with_meta: bool = False):
     while _ntok(text) > FAR_MAX and gap:                             # cap the whole doc (drop gap sentences from the end)
         gap.pop()
         text = ' '.join(p for p in (head, ' '.join(gap), tail_rows) if p) + qtext
-    meta = dict(family=fam, quantity=q, sub=sub, style='far', protocol=True, parts=[proto] + rows)
+    meta = dict(family=fam, quantity=q, sub=sub, style='far', protocol=bool(proto) and conv,
+                parts=([proto] if proto else []) + rows, **extra)
     return (text + '\n', meta) if with_meta else text + '\n'
 
 
 def protocol_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters: Optional[Dict[str, int]] = None,
                        counter_key: str = 'proto', bump=None, max_gap: Optional[int] = None,
-                       compact_only: bool = False, far: bool = False) -> Iterator[str]:
+                       compact_only: bool = False, far: bool = False, far_version: int = 1) -> Iterator[str]:
     """Infinite, deterministic stream of protocol docs (marked answer spans). max_gap = the largest prose gap in filler
     sentences (log-uniform from 2; ~12 tokens each): 150 = the T 2048 recipe, 300 = 'proto4k' (protocol -> rows up to
     ~3.5-4k tokens, for SEQ 4096). compact_only = 'protoc': ONLY the compact "Report rule." style (demos + 1-3 queries, the converted
     value as the marked answer), prose gap <= 20 sentences unless max_gap is given; trained families only. far = 'proto_far':
-    build_far_doc only (protocol -> first answer 2,048-3,000 tokens, doc <= 3,200), its own rng stream."""
+    build_far_doc only (protocol -> first answer 2,048-3,000 tokens, doc <= 3,200), its own rng stream. far_version 2 =
+    'proto_far2' (build_far_doc_v2: 25 % no protocol, 10 % other-quantity protocol), its own rng stream (offset 8888)."""
     if max_gap is None:
         max_gap = 20 if compact_only else 150
-    rng = random.Random((seed * 2654435761 + SEED_OFFSET + 31337 + (7777 if far else 0)) & 0xFFFFFFFF)
+    far2 = far and far_version == 2
+    rng = random.Random((seed * 2654435761 + SEED_OFFSET + 31337 + ((8888 if far2 else 7777) if far else 0)) & 0xFFFFFFFF)
     n = 0
     while True:
-        doc = build_far_doc(rng) if far else build_doc(rng, max_gap=max_gap, compact_only=compact_only)
+        doc = (build_far_doc_v2(rng) if far2 else build_far_doc(rng)) if far else build_doc(rng, max_gap=max_gap, compact_only=compact_only)
         n += 1
         if n <= skip_docs:
             continue
@@ -299,7 +332,7 @@ def _ngrams(t: str, n=5):
     return {' '.join(w[i:i + n]) for i in range(len(w) - n + 1)}
 
 
-def check(n_docs: int = 20000, far: bool = False) -> dict:
+def check(n_docs: int = 20000, far: bool = False, far_version: int = 1) -> dict:
     """leak check against A26's held-out families and wordings (on the generated protocol / rows / questions / answers,
     not on filler prose) + the share of answer characters. far = the proto_far docs (build_far_doc)."""
     from v7.data import ANSWER_MARK as AM
@@ -311,9 +344,11 @@ def check(n_docs: int = 20000, far: bool = False) -> dict:
     shared_5g = set().union(*[_ngrams(t) for t in ours]) & set().union(*[_ngrams(t) for t in a26_t])
     held_unit = re.compile(r'(?<![A-Za-zμ])(' + '|'.join(map(re.escape, HELD_OUT_UNITS)) + r')(?![A-Za-z])')
     rng = random.Random(1)
-    bad, fams, styles, chars_ans, chars = [], {}, {}, 0, 0
+    bad, fams, styles, modes, chars_ans, chars = [], {}, {}, {}, 0, 0
     for _ in range(n_docs):
-        d, m = build_far_doc(rng, with_meta=True) if far else build_doc(rng, with_meta=True)
+        d, m = ((build_far_doc_v2 if far_version == 2 else build_far_doc)(rng, with_meta=True) if far
+                else build_doc(rng, with_meta=True))
+        modes[m.get('mode', '-')] = modes.get(m.get('mode', '-'), 0) + 1
         k = f"{m['family']}:{m['quantity']}:{m['sub'][0] if m['family'] == 'round' else m['sub']}"
         fams[k] = fams.get(k, 0) + 1
         styles[m['style']] = styles.get(m['style'], 0) + 1
@@ -324,7 +359,7 @@ def check(n_docs: int = 20000, far: bool = False) -> dict:
             bad.append(part[:200])
         spans = d.split(ANSWER_MARK)[1::2]
         chars_ans += sum(len(x) for x in spans); chars += len(d.replace(ANSWER_MARK, ''))
-    res = dict(docs=n_docs, families=dict(sorted(fams.items())), styles=styles, held_out_hits=len(bad),
+    res = dict(docs=n_docs, families=dict(sorted(fams.items())), styles=styles, modes=modes, held_out_hits=len(bad),
                shared_template_skeletons=sorted(shared_skel), shared_5gram_with_a26=sorted(shared_5g),
                answer_char_share=round(chars_ans / chars, 4), examples_bad=bad[:3])
     res['leak_free'] = int(not bad and not shared_skel and not shared_5g)

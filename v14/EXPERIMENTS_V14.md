@@ -5377,6 +5377,30 @@ removes B by construction, and that is the case for the gate. The same overshoot
 rate must sit beside every 3d reading. Training-side angle for Mind: keep the protocol / no-protocol contrast pairs balanced in the
 3d mix, so the body is never paid for a unit it was not told.
 
+### proto_far2: far docs with a no-protocol contrast (PRE-REGISTERED 2026-11-17 12:00 IST; Lead's remedy, ready for the HARM trigger)
+Likely cause of the 42.75B no-protocol false units: proto_far is 100 % protocol docs, so doubling it pays the body for "far row +
+question -> a unit" unconditionally. The no-protocol contrast exists only in proto4k (20 % of a ~0.85 % share, short gaps).
+Generator: v14/protocol_docs.py build_far_doc_v2, reached by protocol_text_iter(far=True, far_version=2) (own rng offset 8888;
+proto_far's build_far_doc and its 7777 stream stay bit-identical, checked by a hash in v14/test_proto_far2.py). Modes (drawn first):
+65 % own protocol (the asked quantity; answer with the convention), 25 % NO protocol, 10 % protocol for the OTHER quantity of the
+family. The no-protocol and other-quantity docs answer the raw value: for the unit family, the bare number then '.'. Round
+wordings name no quantity, so round 'other' becomes 'none'. Realized over 2000 docs: own 64.7 %, none 28.2 %, other 7.2 %. Same
+gap / length rules (first answer 2,048-3,000 tokens after the doc head, doc <= 3,200).
+check(far_version=2): held-out hits 0, shared template skeletons 0, shared 5-grams with A26 0, answer char share 0.0012 (v1
+0.0012), leak_free 1. Test: python -m v14.test_proto_far2 -> ALL PASS (v1 hash, mode contracts, determinism, own stream).
+Entry: Mind decides; source name 'proto_far2' (cursor key proto_far2, whole-window packing as proto_far), so proto_far's cursor
+stays clean. Hook (v7/data.py, Mind's file): add 'proto_far2' to the protocol-iter names and pass far_version=2 when spec['far'] == '2'.
+Bars if it enters at the save after the trigger (judged on the 3d snapshots / milestones after the switch, TOLD-MARGIN 2k + 8k):
+- (1) fu 8k <= 0.10 within 0.5B tokens of the switch, and <= 0.05 by 1B;
+- (2) the carry is kept: mean C 8k over the post-switch saves >= the pre-3d 0.427;
+- (3) twin unit_acc 8k not lower than the pre-switch mean - 0.05.
+Note: the CGATE mismatch cell and guard (f) get TRAINED counterparts (an other-quantity protocol and no protocol at a far
+distance), so after the switch they read trained behaviour, not zero-shot. The package probes keep held-out wordings (A26 /
+fresh) for the zero-shot read.
+Closest prior work: contrast sets (Gardner et al. 2020) and counterfactually augmented data (Kaushik et al. 2020): minimal
+pairs that flip the label. Difference: here the flip is the PRESENCE of a rule 2-3k tokens earlier, so the pair trains a
+recurrent O(1) state to carry "no rule was given" as information, not only "rule X was given".
+
 ### 3d HARM readout (ADDENDUM 2026-11-17 11:58 IST, written AFTER seeing 42.75B; Lead's decision)
 Readout: plain no-protocol false-unit rate fu = noprot gate_win (the body without any protocol prefers a unit over '.'), at 8k AND
 2k, on every save. Pre-3d reference, recomputed from the existing jsonls (same four saves as for dC: 39B / 40B / 40.5B / 41B):

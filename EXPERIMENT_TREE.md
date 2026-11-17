@@ -209,6 +209,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 - **SIMPLE-CHAT probe** (2026-11-05) yes/no (strict), short direct answers, verifiable instruction formats, 2-3 turn small talk; held-out items; baseline on the decay checkpoint; chat-ramp bars -> **running (pre-registered; baseline Nov 6)**; code at `current`; -; "SIMPLE-CHAT"
 - **FAR-TOLD told rule under the far block** <- A28 held read: plain vs protocol twin (2026-11-07) protocol twin, train wording 2k / 8k + a26 2k, 100 docs, at M11 (baseline) and every milestone from M12 while proto_far / b2s_far ramp -> **pre-registered (descriptive; Mind's keep rule decides)**; code at `current`; -; "FAR-TOLD"
 - **3d HARM readout** (2026-11-17) plain no-protocol false-unit (noprot gate_win) 2k+8k per save; trigger fu8k>=0.30 at 2 consecutive 3d saves = HARMFUL -> **running**; run `-`; logs/v14_fartold_watch.log; 3d HARM readout
+  - **proto_far2** (2026-11-17) far protocol docs with 25% no-protocol + 10% other-quantity contrast (bare-value answers); remedy if HARM trigger fires -> **ready (not in stream)**; run `-`; v14/test_proto_far2.py; proto_far2
 
 ## v15
 
@@ -227,4 +228,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-209 experiments: v13_sempty 102, v14 85, v15 10, v16 12.
+210 experiments: v13_sempty 102, v14 86, v15 10, v16 12.
