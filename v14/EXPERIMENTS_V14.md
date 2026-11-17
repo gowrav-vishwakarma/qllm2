@@ -5401,6 +5401,11 @@ Next (no GPU first):
   It is plumbing (a lookup, no model ability), so no claim, but it would fix the product read now. Check it offline on these
   rows first: does v04 + bound pass (b)?
 - (iii) (e) and (f) stay required.
+- (ii) checked OFFLINE on the 41B rows (post-hoc, no claim): a quantity-bound gate (an other-quantity unit -> '.') gives
+  mis 2k v04 right 0.83 / false_unit 0.00 (twin+bound 0.81 / 0.05): it would pass (b) at 2k. At 8k: 0.54 / 0.40 vs twin+bound
+  0.77 / 0.15: (b) still FAILS. The rest at 8k are invented compound units ("μg/cm^3", "mg/kg") and units of the asked quantity,
+  so the gate still emits a unit where no convention exists. A lookup does not fix it; the body has to learn scope.
+  train / a26 cells unchanged (0.76 / 0.91 / 0.49).
 Step back: the B / C split taught us to separate "is there a rule" (C) from "what does the body do by default" (B). This result
 adds a third axis, WHICH quantity the rule is about. A far-rule mind needs the scope of a rule, not only its presence. That is a
 claim about the data (rules need scoped contrasts), and it holds for s8 and the skill pack as well as for units.
