@@ -6495,6 +6495,11 @@ dropped 12:46-14:33 IST (a VPN on the 4090 box took all routes; the 6000's firew
 at 15:53 IST, killing the copier; by 18:05 the run was at 668,350. The 43.25B point is the late snapshot step 661,500 (43.35B,
 moved aside 14:33, copied from 18:05). So the addendum's 9-save series has at most **7 points** (42, 42.25, 42.5, 42.75, 43, 43.35,
 44B); the verdict rule is applied to those 7, stated as such. HARM and SCOPE rules unchanged.
+**SERIES = 8 POINTS (Lead, recorded 19:02 IST 2026-11-17, BEFORE the point is scored):** a copier bug (it ignored the .skipped markers)
+took an extra snapshot at step **668,500 = 43.80B** (18:09 IST). It is INCLUDED in the dC mean as an off-grid point, because it was
+selected by the bug, not by any result. Series: 42 / 42.25 / 42.5 / 42.75 / 43 / **43.35 (off-grid)** / **43.80 (off-grid)** / 44B. On
+d_drive it is snap_668500.pt (weights-only, marker .snap_668500.extra; target 663,767 stays skipped). All d_drive snapshots are
+weights-only since 19:00 (295 tensors each verified torch.equal to the full file before the swap; Lead: d_drive was at 11 GB).
 (Snapshot names: Library's targets 644693 / 648508 / 652322 = the first latest.pt at or past them, steps 645,000 / 649,000 / 652,500.
 Kept on d_drive: keep_snap_645000_C1092.pt, keep_snap_652500_C3644_falseunit.pt (the false-unit test case); 649,000 deleted.)
 
