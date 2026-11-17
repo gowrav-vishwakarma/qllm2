@@ -5625,6 +5625,24 @@ RWKV. Ours: a held-vs-noprot fork of the O(1) session state for a far rule, read
 vector added to the state. Also cited: contrastive decoding (Li et al. 2022), CFG for LMs (Sanchez et al. 2023), context-aware
 decoding (Shi et al. 2023).
 
+### DECAY REMEDY: rule x2 inside the decay window (PRE-REGISTERED 2026-11-17 21:34 IST; Lead after the DECAY B / C result)
+Question: does keeping / up-weighting the rule data INSIDE the LR-decay window keep the carry that a plain decay erases (2k dC -0.37)?
+Bodies (M9-era, pre-far-block, so this is a RECIPE test, not the release body):
+- C3 = rule block x2 during a 0.25B decay from M9 (95498f3, step 141,146);
+- C2 = the same from M10 (1b8607d, step 156,405).
+Both are brought from the 6000 as weights-only copies (Mind's fixed copier + sha rule).
+Method: the SCOPE probe at 2k + 8k, n 100. Its C cell uses TOLD-MARGIN's docs and rng, so it is paired per doc with the existing
+decay jsonls (M9 / M10 / decay_M9 / L1). It also gives P_fu / scope_fu / prec_u1. The same probe runs on M9 and M10 as the scope
+reference.
+Readings (fixed now):
+- (1) CARRY KEPT if dC(2k) of C3 vs M9 >= -0.10 (plain decay gave -0.37); the same for C2 vs M10 (plain decay vs M10 gave -0.55).
+  ERASED as before if dC(2k) <= -0.30. Between = partial. 8k reported, no bar (C ~0.4 at these bodies).
+- (2) SCOPE MUST NOT GET WORSE (up-weighting rule data is what produced the 3d excursion): P_fu and scope_fu at 2k and 8k of
+  C3 / C2 <= the parent's + 0.10. A body that keeps the carry but breaks (2) is "kept by over-application", not a remedy.
+Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.g. Robins 1995; experience replay in continual
+learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
+Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
+
 ### DECAY B / C split RESULT (21:33 IST; logs/v14_told_margin_decay_*_n100_*; paired over the same 100 docs per length)
 | pair | 2k dC (se) | 2k dB (se) | 8k dC (se) | 8k dB (se) |
 |---|---|---|---|---|
