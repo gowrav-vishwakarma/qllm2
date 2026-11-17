@@ -6615,6 +6615,8 @@ are reported with NO verdict. Snapshot targets added at +1.5B (696,390) and +2.0
 | | 8k | +0.744 | 0.17 | 0.00 | 0.09 | 0.79 | 0.03 | 0.98 |
 | +0.5B (681,130) | 2k | +1.635 | 0.51 | 0.48 | 0.01 | 0.96 | 0.01 | 0.52 |
 | | 8k | +0.413 | 0.02 | 0.01 | 0.02 | 0.66 | 0.01 | 0.97 |
+| +0.75B (684,945; window 1 of 3) | 2k | +2.056 | 0.72 | | 0.03 | 0.97 | | |
+| | 8k | +0.548 | 0.12 | | 0.06 | 0.70 | | |
 
 Excursion guard (P_fu 8k <= 0.20, scope_fu 8k <= 0.30) passes at both saves. Settled window = +0.75B (684,945), +1.0B, 45B.
 *3e re-armed on the patched v2 (12:32 IST 2026-11-17, Lead (b): the held-out scope direction "asked volume, mass protocol" removed
