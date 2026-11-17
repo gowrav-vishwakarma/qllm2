@@ -6572,6 +6572,15 @@ over-application axes (scope_fu, P_fu, precedence) as co-bars, pre-registered to
 0.20), the over-application is baked in: restart from the 41B save (step_625619, pre-3d; d_drive from_6000/.../sci1_long3c_3a8d7fb/,
 FULL, never slimmed) with the 3f mix, accepting the loss of ~3.5B tokens. If the bars are met, 3f continues.
 **3f STARTED 20:30 IST** from seg3d_end.pt = step **673,500 (44.14B)** (3d stopped 20:30; log logs/v13_sempty_sci1_long3f_91a87ed_20261117_1500.log on the 6000).
+**3f AMENDMENT (21:17 IST 2026-11-17, Lead; BEFORE the first 3f snapshot is scored). Reason:** Library's 44B scope tuple shows the 3d
+excursion settled fully: scope_fu 2k 0.55 (41B 0.73), 8k 0.10; P_fu 0.00 / 0.05; C 1.78 / 0.46, so 44B >= 41B on every axis.
+(1) Reference = 44B. (2) The rollback-to-41B fallback is WITHDRAWN (step_625619 stays kept; it costs nothing). (3) 3f is judged on a
+SETTLED window: the mean of +0.75B, +1.0B and the 45B milestone, and again at +1.5 / +2.0B. **WORKS** = scope_fu 2k mean <= 0.30 AND
+C 8k mean >= 0.40 AND twin unit_acc 8k >= 0.70. **NO EFFECT** = scope_fu 2k mean within +-0.10 of 0.55. **Excursion guard per save:**
+P_fu 8k <= 0.20 and scope_fu 8k <= 0.30; two saves in a row failing = stop and talk (no automatic switch). (4) +0.25 / +0.5B snapshots
+are reported with NO verdict. Snapshot targets added at +1.5B (696,390) and +2.0B (704,020).
+**LESSON (general):** a mix change at constant LR is judged on a settled window (>= 1B after the switch), never on its first saves
+(3d's C swung 0.45 / 1.09 / 0.59 / 3.64 / 2.45 / 0.47 and its harm settled by 44B).
 *3e re-armed on the patched v2 (12:32 IST 2026-11-17, Lead (b): the held-out scope direction "asked volume, mass protocol" removed
 from proto_far2; Library 4ece7bb5):* re-checks on 4ece7bb5: (a) packer 400 chunks identical, hook test OK, and proto_far v1 + proto4k
 streams identical pre- vs post-patch (300 docs each); (b) Library check(): own 65.4 / none 29.5 / other 5.2 %, leak-free, 0 shared
