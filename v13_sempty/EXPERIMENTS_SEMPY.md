@@ -6413,6 +6413,31 @@ NO EFFECT if <= 0.38; otherwise decide at 44B.
 | told 2k / 8k (Library jsonl, Lead's read; Library's report pending) | 0.84 / 0.35 (bare 45) | 0.66 / 0.09 (bare 70) |
 Verdict waits for 43B by the rule. To reach WORKS the 43B told 8k would need >= 0.81; to avoid NO EFFECT, > 0.67.
 
+**3d ADDENDUM: powered readout (Mind + Library + Lead, 05:45 IST 2026-11-17; MADE AFTER SEEING 42B: told 8k 0.09, twin M_gate -2.69,
+C 0.42; recorded before any snapshot is scored).** The ORIGINAL 42B / 43B rule above is still evaluated and reported as written (it will
+probably read NO EFFECT; that is not hidden). The addendum decides what we DO: 3d runs to 44B regardless of the original verdict, then
+this rule is applied.
+*Why:* single-save told 8k swings by about +-0.3 between neighbouring saves; a 2-point mean cannot resolve a 1-2B effect. Library's
+decomposition (1c38ed70) of TOLD-MARGIN at 8k (per doc, n 100): twin gate = B + 5C, with B = noprot M_gate (the body's no-protocol
+'.'-vs-unit prior) and C = mean(held - noprot) M_gate (the carry contrast). Mind's independent recomputation from the same jsonl
+(identity residual 0.00 at every save): pre-3d (30 / 39 / 40 / 40.5 / 41B) C = 0.479 / 0.352 / 0.545 / 0.318 / 0.494, mean 0.438,
+between-save SD 0.097 (within-save SE 0.02-0.03); B = -3.09 / -4.34 / -2.91 / -3.70 / -2.60, mean -3.33, SD 0.69. 42B: C 0.420,
+B -4.79. Spearman with told 8k over the 6 saves Mind has told values for: B 0.89, C 0.83 (Library, 10 saves: 0.96 / 0.73). Low-C saves
+co-occur with low-B ones (39B, 40.5B), so the swing is mostly B but not only B.
+*Saves:* 3d = 9 saves at every 0.25B, 42.0-44.0B (milestones 42 / 43 / 44B + six snapshots of the 6000's latest.pt at steps >= 644,693
+/ 648,508 / 652,322 / 659,952 / 663,767 / 667,581, v13_sempty/tmp/sci1_3d_snapshots.sh: hard links, free-space gates on both ends,
+latest.pt never touched; a snapshot skipped for disk is noted, not replaced). Baseline = the 5 pre-3d saves (UNEVEN: 30B + four in
+39-41B; bimodal in B). Each save: TOLD-MARGIN at 8k (n 100) + told 8k (n 100), Library, on the 4090 between wio arms.
+*PRIMARY:* dC = mean C over the 3d saves - 0.438. WORKS: dC >= +0.10 AND dC / SE >= 2 (Welch SE from the between-save SDs; expected
+~0.054); NO EFFECT: |dC| <= 0.05; WORSE: dC <= -0.10; otherwise inconclusive -> 4 more 0.25B saves to 45B under the same rule. Guards
+(s8 @8k, clk2 16k, HS, bare count) on the 42 / 43 / 44B milestone means, as in the clarification.
+*SECONDARY (reported, not bars):* twin M_gate delta (3d mean - (-1.14); "WORKS-like" if >= +1.0 nats and >= 2 SE); B mean; the fraction
+of saves in the high state (twin M_gate > -1.0): baseline 3/5, 3d k/9; gate_win, unit pick; told 8k mean (headline, single-save noisy).
+*Data-cycle check (own line, Lead):* each snapshot logs its cumulative data counters (chat passes, per-source tokens + docs); the
+window mix = the diff of consecutive saves. Test: does B (or C) move with the last-0.25B share of no-protocol proto4k docs or of
+bare-number answers (cosmo / finemath / tools)? If B aligns with a data cycle, that is a EUREKA for the release recipe (average or pick
+saves by state).
+
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
 **Why:** segment 3's chat sources did not cycle, so R7's <= 4-epoch sizing never applied: tuluif ran dry at 32.95B, chatsr at 34.43B,
