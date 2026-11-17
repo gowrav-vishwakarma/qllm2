@@ -6428,11 +6428,15 @@ co-occur with low-B ones (39B, 40.5B), so the swing is mostly B but not only B.
 / 648,508 / 652,322 / 659,952 / 663,767 / 667,581, v13_sempty/tmp/sci1_3d_snapshots.sh: hard links, free-space gates on both ends,
 latest.pt never touched; a snapshot skipped for disk is noted, not replaced). Baseline = the 5 pre-3d saves (UNEVEN: 30B + four in
 39-41B; bimodal in B). Each save: TOLD-MARGIN at 8k (n 100) + told 8k (n 100), Library, on the 4090 between wio arms.
-*PRIMARY:* dC = mean C over the 3d saves - 0.438. WORKS: dC >= +0.10 AND dC / SE >= 2 (Welch SE from the between-save SDs; expected
-~0.054); NO EFFECT: |dC| <= 0.05; WORSE: dC <= -0.10; otherwise inconclusive -> 4 more 0.25B saves to 45B under the same rule. Guards
-(s8 @8k, clk2 16k, HS, bare count) on the 42 / 43 / 44B milestone means, as in the clarification.
-*SECONDARY (reported, not bars):* twin M_gate delta (3d mean - (-1.14); "WORKS-like" if >= +1.0 nats and >= 2 SE); B mean; the fraction
-of saves in the high state (twin M_gate > -1.0): baseline 3/5, 3d k/9; gate_win, unit pick; told 8k mean (headline, single-save noisy).
+*PRIMARY (merged with Library's text 05:42 IST, still before any snapshot is scored; supersedes the 05:38 draft line):* C = per-doc
+mean(held - noprot) M_gate at 8k (TOLD-MARGIN, train wording, A28 docs seed 26000; v14/told_margin.py at the hash in each log name),
+n 100 per snapshot, n 300 at the 42B / 43B / 44B milestones. Reference = the pre-3d saves 39B / 40B / 40.5B / 41B (contiguous with 3d;
+30B dropped as 9B earlier): C 0.352 / 0.545 / 0.318 / 0.494, mean 0.427, SD 0.110. dC = mean(3d, 9 saves) - 0.427. WORKS: dC >= +0.10;
+NO EFFECT: |dC| <= 0.05; WORSE: dC <= -0.10; in between = unresolved -> 4 more 0.25B saves to 45B. POWER stated, not tuned: SE of dC
+~0.06 (Welch from save-to-save SDs), so a +0.10 result is ~1.7 SE; the SE is reported beside dC. Guards (s8 @8k, clk2 16k, HS, bare
+count) on the 42 / 43 / 44B milestone means, as in the clarification.
+*SECONDARY (reported, not bars):* twin M_gate delta (3d mean - the 39-41B mean -1.25; "WORKS-like" if >= +1.0 nats and >= 2 SE); B mean; the fraction
+of saves in the high state (twin M_gate > -1.0): baseline 2/4 (39-41B), 3d k/9; gate_win, unit pick; told 8k mean (headline, single-save noisy).
 *Data-cycle check (own line, Lead):* each snapshot logs its cumulative data counters (chat passes, per-source tokens + docs); the
 window mix = the diff of consecutive saves. Test: does B (or C) move with the last-0.25B share of no-protocol proto4k docs or of
 bare-number answers (cosmo / finemath / tools)? If B aligns with a data cycle, that is a EUREKA for the release recipe (average or pick
