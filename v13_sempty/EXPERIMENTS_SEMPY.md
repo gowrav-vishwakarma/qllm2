@@ -6135,7 +6135,7 @@ tpp readout; no new bar):** every wio arm reports shift_wide_new and affine_map_
 beside the s8 3-save mean. gdn 3-save: shift_wide_new 0.897 / 0.511 / 0.326 / 0.136 (chance 0.125 by 8k); affine_map_new 0.973 / 0.894
 / 0.820 / 0.681. HYPOTHESIS (Argon, not a claim): shift needs a phase reference that GDN lacks. TEST: nochrono vs pam on shift_wide_new
 @8k; a nochrono arm that holds shift_wide (near pam's level) REFUTES it; a nochrono drop toward gdn's while pam holds supports it.
-**SECONDARY READOUT 2 (12:06 IST 2026-11-17, Argon via Lead; recorded after nochrono's readouts and BEFORE any pam readout; no new
+**SECONDARY READOUT 2 (11:52 IST 2026-11-17, Argon via Lead; recorded after nochrono's readouts and BEFORE any pam readout; no new
 bar):** (a) **affine_map_new @0** for pam. nochrono 3-save 0.711, gdn 0.973. If pam ~= nochrono and still trails gdn, the affine gap
 is the write / erase dynamics, not the clock. HYPOTHESIS (Argon, not a claim): GDN's gated erase on the delta write acts as an online
 map update. (b) **shift_wide 2k / 4k / 8k** stays the Chrono stress test (nochrono 0.709 / 0.558 / 0.345, gdn 0.511 / 0.326 / 0.136).
@@ -6154,7 +6154,7 @@ unit-norm keys and a per-token, per-head decay g_t. The differences:
   (SHORT_CONV=0), RoPE (nochrono) or the Chrono clock (pam) on q / k, and the N4 output gate.
 Reading for (a): if the affine gap is the erase, the candidates are the tied-vs-untied gates (GDN's replace-on-write) and the 3x more
 write sites. Neither is touched in this screen; a follow-up would be a v14-lane question (new mechanism), not a v13 tune.
-**nochrono ARM RESULT (12:06 IST 2026-11-17; 102,870,812 params, 1.000B tokens, solo avg 45.4k tok/s; logs/wio/*nochrono*):**
+**nochrono ARM RESULT (11:52 IST 2026-11-17; 102,870,812 params, 1.000B tokens, solo avg 45.4k tok/s; logs/wio/*nochrono*):**
 
 | arm | params | tokens | s8 @8k 3-save (14,500 / 15,000 / end) | shift_wide 0 / 2k / 4k / 8k | affine_map 0 / 2k / 4k / 8k | clk2 8k / 16k | HS / ARC-e / PIQA | val / wiki_val NLL |
 |---|---|---|---|---|---|---|---|---|
