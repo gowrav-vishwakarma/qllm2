@@ -92,6 +92,7 @@ def main():
     ap.add_argument('--ckpt', required=True); ap.add_argument('--lengths', default='2048,8192')
     ap.add_argument('--docs', type=int, default=100); ap.add_argument('--device', default='cuda'); ap.add_argument('--out', required=True)
     ap.add_argument('--fullctx', action='store_true')
+    ap.add_argument('--guard_only', action='store_true', help='P + C + S cells only (no R): the 3f excursion guard, e.g. on CPU')
     a = ap.parse_args()
     import subprocess
     h = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True, cwd=ROOT).stdout.strip()
@@ -132,20 +133,27 @@ def main():
             rec |= dict(S_proto=ds['proto'], S_fu=int(float(st[all_u].max() - st[dot]) > 0),
                         S_fu_held=int(float(sh[all_u].max() - sh[dot]) > 0),
                         S_bound_fu=int(float(st[ask_u].max() - st[dot]) > 0))
-            dr = swap_row_unit(make_doc(rng_r, tok, fill, 'unit', L, 'train'), urng, enc, tok)
-            _, _, rt = read3(dr, enc)
-            cand = all_u + [dot]; top = cand[int(rt[cand].argmax())]
-            u1t, u2t = first[dr['q']][dr['unit']], first[dr['q']][dr['u2']]
-            rec |= dict(R_u1_unit=dr['unit'], R_u2_unit=dr['u2'], R_u1=int(top == u1t), R_u2=int(top == u2t))
+            if a.guard_only:                                 # R not run; R_u1 / R_u2 are placeholders (printed as n/a)
+                rec |= dict(R_u1=0, R_u2=0)
+            else:
+                dr = swap_row_unit(make_doc(rng_r, tok, fill, 'unit', L, 'train'), urng, enc, tok)
+                _, _, rt = read3(dr, enc)
+                cand = all_u + [dot]; top = cand[int(rt[cand].argmax())]
+                u1t, u2t = first[dr['q']][dr['unit']], first[dr['q']][dr['u2']]
+                rec |= dict(R_u1_unit=dr['unit'], R_u2_unit=dr['u2'], R_u1=int(top == u1t), R_u2=int(top == u2t))
             rec['C_mid_twin'] = int(rec['twin_m_id'] > 0)
             for k in acc:
                 acc[k].append(rec[k])
             out.write(json.dumps(rec) + '\n'); out.flush()
+            if a.guard_only:
+                print(f"doc {di} L {L} P_fu {rec['P_fu']} S_fu {rec['S_fu']}", flush=True)
         n = a.docs; m = {k: sum(v) / n for k, v in acc.items()}
         summ[L] = m
         print(f"L {L}: 4-tuple B {m['B']:+.2f} C {m['C']:+.3f} scope_fu {m['S_fu']:.2f} prec_u1 {m['R_u1']:.2f} | P_fu {m['P_fu']:.2f} "
               f"twin unit_acc {m['C_mid_twin']:.2f} | S_fu_held {m['S_fu_held']:.2f} S_bound_fu {m['S_bound_fu']:.2f} | R_u2 {m['R_u2']:.2f}",
               flush=True)
+        if a.guard_only:
+            print(f"GUARD L {L} n {n}: P_fu {m['P_fu']:.3f} scope_fu {m['S_fu']:.3f} (low power, guard only; prec_u1 / R_u2 not run)", flush=True)
     print('SUMMARY ' + json.dumps(summ), flush=True)
     print('SCOPE DONE', flush=True)
 

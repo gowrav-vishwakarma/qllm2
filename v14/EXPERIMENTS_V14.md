@@ -5676,6 +5676,20 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
+### 3f GUARD on CPU, low power (PRE-REGISTERED 2026-11-18 04:54 IST by the clock, before any number; Lead message stamped 05:02 IST, received ~04:50)
+Why: tpp keeps the 4090 until ~10:10 IST, so the GPU read of +1.0B / +1.5B may not happen before the user's day, while the 6000
+trains ~2B more on 3f. This settles only the EXCURSION pair (45B = #1).
+Method: scope_probe.py --guard_only (P + C + S cells, no R), --lengths 8192, n 40 (= the first 40 docs of the n-100 run, same rngs),
+--device cpu, 16 of 32 threads, nice 10; stop if RAM available < 12 GB. Labelled "low power, CPU, guard only".
+Saves: +1.0B substitute grab_689500 (step 689,500 = 45.19B; the 688,760 snapshot was never taken), then +1.5B snap_696390 when it
+lands. Smoke (2 docs) 120 s wall incl. load, peak RSS 4.6 GB -> ~35 min per save.
+Reading (fixed now), per save, on P_fu 8k and scope_fu 8k: either >= 0.35 -> GUARD BROKEN; both <= 0.15 -> CLEAR; else UNCLEAR
+(wait for the GPU read at n 100). A GPU read, when it comes, supersedes this one.
+RESULT 689,500 (+1.0B substitute, 45.19B; 05:29 IST; logs/v14_cpuguard_3f_689500_b539d107_20261118_0454.*): 8k n 40 P_fu 0.050,
+scope_fu 0.075 -> CLEAR. Also B -3.73, C +0.549, twin unit_acc 0.75, S_fu_held 0.07, S_bound_fu 0.07 (0 tracebacks).
+Excursion pair: 45B #1 is followed by a clear save, so NOT two in a row; no stop-and-talk. The 45B break looks like one more swing,
+like the 3d peaks. +1.0B still owes its n-100 2k read (scope_fu 2k) for NO EFFECT vs WORSE.
+
 ### DECAY REMEDY PARTIAL: C3 at 2k only (2026-11-18 04:40 IST; logs/v14_scope_dec_C3_82bd02bd_20261118_0434.*)
 Run SHARED beside tpp (Lead's split far window); the 55 % speed guard stopped it at 04:39 IST (tpp 82.8k -> 42.4k / 42.8k tok/s,
 ~52 % of solo, two lines in a row). 2k is complete (100 docs), 8k has 6 docs (not read). Paired per doc (same quantity + unit
