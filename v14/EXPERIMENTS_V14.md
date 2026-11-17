@@ -5420,7 +5420,19 @@ Cost: no decoding; one forward per prompt, about like an s8 run. Code: ~60 lines
 3f = proto_far3 + proto4k2, started at step 673,500 (44.14B), run sci1_long3f_91a87ed. Snapshot targets 677315 / 681130 / 684945 / 688760
 (+0.25 / +0.5 / +0.75 / +1.0B); 45B milestone step_686655. On each save: the SCOPE probe at 2k + 8k, n 100 (it also gives B and C;
 logs/v14_scope_3f_<step>_*).
-FALLBACK DECISION at +0.5B (681130): 3f continues if scope_fu 2k <= 0.30 OR P_fu 8k <= 0.20; else the run restarts from 41B.
+[WITHDRAWN, see the amendment below] FALLBACK DECISION at +0.5B (681130): 3f continues if scope_fu 2k <= 0.30 OR P_fu 8k <= 0.20; else the run restarts from 41B.
+AMENDMENT (21:17 IST, before any 3f save is scored; Lead): reason: "the 44B scope tuple shows the 3d excursion settled; 44B >= 41B
+on every axis".
+- (1) Reference = 44B: scope_fu 2k 0.55 / 8k 0.10, P_fu 0.00 / 0.05, prec_u1 0.42 / 0.02, C 1.78 / 0.46.
+- (2) The rollback-to-41B fallback is WITHDRAWN (there is nothing baked in to roll back).
+- (3) 3f is judged on a SETTLED window, not one save: the mean of the +0.75B (684945) and +1.0B (688760) snapshots and the 45B
+  milestone (686655) = 3 saves; judged again at +1.5B / +2.0B.
+  - WORKS: scope_fu 2k mean <= 0.30, AND C 8k mean >= 0.40, AND twin unit_acc 8k >= 0.70.
+  - NO EFFECT: scope_fu 2k mean within +-0.10 of 0.55.
+  - EXCURSION guard on every save: P_fu 8k <= 0.20 and scope_fu 8k <= 0.30. A save that breaks it is reported as an excursion;
+    two in a row = stop and talk. No automatic switch.
+- (4) The +0.25B (677315) and +0.5B (681130) snapshots are scored and reported, with no verdict.
+- (5) prec_u1 is reported, with no bar yet.
 44B (step_671396, last pure-3d save), TOLD-MARGIN n300: C 8k +0.471 (se 0.016) / 2k +1.810, B -4.29 / -5.01, fu 0.01 / 0.01, twin
 gate_win 0.18. That is back near 42B (0.453): the 3d C series swings (0.45, 1.09, 0.59, 3.64, 2.45, 0.47), it does not climb.
 A 44B scope 4-tuple is queued in this window, to see whether the scope damage swung back too.
