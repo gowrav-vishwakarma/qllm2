@@ -5333,7 +5333,7 @@ The twin's gate is B + 5C (alpha 4).
 
 **Closest prior work and difference** as for the GATE-FREE read: contrastive decoding (Li et al. 2023), but the emit decision uses only the contrast term.
 
-### CONTRAST GATE guards: real decoding + composition with A32c (PRE-REGISTERED 2026-11-17 05:46 IST, before any GPU number; Lead 05:43 IST adds guard (d) and asks for ONE v0.4 candidate)
+### CONTRAST GATE guards: real decoding + composition with A32c (PRE-REGISTERED 2026-11-17 05:45 IST, before any GPU number; Lead 05:43 IST adds guard (d) and asks for ONE v0.4 candidate)
 **Composition:**
 - It is the same read with a different gate, not a competitor. A32c's split read takes the number from the warm stream and every other token from the α-4 contrast. At the unit step that contrast is B + 5C, so B still votes on unit vs '.'.
 - The contrast gate replaces only that one emit decision: emit t* (the twin's best non-stop token) iff (la − lb)[t*] − (la − lb)['.'] > 0.
