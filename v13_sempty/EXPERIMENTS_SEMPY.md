@@ -6528,6 +6528,13 @@ source), as a separate GO.
   proto_far -> proto_far3 and proto4k -> proto4k2 at the same shares, own cursors (not v2).
 - < 0.50 AND HARM (fu 8k) stays < 0.30 -> finish the addendum to 44B, then replace 3d by 3f in one step.
 - 3e (v2) stays armed only for the HARM trigger. Nothing launches on the 6000 without Lead's GO; pam has priority on the 4090.
+*3f READY (12:54 IST 2026-11-17; 9753ce39):* registry proto_far3 (far '3', whole-window) + proto4k2 (scope '2', max_gap 300), own
+cursors; `v13_sempty/tmp/sci1_long3f_env.sh` = 3d's weights (token shares) with proto_far -> proto_far3 (1.6 %), proto4k -> proto4k2
+(0.846 %). (a) packer 400 chunks identical; proto / proto4k / proto_far / proto_far2 streams identical HEAD vs hook; own cursors, exact
+resume. (b) Library check(): leak-free, held_out_hits 0, 0 shared 5-grams (far3 answer share 0.0012, 4k2 0.0032); my count: held-out unit
+direction 0 / 20,000 in both; modes far3 own .549 / none .251 / other .200, 4k2 own .447 / none .353 / other .200. (c) tokens far3 2,593
+vs proto_far 2,588; 4k2 914 vs proto4k 992 (weights are token shares, v7/data.py l.1751, so the share holds; the [mix] line confirms).
+Launch = sci1_seg_switch.sh with the 3f env from a 6000 worktree at >= 9753ce39, on Lead's GO.
 *3e re-armed on the patched v2 (12:32 IST 2026-11-17, Lead (b): the held-out scope direction "asked volume, mass protocol" removed
 from proto_far2; Library 4ece7bb5):* re-checks on 4ece7bb5: (a) packer 400 chunks identical, hook test OK, and proto_far v1 + proto4k
 streams identical pre- vs post-patch (300 docs each); (b) Library check(): own 65.4 / none 29.5 / other 5.2 %, leak-free, 0 shared
