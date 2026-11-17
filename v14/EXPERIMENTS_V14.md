@@ -5685,6 +5685,10 @@ Saves: +1.0B substitute grab_689500 (step 689,500 = 45.19B; the 688,760 snapshot
 lands. Smoke (2 docs) 120 s wall incl. load, peak RSS 4.6 GB -> ~35 min per save.
 Reading (fixed now), per save, on P_fu 8k and scope_fu 8k: either >= 0.35 -> GUARD BROKEN; both <= 0.15 -> CLEAR; else UNCLEAR
 (wait for the GPU read at n 100). A GPU read, when it comes, supersedes this one.
+RESULT 689,500 (+1.0B substitute, 45.19B; 05:29 IST; logs/v14_cpuguard_3f_689500_b539d107_20261118_0454.*): 8k n 40 P_fu 0.050,
+scope_fu 0.075 -> CLEAR. Also B -3.73, C +0.549, twin unit_acc 0.75, S_fu_held 0.07, S_bound_fu 0.07 (0 tracebacks).
+Excursion pair: 45B #1 is followed by a clear save, so NOT two in a row; no stop-and-talk. The 45B break looks like one more swing,
+like the 3d peaks. +1.0B still owes its n-100 2k read (scope_fu 2k) for NO EFFECT vs WORSE.
 
 ### DECAY REMEDY PARTIAL: C3 at 2k only (2026-11-18 04:40 IST; logs/v14_scope_dec_C3_82bd02bd_20261118_0434.*)
 Run SHARED beside tpp (Lead's split far window); the 55 % speed guard stopped it at 04:39 IST (tpp 82.8k -> 42.4k / 42.8k tok/s,
