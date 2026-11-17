@@ -120,7 +120,7 @@ class StackedChunkDataset(Dataset):
 
 # Sources whose docs must sit whole inside one training window (StreamingTokenChunkDataset holds them; 2026-11-07, far rule
 # carry: b2s_far / proto_far docs are 1.8k-3.2k tokens and lose their early examples + answer weight when they cross a window).
-WHOLE_WINDOW_SOURCES = ('b2s_far', 'proto_far', 'proto_far2')
+WHOLE_WINDOW_SOURCES = ('b2s_far', 'proto_far', 'proto_far2', 'proto_far3')
 HOLD_MAX = 8
 
 
@@ -2771,6 +2771,11 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     # proto_far v2 (Library e670df5a, 2026-11-17 HARM remedy): 65 % own protocol / 25 % no protocol / 10 % other-quantity protocol,
     # no-protocol + other docs answer the bare value; own rng (offset 8888), own cursor 'proto_far2'.
     'proto_far2':    {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto', 'far': '2'},
+    # SCOPE sources (Library 4ece7bb5, Argon / Lead 2026-11-17 segment 3f): proto_far3 = far docs 55 % own / 25 % none / 20 % other-quantity
+    # protocol (rng offset 9999); proto4k2 = proto4k's docs with 20 % other-quantity docs at short gaps (offset 5555). Both hold out the
+    # unit direction "asked volume, mass protocol" (the scope probe's S cell). Own cursors.
+    'proto_far3':    {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto', 'far': '3'},
+    'proto4k2':      {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto', 'max_gap': 300, 'scope': '2'},
     # SCI-1 (user 11:10 IST): a scientist that calls tools, thinks briefly and writes analysis code (v7/sci_tools.py).
     'tools':         {'schema': 'text',     'kind': 'scitool',   'hf': 'glaive-fc-v2 + ToolACE + library-fetch'},
     'think':         {'schema': 'text',     'kind': 'scitool',   'hf': 'MetaMathQA + GSM8K (short)'},
@@ -2841,7 +2846,7 @@ def _open_source_iter(
         if name == 'reason':
             return _reason_text_iter(seed=mix_seed, skip_docs=skip,
                                      doc_counters=doc_counters, counter_key=name)
-        if name in ('proto', 'proto4k', 'protoc', 'proto_far', 'proto_far2'):
+        if name in ('proto', 'proto4k', 'protoc', 'proto_far', 'proto_far2', 'proto_far3', 'proto4k2'):
             from v14.protocol_docs import protocol_text_iter
             kw = {'max_gap': int(spec['max_gap'])} if 'max_gap' in spec else {}
             if spec.get('compact_only'):
@@ -2850,6 +2855,8 @@ def _open_source_iter(
                 kw['far'] = True
                 if spec['far'] != '1':
                     kw['far_version'] = int(spec['far'])
+            if spec.get('scope'):
+                kw['scope_version'] = int(spec['scope'])
             return protocol_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name,
                                       bump=_bump_counter, **kw)
         if name == 'b2s_far':
