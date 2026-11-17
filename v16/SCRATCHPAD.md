@@ -173,6 +173,26 @@ Opposite moves in 2 of 3 intervals (M6->M7 within one mix: told 0.81 -> 0.49, in
 
 ## Decisions (organiser)
 
+**2026-11-17 23:40 IST - SETBACK + step back: the wio claim is NOT met (pam 0.343 < gdn 0.408 < nochrono 0.427 on s8 @8k; bcebc850).**
+Re-read the meditation memory first. What surprised: the learned clock is the one flag between our two arms, and it LOWERS rule carry
+at every distance while it more than doubles needles at 16k (0.80 vs 0.35 / 0.33). What it really says: (1) with far docs in everyone's
+data, carrying an example rule to 8k is not our architecture's edge at 100M / 1B; a published O(1) relative (Gated DeltaNet) does it
+as well or better, fits affine maps better (tied replace-on-write, 12 write sites vs our 4) and has the lower NLL at 2.5x the speed.
+(2) Our clean, one-flag, architectural result is on the OTHER side: the clock buys verbatim recall far past the trained length.
+(3) That is the user's thesis seen from inside the body: rules want a key free of position (mind), episodes want a phased key
+(knowledge index). We built one geometry and asked it to do both. Angles, none run yet, each needs its own pre-registration:
+(a) SPLIT GEOMETRY: phase-free notebooks for rules + clocked notebooks for episodes (split heads or layers); closest prior work =
+complementary learning systems (McClelland et al. 1995) and per-head positional mixes; ours = a content-modulated clock only on the
+episodic half of a delta-rule memory. One 100M / 1B arm on the wio mix, bar = s8 @8k >= nochrono AND t40 16k >= pam - 0.10.
+(b) The MISSING CELL for "holds beyond the trained length": on the ctl mix (NO far docs) PAM kept 0.52 at 2k / 4k where T++ / Mamba-2
+fell to 0.07 / 0.15. GDN and nochrono were never run there. If they also collapse without far docs, our edge is zero-shot length
+generalisation of rules, which is the claim the user actually stated; if they do not, it is not ours either. Two arms, ~4 h each.
+(c) Write / erase: untied erase starting at 0.05 and 4 write sites may be why affine at distance 0 is 0.66-0.71 vs 0.97; an erase-init
+/ tied-erase rung is cheap. (d) Scale: at 386M / 44B the clock-on body has s8 @8k 0.98; there is no clock-off twin and no baseline
+at that size, so "the cost shrinks with scale" is a hope, not a result. (e) mamba2 / tpp on the far mix finish tonight: bar 2 as the
+user wrote it is vs those two, and it is still open. Order I will propose: (b) first (it decides what we may claim), then (a), then (c).
+Honest status for the user: rule-at-distance is not a proven edge; recall-at-distance via the clock is; language is level to behind.
+
 **2026-11-17 07:50 IST - step back (user asked: re-read memory, think in the void).** One night went into one cell (told rule @8k).
 What it really said: (1) the mind carries the told rule (C steady 0.3-0.5 nats) and the READ loses it to a drifting prior (B swings
 4-5 nats at constant LR): "the state knows, the readout does not ask". (2) Reading a state against its own counterfactual fork is cheap
