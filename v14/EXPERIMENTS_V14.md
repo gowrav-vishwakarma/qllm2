@@ -5377,6 +5377,38 @@ removes B by construction, and that is the case for the gate. The same overshoot
 rate must sit beside every 3d reading. Training-side angle for Mind: keep the protocol / no-protocol contrast pairs balanced in the
 3d mix, so the body is never paid for a unit it was not told.
 
+### SCOPE (PRE-REGISTERED 2026-11-17 12:20 IST; Lead's decisions after the cgate 41B verdict; commit 4ece7bb5)
+Decisions (Lead 12:1x IST):
+- v0.4 (contrast gate) is NOT adoptable.
+- A32c (self-demos + split, no gate) is NOT adoptable either until scope is trained: its mismatch false-unit is worse than the
+  twin's (8k 0.51 vs 0.25, 2k 0.96 vs 0.74), so guard (b) applies to it.
+- v0.3.1 stays the package.
+- 42B cgate run dropped.
+STANDING READOUT from now on: the SCOPE 4-tuple (B, C, scope_fu, prec_u1) on the plain twin at 2k + 8k, for every milestone told line,
+in MLB and on the release page. Probe: v14/scope_probe.py (pre-registered separately, below, before any number). Today's baseline
+from the cgate mismatch cell, 41B: twin false-unit 0.74 at 2k, 0.25 at 8k. An honest limitation for the paper: the body carries
+"a rule exists", not "what it is about".
+Held-out direction (Argon): the unit direction "asked volume, protocol about mass" is in NO scope training data; the probe scores it.
+proto_far2 patched to match (Lead (b)): an 'other' draw with asked = volume becomes 'none'. v2 hash 884452eec7730950 (pre-patch
+1295aa3bf38d0450 stays armed until Mind's three re-checks pass). Patched v2 realized: own 65.4 / none 29.5 / other 5.2 %. If 3e
+starts on the pre-patch v2, S is a TRAINED direction for units from then on, and the 3e notes say so.
+Scope data (CPU, ready; its own segment after Mind's three checks):
+- proto_far3 = far_version 3 (own 55 / none 25 / other 20; 'other' takes unit / convert only; realized 55.9 / 25.7 / 18.3 %).
+- proto4k2 = scope_version 2 (short gaps, max_gap 300: 20 % natural docs with the OTHER quantity's protocol and raw answers; the
+  rest build_doc's own 80 / 20 + compact mix; realized other 20.2 %).
+- Both are leak_free (0 shared 5-grams with A26), and both hold out the direction above.
+- Old streams bit-identical by hash (proto_far v1 68a702f3fe73c0f8, build_doc 62ae4850c80d73fc).
+- Tests: python -m v14.test_proto_far2 ALL PASS.
+Bars for the scope segment (on the plain twin, scope probe, held-out direction):
+- (1) scope_fu 2k <= 0.30 within 0.5B tokens and <= 0.15 by 1B (41B baseline 0.74 on the cgate mis cell);
+- (2) C 8k mean >= 0.427 (the carry is kept);
+- (3) B-cell false-unit <= 0.10 at 8k (the no-protocol half stays fixed);
+- (4) twin unit_acc 8k not lower than the pre-segment mean - 0.05.
+Closest prior work: contrast sets (Gardner et al. 2020); counterfactually augmented data (Kaushik et al. 2020); binding / scope
+tests of which entity an instruction or attribute applies to (entity-binding probes in LMs, e.g. Feng & Steinhardt 2023, "How do
+language models bind entities in context?"). Difference: the rule sits 2-8k tokens before the question in an O(1) recurrent
+state, and we train and score its scope at that distance, with one direction held out against a lexical shortcut.
+
 ### CONTRAST GATE guards RESULT, 41B (2026-11-17 12:15 IST; logs/v14_cgate_m41_e1d7749c_20261117_1156.*; peak 5,072 MiB)
 | cell | twin | split (A32c) | cgate | v04 |
 |---|---|---|---|---|
