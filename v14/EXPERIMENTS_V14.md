@@ -5625,6 +5625,23 @@ RWKV. Ours: a held-vs-noprot fork of the O(1) session state for a far rule, read
 vector added to the state. Also cited: contrastive decoding (Li et al. 2022), CFG for LMs (Sanchez et al. 2023), context-aware
 decoding (Shi et al. 2023).
 
+### DECAY B / C split RESULT (21:33 IST; logs/v14_told_margin_decay_*_n100_*; paired over the same 100 docs per length)
+| pair | 2k dC (se) | 2k dB (se) | 8k dC (se) | 8k dB (se) |
+|---|---|---|---|---|
+| decay_M9 - M9 (parent) | -0.373 (0.044) | -0.85 (0.18) | -0.070 (0.011) | -0.43 (0.17) |
+| decay_M9 - M10 (same tokens, constant LR) | -0.551 (0.085) | -0.54 (0.18) | -0.071 (0.017) | -0.86 (0.17) |
+| LAWA L1 - M9 | -0.264 (0.026) | +0.23 (0.09) | -0.073 (0.006) | +0.43 (0.10) |
+| M10 - M9 (control: 1B more tokens, no decay) | +0.178 (0.094) | -0.31 (0.20) | +0.001 (0.019) | +0.43 (0.19) |
+Raw C 2k / 8k: M9 2.145 / 0.401; decay_M9 1.772 / 0.331; M10 2.324 / 0.402; L1 1.881 / 0.327.
+READING (pre-registered, 2k primary): dC <= -0.10 (-0.37 vs the parent, -0.55 vs the same-token twin), with dB above -1. So the
+decay erases the CARRY; it does not only hurt the read. A decode-time gate cannot restore it. Weight averaging (LAWA) does the
+same, more mildly (-0.26). At 8k all four bodies carry little (C 0.33-0.40, pre-proto_far data), and |dC| 0.07 meets neither
+bar: no clear reading there.
+What it means for the release recipe (the blocker "a decay erases the far rule first"): the LR decay and the averaging shrink
+the rule's carry margin itself. A recipe has to protect the carry during the decay (the rule data stays in, or is up-weighted, in
+the decay window). That is Mind's C2 / C3 design (rule x2 during a 0.25B decay); those saves are on the 6000 only and are now
+worth scoring (4.6 GB each to copy; d_drive ~17 GB).
+
 ### DECAY B / C split (PRE-REGISTERED 2026-11-17 07:51 IST, Lead's step-back 95ae29f5; no training)
 Question: is the release blocker "a decay erases the far rule first" the same thing as the told-8k swing, i.e. does the decay
 move B (the body's no-protocol '.' prior) while the carry C stays?
