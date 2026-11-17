@@ -5372,9 +5372,9 @@ Reading, fixed now:
 - dC <= -0.10 (any dB): the decay erases the CARRY -> the gate cannot fix it; the recipe must change.
 - otherwise: no clear reading at n 100; say so.
 Queued after the pending 3d snapshots and the cgate 41B body, inside Mind's windows only.
-Pairs (Mind 07:5x IST, D = d_drive from_6000/checkpoints_v13_sempty): M9 (step 137,331) -> decay_M9 (9->10B, 8290f7d);
+Pairs (Mind ~07:51 IST, D = d_drive from_6000/checkpoints_v13_sempty): M9 (step 137,331) -> decay_M9 (9->10B, 8290f7d);
 M10 (152,590, the constant-LR twin over the same 1B tokens) as the third point; LAWA L1 = mean(M9, 138,500) vs M9. C2 / C3 are
-on the 6000 only, so they are copied only if the four local saves give a reading. Addendum 07:55 IST, before any number (Mind):
+on the 6000 only, so they are copied only if the four local saves give a reading. Addendum 07:52 IST, before any number (Mind):
 these bodies saw proto4k only inside 4k (no proto_far yet), so C at 8k may sit near 0 everywhere. So BOTH 2k and 8k are read,
 2k is the PRIMARY cell for this reading, and 8k is reported beside it. Logs: logs/v14_told_margin_decay_<tag>_n100_<hash>_<stamp>.
 Closest prior work: contrastive decoding (Li et al. 2022), classifier-free guidance for LMs (Sanchez et al. 2023), context-aware
