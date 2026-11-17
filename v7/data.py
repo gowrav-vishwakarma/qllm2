@@ -120,7 +120,7 @@ class StackedChunkDataset(Dataset):
 
 # Sources whose docs must sit whole inside one training window (StreamingTokenChunkDataset holds them; 2026-11-07, far rule
 # carry: b2s_far / proto_far docs are 1.8k-3.2k tokens and lose their early examples + answer weight when they cross a window).
-WHOLE_WINDOW_SOURCES = ('b2s_far', 'proto_far')
+WHOLE_WINDOW_SOURCES = ('b2s_far', 'proto_far', 'proto_far2')
 HOLD_MAX = 8
 
 
@@ -2768,6 +2768,9 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     # SCI-1 first continuation: compact "Report rule." value-copy docs only (Library's protocol_docs compact_only), short gaps.
     'protoc':        {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto', 'compact_only': '1'},
     'proto_far':     {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto', 'far': '1'},
+    # proto_far v2 (Library e670df5a, 2026-11-17 HARM remedy): 65 % own protocol / 25 % no protocol / 10 % other-quantity protocol,
+    # no-protocol + other docs answer the bare value; own rng (offset 8888), own cursor 'proto_far2'.
+    'proto_far2':    {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto', 'far': '2'},
     # SCI-1 (user 11:10 IST): a scientist that calls tools, thinks briefly and writes analysis code (v7/sci_tools.py).
     'tools':         {'schema': 'text',     'kind': 'scitool',   'hf': 'glaive-fc-v2 + ToolACE + library-fetch'},
     'think':         {'schema': 'text',     'kind': 'scitool',   'hf': 'MetaMathQA + GSM8K (short)'},
@@ -2838,13 +2841,15 @@ def _open_source_iter(
         if name == 'reason':
             return _reason_text_iter(seed=mix_seed, skip_docs=skip,
                                      doc_counters=doc_counters, counter_key=name)
-        if name in ('proto', 'proto4k', 'protoc', 'proto_far'):
+        if name in ('proto', 'proto4k', 'protoc', 'proto_far', 'proto_far2'):
             from v14.protocol_docs import protocol_text_iter
             kw = {'max_gap': int(spec['max_gap'])} if 'max_gap' in spec else {}
             if spec.get('compact_only'):
                 kw['compact_only'] = True
             if spec.get('far'):
                 kw['far'] = True
+                if spec['far'] != '1':
+                    kw['far_version'] = int(spec['far'])
             return protocol_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name,
                                       bump=_bump_counter, **kw)
         if name == 'b2s_far':
