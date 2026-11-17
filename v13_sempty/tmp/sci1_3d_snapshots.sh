@@ -15,7 +15,7 @@ print('MIX step', c['global_step'], 'passes', {k: v for k, v in dc.items() if k.
 r_free_ok() { [ "$(ssh -o ConnectTimeout=20 $R "df --output=avail -BG ~/$RD | tail -1" | tr -dc 0-9)" -ge 30 ]; }   # 6000 floor 25 GB + one 4.6 GB snapshot
 step_of() { ssh -o ConnectTimeout=20 $R "cd ~/$RD && ~/Development/qllm_sci1d/.venv/bin/python -c \"import torch; print(torch.load('$1', map_location='cpu', weights_only=False, mmap=True)['global_step'])\"" 2>/dev/null | tail -1; }
 for T in 644693 648508 652322 659952 663767 667581; do   # 42.25 / 42.5 / 42.75 / 43.25 / 43.5 / 43.75B (milestone = 640,878 + k x 3,815)
-  f=snap_${T}.pt; [ -f $LD/.snap_${T}.done ] && continue
+  f=snap_${T}.pt; [ -f $LD/.snap_${T}.done ] && continue; [ -f $LD/.snap_${T}.skipped ] && { echo "=== target $T marked skipped"; continue; }   # 2026-11-17: .skipped was ignored -> an off-grid snap_668500
   until ssh $SO $R true 2>/dev/null; do echo "=== 6000 SSH not answering, retry in 2 min $(date)"; sleep 120; done   # decide resume only on a live link
   # resume (2026-11-17 SSH flap): a snapshot already moved aside on the 6000 for this target (logged "snapshot step S (target T)") is
   # copied again instead of taking a new one
@@ -33,6 +33,14 @@ for T in 644693 648508 652322 659952 663767 667581; do   # 42.25 / 42.5 / 42.75 
   if ! r_free_ok; then ssh $R "rm -f ~/$RD/.probe.pt"; echo "=== SKIP target $T: 6000 below 30 GB free (floor 25 + snapshot) $(date)"; touch $LD/.snap_${T}.skipped; continue; fi
   until ssh $SO $R "cd ~/$RD && { test -f snap_${s}.pt || mv .probe.pt snap_${s}.pt; }"; do echo "=== mv failed (connection?), retry in 5 min $(date)"; sleep 300; done
   f=snap_${s}.pt; echo "=== snapshot step $s (target $T) $(date)"; mix_of $f
+  # weights-only (Lead 2026-11-17, d_drive at 11 GB): the readers need config + model_state_dict only (1.5 GB vs 4.6 GB)
+  until ssh $SO $R "cd ~/$RD && ~/Development/qllm_sci1d/.venv/bin/python -c \"
+import torch, os
+f = torch.load('$f', map_location='cpu', weights_only=False, mmap=True)
+if 'optimizer_state_dict' in f:
+    torch.save({k: f[k] for k in ('config', 'model_state_dict', 'global_step', 'global_tokens', 'best_val_loss', 'args') if k in f}, '$f.slim')
+    os.replace('$f.slim', '$f')
+print('slim ok')\""; do echo "=== slim on the 6000 failed, retry in 5 min $(date)"; sleep 300; done
   fi
   # copy with retries; a delete on the 6000 ONLY after both shas are real 64-hex strings and equal (2026-11-17: an empty == empty
   # after a dropped connection would have counted as a match)
