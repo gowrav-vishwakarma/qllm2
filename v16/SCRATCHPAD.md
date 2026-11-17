@@ -173,7 +173,7 @@ Opposite moves in 2 of 3 intervals (M6->M7 within one mix: told 0.81 -> 0.49, in
 
 ## Decisions (organiser)
 
-**2026-11-17 23:40 IST - SETBACK + step back: the wio claim is NOT met (pam 0.343 < gdn 0.408 < nochrono 0.427 on s8 @8k; bcebc850).**
+**2026-11-17 23:33 IST - SETBACK + step back: the wio claim is NOT met (pam 0.343 < gdn 0.408 < nochrono 0.427 on s8 @8k; bcebc850).**
 Re-read the meditation memory first. What surprised: the learned clock is the one flag between our two arms, and it LOWERS rule carry
 at every distance while it more than doubles needles at 16k (0.80 vs 0.35 / 0.33). What it really says: (1) with far docs in everyone's
 data, carrying an example rule to 8k is not our architecture's edge at 100M / 1B; a published O(1) relative (Gated DeltaNet) does it
