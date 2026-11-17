@@ -5377,6 +5377,29 @@ removes B by construction, and that is the case for the gate. The same overshoot
 rate must sit beside every 3d reading. Training-side angle for Mind: keep the protocol / no-protocol contrast pairs balanced in the
 3d mix, so the body is never paid for a unit it was not told.
 
+### S8-SCOPE probe (DESIGN ONLY, 2026-11-17 12:26 IST; Lead: CPU design, not run)
+Question: does in-context rule learning (s8: a hidden rule from 8 examples, memory_probes/rules.py, spread across held-out filler)
+bind each learned rule to its own symbol family, or does the last / strongest rule leak onto every query?
+Design: one prompt with TWO letter_shift rules of the same kind for two symbol families, lowercase (shift k1) and UPPERCASE
+(shift k2), with k1 != k2 drawn from 1-3. Header "Letter rule." as in s8 (no new prose). 4 + 4 examples, interleaved in random
+order, then spread across filler exactly as s8 (memory_probes/spread.py, 0 / 2k / 8k). Query: a symbol of ONE family, never
+shown with its answer.
+Candidates (8, single-token, like s8): target = query + k_own; scope error = query + k_other; copy = query; the rest are
+random letters of the query's case.
+Scores:
+- acc (chance 1/8);
+- scope_err = rate of query + k_other being top (the rule applied to the wrong family);
+- a one-rule control: the same prompt without the other family's 4 examples (4 shots); scope cost = control acc - acc.
+Cells: query family = the FIRST-shown or the LAST-shown family (recency), at 0 / 2k / 8k; n 200 per cell.
+Held-out (anti-shortcut): case pairs never decide k: k1 / k2 are re-drawn per prompt, and an UPPERCASE-query, k2 > k1 cell is
+reported apart.
+Reading (to fix before any run): scope_err > 2x its chance share (1/8) with acc below the control by >= 0.10 means s8 rules are
+not scoped. Same failure as units; the remedy is scoped contrasts in the rule data (b2s / s8 training sets).
+Closest prior work: the s8 / b2s suites themselves (ours), entity binding (Feng & Steinhardt 2023), multi-task ICL interference
+studies. Difference: two rules held at once across 2-8k tokens of filler in an O(1) state, scope scored per family.
+Cost: no decoding; one forward per prompt, about like an s8 run. Code: ~60 lines as a new task in memory_probes/rules.py
+(two_family_shift) + a --suite flag; not written until Lead / Mind ask for the run.
+
 ### SCOPE probe (PRE-REGISTERED 2026-11-17 12:25 IST, before any number; Argon's 4-cell design via Lead 12:19 IST)
 v14/scope_probe.py: one FAR-TOLD doc skeleton (A28's make_doc, trained wording), no new prose; teacher-forced like TOLD-MARGIN
 (logits at the step after the gold number; units by first token; twin = held + 4 (held - noprot)); 2k + 8k, n 100.
