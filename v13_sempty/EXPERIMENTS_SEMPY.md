@@ -6561,6 +6561,16 @@ not below 44B by > 0.01; **clk2 16k 3-save mean >= 0.78** (floor SET AT 44B: clk
 Snapshots weights-only at +0.25 / +0.5 / +0.75 / +1.0B from the start (slimmed on the 6000), plus the 45B milestone; Library scores scope
 + TOLD-MARGIN on each. Fallback 3r if 3f fails to start. The 3d addendum closes with its saves (42 .. 44B, 8 points); verdict when
 Library has scored 43.35 / 43.80 / 44B.
+**3d -> what it did (Library 41B reference tuple vs 43B; recorded 20:35 IST 2026-11-17, Lead):** carry C up (2k 2.3 -> 9.9, 8k 0.49 ->
+2.45) but over-application worse on every axis: scope_fu 2k 0.73 -> 1.00, 8k 0.17 -> 0.94; P_fu (no protocol, any unit) 2k 0.06 -> 0.42,
+8k 0.18 -> 0.50; precedence u1 2k 0.49 -> 0.95, 8k 0.02 -> 0.44; plain held read on scope 2k 0.09 -> 0.84.
+**3d addendum verdict (to be written when 43.35 / 43.80 / 44B are scored) will read: "dC WORKS, but HARMFUL on scope / presence /
+precedence; superseded by 3f".** LESSON: the dC bar measured strength only (one axis). A rule-carry bar must come with the
+over-application axes (scope_fu, P_fu, precedence) as co-bars, pre-registered together.
+**3f FALLBACK RULE (Lead, recorded 20:35 IST, BEFORE any 3f number):** at 3f + 0.5B, if NOT (scope_fu 2k <= 0.30) AND NOT (P_fu 8k <=
+0.20), the over-application is baked in: restart from the 41B save (step_625619, pre-3d; d_drive from_6000/.../sci1_long3c_3a8d7fb/,
+FULL, never slimmed) with the 3f mix, accepting the loss of ~3.5B tokens. If the bars are met, 3f continues.
+**3f STARTED 20:30 IST** from seg3d_end.pt = step **673,500 (44.14B)** (3d stopped 20:30; log logs/v13_sempty_sci1_long3f_91a87ed_20261117_1500.log on the 6000).
 *3e re-armed on the patched v2 (12:32 IST 2026-11-17, Lead (b): the held-out scope direction "asked volume, mass protocol" removed
 from proto_far2; Library 4ece7bb5):* re-checks on 4ece7bb5: (a) packer 400 chunks identical, hook test OK, and proto_far v1 + proto4k
 streams identical pre- vs post-patch (300 docs each); (b) Library check(): own 65.4 / none 29.5 / other 5.2 %, leak-free, 0 shared
