@@ -6478,6 +6478,25 @@ saves by state).
 | save | step | n | C (se) | B | twin unit / gate_win | tau0 pred told 8k | log |
 |---|---|---|---|---|---|---|---|
 | 42B | 640,878 | 300 | 0.453 (0.016) | -5.02 | 0.69 / 0.13 | 0.69 | logs/v14_told_margin_3d_640878_n300_4db71183_20261117_0541.jsonl (Library repo) |
+| 42.25B snap | 645,000 | 100 | 1.092 (0.079) | -2.97 | 0.81 / 0.73 | 0.81 | v14_told_margin_3d_644693_n100_9d5f43de_20261117_1141.jsonl (noprot gate_win 0.11) |
+| 42.5B snap | 649,000 | 100 | 0.588 (0.037) | -3.86 | 0.73 / 0.29 | 0.73 | v14_told_margin_3d_648508_n100_9d5f43de_20261117_1146.jsonl (noprot gate_win 0.00) |
+| 42.75B snap | 652,500 | 100 | **3.644 (0.176)** | **+0.63** | 0.98 / 1.00 | 0.98 | v14_told_margin_3d_652322_n100_9d5f43de_20261117_1150.jsonl (**noprot gate_win 0.55**, unit_acc 0.34 at chance 0.27) |
+(Snapshot names: Library's targets 644693 / 648508 / 652322 = the first latest.pt at or past them, steps 645,000 / 649,000 / 652,500.
+Kept on d_drive: keep_snap_645000_C1092.pt, keep_snap_652500_C3644_falseunit.pt (the false-unit test case); 649,000 deleted.)
+
+**HARM READOUT (Lead, 11:58 IST 2026-11-17; ADDED AFTER SEEING 42.75B, dated as such):** at 42.75B the carry jumps (C 3.64) but with
+NO protocol the body prefers a unit over '.' in 55 % of docs, at chance unit identity: 3d teaches "far rows + question -> a unit"
+unconditionally (proto_far is 100 % protocol docs; the only no-protocol contrast is proto4k's 20 % at short gaps). Pre-3d reference
+noprot gate_win 0.04; the only earlier spike was 27B at 0.34 (reverted).
+*Readout:* noprot gate_win at 8k and 2k at every save. *Trigger:* >= 0.30 at TWO consecutive saves -> 3d is HARMFUL regardless of dC;
+the mix changes at the next save. 42.75B = first (0.55); the 43B TOLD-MARGIN (2k + 8k) runs in today's 4090 window, right after the 43B CHECK.
+*Remedy:* proto_far v2 (Library: 25-30 % no-protocol docs + other-quantity protocols) entering as a NEW source `proto_far2` (own
+cursor and rng, whole-window packing), segment 3e env, READY only after (a) packer bit-identity without proto_far2, (b) Library's
+check() (5-gram decontam, answer share, realized no-protocol share), (c) a CPU smoke showing the realized share. *Fallback* if v2
+has not passed when the trigger fires: segment 3r = 3c's weights (proto_far 0.8 %), `v13_sempty/tmp/sci1_long3r_env.sh` via the
+generic `sci1_seg_switch.sh` (waits for the next latest.pt, stops sci1s3d, starts from that save). Nothing launches without Lead's GO.
+*Collateral check (43B CHECK):* skill-pack answers, generations and chat probes scanned for spurious units / changed answer formats
+vs the 42B CHECK; HS / ARC as usual.
 Snapshot 42.25B = snap_645000.pt (hard-linked as snap_644693.pt after a name mismatch made Library's watcher log it "skipped";
 scored in the next window). Window mix logged per snapshot in logs/v13_sempty_3d_snapshots_*.log.
 
