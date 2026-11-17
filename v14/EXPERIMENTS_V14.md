@@ -5361,6 +5361,33 @@ The twin's gate is B + 5C (alpha 4).
 
 **Closest prior work:** contrastive decoding (Li et al. 2023), CFG (Sanchez et al. 2023). The difference: only the emit decision is taken from the contrast term, and the number is taken warm.
 
+### CONTRAST GATE amendment (2026-11-17 11:52 IST, BEFORE any cgate 41B number; Argon via Lead 11:50 IST)
+Argon's independent audit of B / C: the identity is exact to 4e-6; Spearman(gate_win, B) 0.979, (gate_win, C) 0.717.
+(2) The decode shape, stated exactly from v14/cgate.py gate_read (arm v04; cgate is the same without demos):
+- The number comes from the WARM read (alpha 0) of the demo session while num_step holds.
+- At the first step after a complete x.y, the unit IDENTITY is t* = argmax of the twin (la + 4(la - lb)) with stops masked. That is
+  the twin's M_id choice.
+- Emit-or-stop: emit t* iff g = (la - lb)[t*] - (la - lb)['.'] > 0 (tau 0), else '.'. g is the per-doc C measured on t* instead
+  of on gold, and on the v04 arm la is the DEMO session (held + self-demos), so g there is demo-session C, not plain held C.
+(1) tau 0 is close to "always emit": P(C > 0) is 0.96-1.00 on held docs, so the '.' veto is nearly off. Two more false-unit guards
+are therefore required BEFORE ADOPTION. They are not in the 41B / 42B run (cgate.py is already queued); they run as a follow-up
+on the same bodies:
+- (e) SAME-QUANTITY WRONG UNIT: the protocol says u1, and the asked row states its value WITH an explicit unit u2 of the same quantity
+  (u2 != u1). Right answer, fixed now: value + u2 (the explicit local unit beats the log-wide convention); emitting u1 = false_unit.
+  Reported: right / u1-rate / bare-rate for twin4, cgate, v04. Bar: v04 u1-rate <= twin4's + 0.05.
+- (f) NO-PROTOCOL WITH DISTRACTORS: no unit convention for the asked quantity, but the session holds chat, nearby rules
+  (rounding / other-quantity wordings) and protocol-looking filler. Why the plain no-protocol case is 0 "by construction": the
+  fork removes the protocol sentence, so with none there is no fork; la = lb, g = 0, '.' is never beaten and no unit is emitted.
+  That is trivially safe, but only because the probe's fork position is an ORACLE (the generator's doc['proto']). In deployment, a
+  rule detector chooses the forked sentence. In (f) the fork removes the distractor sentence such a detector would pick (the most
+  protocol-like sentence by the package's own fetch), so a fork exists. Bar: v04 false_unit <= twin4's.
+- The oracle fork position is an open piece of v0.4 itself: adoption needs the fork chosen by the package, not by the generator.
+(3) Closest prior work (verified on arXiv 2026-11-17): Paulo, Marshall & Belrose 2024, "Does Transformer Interpretability Transfer
+to RNNs?", arXiv:2404.05971 (preprint, no venue listed; not "Pauli, Hewitt / AAAI"): contrastive activation addition on Mamba /
+RWKV. Ours: a held-vs-noprot fork of the O(1) session state for a far rule, read as a logit contrast at decode time, with no steering
+vector added to the state. Also cited: contrastive decoding (Li et al. 2022), CFG for LMs (Sanchez et al. 2023), context-aware
+decoding (Shi et al. 2023).
+
 ### DECAY B / C split (PRE-REGISTERED 2026-11-17 07:51 IST, Lead's step-back 95ae29f5; no training)
 Question: is the release blocker "a decay erases the far rule first" the same thing as the told-8k swing, i.e. does the decay
 move B (the body's no-protocol '.' prior) while the carry C stays?
