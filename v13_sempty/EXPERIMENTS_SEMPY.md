@@ -6428,7 +6428,7 @@ co-occur with low-B ones (39B, 40.5B), so the swing is mostly B but not only B.
 / 648,508 / 652,322 / 659,952 / 663,767 / 667,581, v13_sempty/tmp/sci1_3d_snapshots.sh: hard links, free-space gates on both ends,
 latest.pt never touched; a snapshot skipped for disk is noted, not replaced). Baseline = the 5 pre-3d saves (UNEVEN: 30B + four in
 39-41B; bimodal in B). Each save: TOLD-MARGIN at 8k (n 100) + told 8k (n 100), Library, on the 4090 between wio arms.
-*PRIMARY (merged with Library's text 05:42 IST, still before any snapshot is scored; supersedes the 05:38 draft line):* C = per-doc
+*PRIMARY (merged with Library's text 05:39 IST, still before any snapshot is scored; supersedes the 05:38 draft line):* C = per-doc
 mean(held - noprot) M_gate at 8k (TOLD-MARGIN, train wording, A28 docs seed 26000; v14/told_margin.py at the hash in each log name),
 n 100 per snapshot, n 300 at the 42B / 43B / 44B milestones. Reference = the pre-3d saves 39B / 40B / 40.5B / 41B (contiguous with 3d;
 30B dropped as 9B earlier): C 0.352 / 0.545 / 0.318 / 0.494, mean 0.427, SD 0.110. dC = mean(3d, 9 saves) - 0.427. WORKS: dC >= +0.10;
