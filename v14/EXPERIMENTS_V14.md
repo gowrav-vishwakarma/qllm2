@@ -5676,6 +5676,20 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
+### DECAY REMEDY PARTIAL: C3 at 2k only (2026-11-18 04:42 IST; logs/v14_scope_dec_C3_82bd02bd_20261118_0434.*)
+Run SHARED beside tpp (Lead's split far window); the 55 % speed guard stopped it at 04:39 IST (tpp 82.8k -> 42.4k / 42.8k tok/s,
+~52 % of solo, two lines in a row). 2k is complete (100 docs), 8k has 6 docs (not read). Paired per doc (same quantity + unit
+checked) with the TOLD-MARGIN decay jsonls:
+| pair (2k) | dC (se) | dB (se) |
+|---|---|---|
+| C3 - M9 (parent) | -0.175 (0.036) | +0.22 (0.14) |
+| C3 - decay_M9 (plain decay, same window) | +0.198 (0.030) | +1.07 (0.12) |
+| C3 - M10 | -0.353 (0.091) | +0.53 (0.18) |
+C3 2k: B -3.64, C 1.971, P_fu 0.13, scope_fu 0.81, prec_u1 0.45.
+Reading (1): C3 vs M9 dC -0.175 is between -0.30 and -0.10 = PARTIAL. Rule x2 in the decay keeps about half of what the plain decay
+erased (-0.37 -> -0.18). Reading (2) (scope vs the parent) is NOT decidable yet: M9's scope tuple was not run. C3's scope_fu 2k 0.81
+and P_fu 0.13 are high next to 44B (0.55 / 0.00), so the guard may well fail. C2, M9 and M10 are not run.
+
 ### DECAY B / C split RESULT (21:33 IST; logs/v14_told_margin_decay_*_n100_*; paired over the same 100 docs per length)
 | pair | 2k dC (se) | 2k dB (se) | 8k dC (se) | 8k dB (se) |
 |---|---|---|---|---|
