@@ -6627,7 +6627,7 @@ Excursion guard (P_fu 8k <= 0.20, scope_fu 8k <= 0.30) passes at +0.25 / +0.5 / 
 Settled window = +0.75B (684,945), +1.0B, 45B. **+1.0B (688,760) was NOT snapshotted:** the copier skipped it at 04:29 IST (6000 below
 its 30 GB gate). Substitute (Lead 04:32): `grab_689500.pt` = latest.pt at step **689,500 (45.19B tokens)**, slimmed on the 6000
 (tensor-equal), sha-verified on d_drive (4d635a2d...), pointed to by ~/.qllm_lib_688760; scored in Library's SOLO window after tpp,
-labelled by its real step. "Two in a row" is read on it. The 6000's 45B copy was removed after a sha match (d75c3895..., kept full on
+labelled by its real step. "Two in a row" is read on it. **CPU guard read (Library, 8k n 40, no GPU): CLEAR** (P_fu 0.050, scope_fu 0.075, C +0.549, unit_acc 0.75): 45B stays a single excursion; the GPU n-100 read follows in the SOLO window. The 6000's 45B copy was removed after a sha match (d75c3895..., kept full on
 d_drive). +1.5B / +2.0B copier re-armed 04:48 IST (tmux mind3fsnap2).
 **45B CHECK (step 686,655, 45.0B tokens; 03:27-03:48 IST 11-18 on the 4090; outputs logs/*/v13_sempty_*sci1_step_686655_91a87ed*,
 from ../qllm_sci1check):** s8 @8k **0.945** (shift 0.9125, affine 0.9775; 44B 0.977), skill @8k (A_state) **0.71** (44B 0.735),
