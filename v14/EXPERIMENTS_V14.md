@@ -5255,7 +5255,7 @@ The twin's gate is B + 5C (alpha 4).
 - **Cost per save:** TOLD-MARGIN at 2k + 8k is 6.5 min at a 4.5 GB peak (8k alone about 4.5 min). FAR-TOLD's three cells add 11 min. The slimmed weight copy takes 1.5 GB of disk, deleted after the point.
 - Multi-save would need intermediate saves, and 3d only writes milestones. 300 docs per save (about 13 min) would bring the SE to about 0.017 if wanted.
 
-### GATE-FREE told read, offline (PRE-REGISTERED 2026-11-17 05:40 IST, before any number; Lead's decision (2) of 05:37 IST, made after seeing 42B)
+### GATE-FREE told read, offline (PRE-REGISTERED 2026-11-17 05:38 IST (commit 0a54b9ba), before any number; Lead's decision (2) of 05:37 IST, made after seeing 42B)
 **Question:** if B (the no-protocol '.' prior) is a nuisance, does a read that gives B less vote make told 8k stable across saves?
 
 **Data.** The existing told_margin jsonl at 8k, 100 docs per save (no GPU).
@@ -5282,6 +5282,56 @@ The twin's gate is B + 5C (alpha 4).
 - On sessions with no protocol, the contrast read is 0 by construction (no protocol is detected, so there is no twin); that is not counted as a guard.
 
 **Closest prior work:** classifier-free guidance / contrastive decoding (Li et al. 2023) set the guidance weight globally. The difference here: the emit decision depends only on the contrast term, so the base model's own format prior gets no vote.
+
+### GATE-FREE told read RESULT, offline (2026-11-17 05:39 IST; v14/gate_free_offline.py; the 10 told_margin jsonl at 8k)
+**Checks:**
+- The identity approximation at α 4 vs the stored twin_m_id: mean |err| 0.015 nats (max 1.56, n 1000).
+- Calibration: twin(4)'s predicted told vs FAR-TOLD's measured told 8k: Spearman 0.99, mean gap +0.05. So the proxy tracks real decoding at α 4.
+
+**Selection** (saves ≤ 41B, mean / SD of predicted told 8k):
+
+| read | mean | SD |
+|---|---|---|
+| twin4 | 0.30 | 0.20 |
+| twin8 | 0.52 | 0.22 |
+| twin16 | 0.79 | 0.13 |
+| τ 0 | 0.63 | 0.09 |
+| τ 0.1 | 0.60 | 0.10 |
+| τ 0.3 | 0.45 | 0.13 |
+| τ 1.0 | 0.07 | 0.10 |
+
+**CHOSEN: twin16.**
+
+**Held-out, twin16:**
+1. 42B 0.68 ≥ 0.45: yes.
+2. SD across saves 0.124 vs twin4 0.193: not ≤ half, so no.
+3. Spearman with B 0.79 (twin4 0.94): not ≤ 0.5, so no.
+
+**VERDICT: NOT met.** A larger α raises the level (0.30 → 0.79 mean) but does not remove B's vote: twin16's gate is still B + 17C.
+
+**Post-hoc, NOT a claim:**
+- The contrast-only gate at τ 0 would pass all three bars: 42B 0.71, SD 0.088 (0.46× twin4), Spearman with B 0.39, minimum over saves 0.48.
+- My selection rule ranked on the mean and so chose twin16. τ 0 is re-registered below on data it has not seen.
+- Real-decoding guard (a) is not yet run. α 16 is likely to break the number, which the offline proxy cannot see.
+
+### CONTRAST GATE τ 0 on the 3d snapshots (PRE-REGISTERED 2026-11-17 05:39 IST, before any 3d snapshot is scored; after seeing the offline result above, incl. 42B)
+**Read:**
+- At the unit step, emit the twin(4) unit iff C_doc = (held − noprot) M_gate > 0; otherwise emit '.'.
+- The number is unchanged (A32c's split: warm pieces while num_step).
+
+**Data:** the 3d snapshots between 42B and 44B (not 42B itself, which has been seen), TOLD-MARGIN at 8k as in the 3d addendum.
+
+**Offline bar** (all must hold):
+- Mean predicted told 8k ≥ 0.55.
+- SD across the snapshots ≤ ½ of twin4's SD on the same snapshots.
+- Spearman with B ≤ 0.5 (if fewer than 6 snapshots, report it only).
+
+**Real guards before adoption** (one GPU job, after Lead's slot; code reviewed before it runs):
+- (a) Real decoding with this read on FAR-TOLD train 8k docs, 41B and 42B: told 8k ≥ predicted − 0.10.
+- (b) Mismatch cell as pre-registered above: false-unit rate ≤ twin4's + 0.05.
+- (c) 2k cells (train 2k, a26 2k) not below twin4 − 0.05.
+
+**Closest prior work and difference** as for the GATE-FREE read: contrastive decoding (Li et al. 2023), but the emit decision uses only the contrast term.
 
 ### A32c RESULT (2026-11-16 21:56 IST; fixed code 166a3d6; logs/v14_a32c_{m22best,m30}_166a3d6_20261116_2029.{log,jsonl}; 100 docs per cell)
 right (value / unit). The twin and a32b arms reproduce A32b exactly (same docs), which checks the rerun.
