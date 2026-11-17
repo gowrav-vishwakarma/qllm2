@@ -5370,6 +5370,9 @@ The twin's gate is B + 5C (alpha 4).
 | 652322 | 42.75B | 100 | +3.644 (0.176) | +0.63 | 0.98 | 0.98 / 1.00 | 0.55 |
 | 656137 | 43B | 100 | +2.452 (0.136); 2k +9.884 (0.526) | -2.03; 2k -2.30 | 0.94; 2k 1.00 | 0.94 / 0.94 | 0.18; 2k fu 0.14 |
 Pre-3d mean C 0.427. Running dC over 4 of 9 saves: +1.02. After 43B (5 of 9): +1.22.
+dC SERIES REVISED (Lead 19:02 IST, recorded 19:03 IST before 43.35B / 43.80B / 44B are scored): the 43.5B / 43.75B snapshots were lost
+in the 15:53 IST reboot (.skipped). The primary dC mean is over 42 / 42.25 / 42.5 / 42.75 / 43 / 43.35 / 43.80 (off-grid extra,
+step 668,500) / 44B = 8 saves; the bars are unchanged. Every point from 43.35B on is read at 2k + 8k with fu.
 HARM trigger (fu 8k >= 0.30 at two consecutive saves) NOT met at 43B: 0.55 then 0.18. 3d continues and 3e stays armed. fu stays
 above the pre-3d reference (8k 0.18 vs 0.04, 2k 0.14 vs 0.015), so a new pair starts if the next save reads >= 0.30. The series jumps (1.09, 0.59, 3.64), so no verdict yet.
 NEW at 42.75B: B > 0. Without any protocol, the body prefers a unit over '.' on 55 % of docs, at chance unit identity (0.34 vs
