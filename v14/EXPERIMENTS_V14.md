@@ -5711,6 +5711,8 @@ Closest prior work: hybrid RoPE / NoPE attention (Yang et al. 2025, "Rope to Nop
 partial rotary (GPT-NeoX rotary_pct); complementary learning systems (McClelland, McNaughton & O'Reilly 1995) for the reading of one
 half as episode memory and the other as rule memory. Difference: the split is per head INSIDE one delta-rule notebook, and one half's
 phase is a learned content clock, so where a key sits in time (episode) is separated from what it binds (rule).
+Review: Mind APPROVED 887aaf15 (re-ran the test on CPU, identical numbers). Mind adds a 2-min GPU smoke at launch: Triton chunked path
+vs the CPU path on a fixed batch, then 200 steps for tok/s into the run header. Params are quoted as "pam's count, 3 warp rows idle".
 
 ### 3r GUARD on CPU (PRE-REGISTERED 2026-11-18 10:28 IST, before any number; Mind / Lead)
 3r = the main run back on 3c's exact mix from step 700,000 (45.875B), Lead's call after the 3f +1.5B break (sci1_long3r_91a87ed).
