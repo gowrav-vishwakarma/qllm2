@@ -6726,6 +6726,23 @@ split-geometry arm; the no-far-docs GDN / nochrono cell. Write-ups due before th
 **3r +0.25B (snap 704,000; Library CPU guard 8k n 40):** P_fu 0.175, scope_fu 0.300 -> inside the guard (<= 0.20 / <= 0.30), scope at
 the edge; UNCLEAR by the n-40 bands (>= 0.35 broken / <= 0.15 clear). C +0.687, twin unit_acc 0.85.
 **3r +0.5B (snap 708,000; CPU guard 8k n 40):** P_fu 0.150, scope_fu 0.125 -> **CLEAR** (C +0.549, unit_acc 0.72). Guard so far: edge, clear; no break.
+**46B CHECK (step 701,914 = 3r + 1,914 steps, 46.0B tokens; 15:54-16:15 IST 11-18 on the 4090; outputs logs/*/v13_sempty_*sci1_step_701914_91a87ed*):**
+s8 @8k **0.975** (shift 0.955, affine 0.995; 45B 0.945), skill @8k (A_state) **0.645** (45B 0.71), t40 16k **0.978** (45B 0.939; 8k 1.000),
+clk2 8k **0.93** / 32k-run @16k 0.58 (45B 0.92 / 0.68), HS / ARC-e / PIQA 0.316 / 0.553 / 0.642 (45B 0.322 / 0.550 / 0.639). Guards vs 45B:
+s8 OK, HS -0.006 / ARC-e +0.003 OK, clk2 OK. Skill keeps sliding (0.845 / 0.735 / 0.71 / 0.645 at 43-46B): watch item, no bar.
+**GPU scope reads, n 100 (Library window 1, 16:16-16:52 IST; supersede the CPU guard reads):**
+
+| save | L | C | scope_fu | prec_u1 | P_fu | twin unit_acc | guard |
+|---|---|---|---|---|---|---|---|
+| 46B (701,914; ~all 3f history) | 2k | +3.107 | 0.93 | 0.70 | 0.09 | 0.97 | |
+| | 8k | +0.713 | **0.38** | 0.06 | 0.15 | 0.85 | **BREAK** (scope_fu > 0.30) |
+| 3r +0.25B (704,000) | 2k | +2.561 | 0.86 | 0.69 | 0.06 | 0.99 | |
+| | 8k | +0.602 | 0.26 | 0.02 | 0.15 | 0.76 | pass |
+| 3r +0.5B (708,000) | 2k | +2.095 | 0.76 | 0.55 | 0.09 | 0.97 | |
+| | 8k | +0.515 | 0.17 | 0.00 | 0.14 | 0.65 | pass |
+
+Sequence since 45B: BREAK (45B) / pass (45.19B) / BREAK (+1.5B 3f) / BREAK (46B, 1,914 steps into 3r: the 3f state) / pass / pass:
+no two breaks in a row under 3r; scope_fu 8k falls 0.38 -> 0.26 -> 0.17 and C 8k 0.71 -> 0.60 -> 0.52 together (the trade again).
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
