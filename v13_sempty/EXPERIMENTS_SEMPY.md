@@ -6705,6 +6705,13 @@ et al. 2023). Difference: a behaviour-level excursion (over-application of a tol
 - **Set B:** parent = wio pam main stable_final copied with a sha; its parent tuple read on the 6000 first (validity C 2k >= 0.5).
 - **Gates before the 3r pause:** fp32 parity of one fixed batch through pam and gdn on both boxes within 1e-4 (else stop and talk),
   and identical token streams (first 2,000 packed windows, ctl mix and wio far mix, sha). Pause at a save -> seg3r_pause.pt.
+**GATES PASSED + 3r PAUSE (20:49 IST 11-18):** (2) parity, fixed 2 x 2048 real-token batch, trained weights sha-equal on both
+boxes: pam fp32 CE 4.268455 (4090) = 4.268455 (6000), bf16 4.268277 / 4.268906; gdn fp32-path 4.099769 / 4.099792, bf16 4.100368 /
+4.100105 (|d| 2.6e-4 < bar 2e-3; run on the 6000 after the pause, it OOMs beside 3r). (3) data: train.py --dump_batches 125 (3eacafbb)
+on the logs' exact [args]: ctl mix sha 9ae682b1... and wio far mix 72e954b7... identical on both boxes (4090 repeat identical;
+transformers 5.2.0 vs 4.57.6 changes no token). **3r PAUSED at step 721,000 (47.251B) -> sci1_long3r_91a87ed/seg3r_pause.pt**
+(6000, 20:48 IST; resume with sci1_cont_chain.sh CONT_FROM=seg3r_pause.pt + sci1_long3r_env.sh). Set A launched 20:50 IST on the
+6000 (worktree qllm_twins @ a3ffb14b, twins_chain.sh BOX=6000, tmux tw_pam_nofar / tw_nochrono_nofar / tw_gdn_nofar, 3 at once).
 **Proposed order** (one night ~10-12 h after the CHECKs): (a) gdn_nofar (3 h; closes the paper's "beyond the trained length" cell
 for the family), then (b) split (6.5 h; the one new mechanism), then (a) nochrono_nofar (6.2 h); (c) last (10 h; readability risk,
 and 3r's guard reads may already answer whether 0.8 % is quiet at 386M). Nothing launches before Lead's GO and the user's release.
