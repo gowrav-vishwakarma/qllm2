@@ -5737,6 +5737,8 @@ GPU n-100 scope 4-tuples (16:2x-16:52 IST, Lead: supersede the CPU reads; logs/v
 GPU agrees with CPU on both 3r snapshots (CPU 0.30 / 0.125 scope_fu 8k). Guard sequence: break, pass, pass; no stop and talk.
 Reading: under 3c's mix the 3f residue decays monotonically in 0.5B on every axis: C 2k 3.1 -> 2.1, scope_fu 2k 0.93 -> 0.76, 8k
 0.38 -> 0.17, precedence u1 0.70 -> 0.55. Carry and over-application fall TOGETHER again (EUREKA 299041e1): no axis improves alone.
+CPU guard 715,500 (+1.0B, 46.86B; 18:42 IST; logs/v14_cpuguard_3r_715500_*): 8k n 40 P_fu 0.150, scope_fu 0.025 -> CLEAR. C 8k +0.737,
+unit_acc 0.80, S_fu_held 0.00. Scope at 8k is back to the 44B level (0.10) or below; P_fu holds at ~0.15 (44B 0.05).
 
 ### 3f GUARD on CPU, low power (PRE-REGISTERED 2026-11-18 04:54 IST by the clock, before any number; Lead message stamped 05:02 IST, received ~04:50)
 Why: tpp keeps the 4090 until ~10:10 IST, so the GPU read of +1.0B / +1.5B may not happen before the user's day, while the 6000
