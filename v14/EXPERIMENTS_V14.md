@@ -5719,6 +5719,11 @@ C3 2k: B -3.64, C 1.971, P_fu 0.13, scope_fu 0.81, prec_u1 0.45.
 Reading (1): C3 vs M9 dC -0.175 is between -0.30 and -0.10 = PARTIAL. Rule x2 in the decay keeps about half of what the plain decay
 erased (-0.37 -> -0.18). Reading (2) (scope vs the parent) is NOT decidable yet: M9's scope tuple was not run. C3's scope_fu 2k 0.81
 and P_fu 0.13 are high next to 44B (0.55 / 0.00), so the guard may well fail. C2, M9 and M10 are not run.
+UPDATE 09:23 IST, M9 scope tuple (logs/v14_scope_dec_M9_*; solo window): 2k B -3.86 C +2.145 scope_fu 0.81 prec_u1 0.51 P_fu 0.11
+unit_acc 1.00; 8k C +0.401 scope_fu 0.21 P_fu 0.21 unit_acc 0.59. M9's C equals its TOLD-MARGIN C on every doc (max |diff| 0.0000).
+Reading (2) at 2k: C3 P_fu 0.13 vs M9 0.11, scope_fu 0.81 vs 0.81 (bar: <= parent + 0.10) -> SCOPE NOT WORSE at 2k. 8k waits for
+C3's 8k run. So far: C3 = carry PARTIAL (-0.175), scope unchanged at 2k. The high scope_fu (0.81) is the M9-era body's own, not
+caused by rule x2: the unscoped rule predates the far-block data.
 
 ### DECAY B / C split RESULT (21:33 IST; logs/v14_told_margin_decay_*_n100_*; paired over the same 100 docs per length)
 | pair | 2k dC (se) | 2k dB (se) | 8k dC (se) | 8k dB (se) |
