@@ -71,13 +71,13 @@ Each item says where it goes. Nothing here is in main.tex yet.
   and cannot do shift_wide even at distance 0.
 - [ ] **Metric note (errata for §7):** the old "s8 D 0.52 vs 0.07 / 0.15" is the 2k / 4k mean on a mix WITHOUT far documents; on that
   metric wio pam is 0.538 while nochrono = gdn = 0.64. Label every s8 number with its distances and whether far docs were in training.
-- [ ] **A told rule has four axes: presence (B), strength (C), scope, precedence (EXPERIMENTS_V14 "TOLD-MARGIN", "SCOPE", 57ad8435).**
+- [ ] **A told rule has four axes: presence (B), strength (C), scope, precedence (EXPERIMENTS_V14 "TOLD-MARGIN", "SCOPE"; probe code 57ad8435; results 139fc9fe for 41B / 42.75B / 43B, c2c104f7 for 44B).**
   Method §: twin gate = B + 5C exactly; the four-cell probe (one skeleton, held-out quantity direction; design due to the outside
-  reviewer). Results: single-save told 8k tracks B (Spearman 0.96-0.98), not the carry; at 41B / 44B scope_fu 2k is 0.73 / 0.55
+  reviewer). Results: single-save told 8k tracks B (Spearman told 8k vs B 0.96, 1c38ed70; the reviewer's audit gate_win vs B 0.979; vs C 0.73), not the carry; at 41B / 44B scope_fu 2k is 0.73 / 0.55
   and precedence u1 0.49 / 0.42: the body knows a rule exists, not what it is about. Limitations § gets this in plain words.
 - [ ] **Constant-LR excursions (EXPERIMENTS_V14 "3d series", "3f readout"; 88d742f0, 82bd02bd, fbc8cf33).** Doubling presence-only far
-  protocol docs (3d) gave a ~1B-token excursion: C 0.43 -> 3.64 at 42.75B with P_fu 0.89-0.95 and scope_fu 1.00, back to baseline
-  by 44B. A second, shorter one at 45B under the scope-aware mix (3f). Lesson for the methods §: judge a mix change on a settled
+  protocol docs (3d) gave a ~1B-token excursion: C 0.45 (42B, n 300) -> 3.64 at 42.75B with P_fu 0.89-0.95 and scope_fu 1.00, back to
+  baseline by 44B (8k series 0.45, 1.09, 0.59, 3.64, 2.45, 0.86, 0.58, 0.47; 2672840d). A second, single-save one at 45B under the scope-aware mix (3f); the next save (689,500, CPU guard read, method b539d107) is CLEAR (fbc8cf33). Lesson for the methods §: judge a mix change on a settled
   window (>= 1B after the switch) and on all four axes; a one-axis bar (dC) read "WORKS" on what was partly over-application.
 - [ ] **Decay erases the carry itself (DECAY B / C split, 3f61ea54; C3 partial, c703578a).** Paired on 100 docs: decay_M9 - M9
   dC(2k) -0.37, LAWA -0.26, control +0.18 (ns); rule x2 inside the decay keeps about half (-0.175). Replaces the "read problem"
