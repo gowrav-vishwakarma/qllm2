@@ -6646,7 +6646,7 @@ directions 334 / 331, not probed); (c) v2 patched 2,580 +- 271 tokens (pre-patch
 Snapshot 42.25B = snap_645000.pt (hard-linked as snap_644693.pt after a name mismatch made Library's watcher log it "skipped";
 scored in the next window). Window mix logged per snapshot in logs/v13_sempty_3d_snapshots_*.log.
 
-## Tonight's 100M / 1B twins on the 4090 (PRE-REGISTRATION DRAFTS, 15:2x IST 2026-11-18, before any number; Lead orders them; card = user's until released)
+## Tonight's 100M / 1B twins on the 4090 (PRE-REGISTRATION DRAFTS, 14:59 IST 2026-11-18, before any number; Lead orders them; card = user's until released)
 
 Common: wio recipe (wio_chain.sh @ >= 227f3eb pins, ~103M, 0.9B wsd_stable + 0.1B decay, LR 1.2e-3, seed 43, SEQ 4096, readouts =
 s8 spread 0 / 2k / 4k / 8k (3-save mean of 14,500 / 15,000 / end), t40 2k..16k, clk2, HS / ARC-e / PIQA, val). Speeds measured on the
