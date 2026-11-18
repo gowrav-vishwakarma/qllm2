@@ -173,6 +173,16 @@ Opposite moves in 2 of 3 intervals (M6->M7 within one mix: told 0.81 -> 0.49, in
 
 ## Decisions (organiser)
 
+**2026-11-18 09:20 IST - main run goes back to the 3c mix (segment 3r); experiments leave the release run.** Stop-and-talk after
+3f's second guard break (+1.5B: scope_fu 0.84 / 0.43, P_fu 0.14 / 0.22; first settled window NO EFFECT on scope, 0.653 vs 0.55;
+6bc4aac4). Both segments with the far protocol share at 1.6 % (3d, 3f) showed over-application excursions; M9 (9B) already has
+scope_fu 2k 0.81, so the unscoped rule is old, not made by the mixes (03c5a5d5). Decision with Mind (GO 09:40 IST): 3r = 3c's exact
+weights from 3f's next save; judged by the per-save guard (P_fu 8k <= 0.20, scope_fu 8k <= 0.30; "3c is excursion-free" is a prior
+from one save); release notes state the scope limitation. Lesson: three mix changes in two days on the release run to chase one cell
+was Lead's error; scope / excursions / LR go to 100M / 1B twins on the 4090 (far share 0.8 vs 1.6 % x LR as is vs half; split key
+geometry; GDN / nochrono on the no-far-docs mix). wio is complete on s8 @8k: nochrono 0.427, gdn 0.408, pam 0.343, mamba2 0.259,
+tpp 0.08 (Lead's read; Mind's table pending): ahead of T++ / Mamba-2 on rules and needles, not ahead of GDN, behind on NLL.
+
 **2026-11-17 23:33 IST - SETBACK + step back: the wio claim is NOT met (pam 0.343 < gdn 0.408 < nochrono 0.427 on s8 @8k; bcebc850).**
 Re-read the meditation memory first. What surprised: the learned clock is the one flag between our two arms, and it LOWERS rule carry
 at every distance while it more than doubles needles at 16k (0.80 vs 0.35 / 0.33). What it really says: (1) with far docs in everyone's
