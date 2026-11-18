@@ -960,7 +960,7 @@
   }
  },
  "wio_five_arm_far_mix": {
-  "_note": "Five bodies ~102M, identical 1.0B tokens (0.9B stable + 0.1B decay) of the SCI-1 mix WITH far rule documents; one seed; pre-registered c492727; verdict bcebc850 (claim not met); tables bd68e6b0, e97e0549; told scope 9f093b93. s8 @8k = mean of the last three saves (14,500 / 15,000 / end).",
+  "_note": "Five bodies ~102M, identical 1.0B tokens (0.9B stable + 0.1B decay) of the SCI-1 mix WITH far rule documents; one seed; pre-registered c492727; verdict bcebc850 (claim not met); tables bd68e6b0, e97e0549; told scope 9f093b93. s8 @8k = mean of the last three saves (14,500 / 15,000 / end). Per-task rows are 3-save means for all five; t40 / clk2 are the final save.",
   "params_M": {
    "pam": 102.88,
    "nochrono": 102.87,
@@ -979,9 +979,9 @@
    "pam": 0.538,
    "nochrono": 0.64,
    "gdn": 0.64,
-   "mamba2": 0.32,
+   "mamba2": 0.3,
    "tpp": 0.26,
-   "_note": "mamba2 / tpp computed from the per-task cells below"
+   "_note": "3-save mean (14,500 / 15,000 / end) for all five (Mind check 11-18)"
   },
   "shift_0_2k_4k_8k": {
    "pam": [
@@ -1003,16 +1003,16 @@
     0.136
    ],
    "mamba2": [
-    0.27,
-    0.02,
-    0.018,
-    0.02
+    0.26,
+    0.038,
+    0.027,
+    0.021
    ],
    "tpp": [
-    0.138,
+    0.118,
+    0.082,
     0.072,
-    0.055,
-    0.007
+    0.011
    ]
   },
   "affine_0_2k_4k_8k": {
@@ -1035,16 +1035,16 @@
     0.681
    ],
    "mamba2": [
-    0.968,
-    0.625,
-    0.598,
-    0.555
+    0.947,
+    0.59,
+    0.558,
+    0.497
    ],
    "tpp": [
-    0.527,
-    0.465,
-    0.438,
-    0.14
+    0.502,
+    0.453,
+    0.415,
+    0.149
    ]
   },
   "t40_2k_8k_16k": {
@@ -1131,11 +1131,12 @@
    ]
   },
   "solo_tok_s_k": {
-   "pam": 64,
-   "nochrono": 45,
+   "pam": 63,
+   "nochrono": 49,
    "gdn": 114,
-   "mamba2": 96,
-   "tpp": 83
+   "mamba2": 113,
+   "tpp": 83,
+   "_note": "median step-line tok/s of each arm main log (latest segment)"
   },
   "told_C_2k_8k": {
    "pam": [
