@@ -70,6 +70,11 @@ class PAMConfig:
     # the fused kernel is untouched (speed preserved). Decode carries
     # (notebook, clock). Real arm only. RUNG DONE: 23.14 vs 23.81 (KEEP).
     chrono: bool = False
+    # SPLIT key geometry (2026-11-18, Library; Mind's twin (b)): with chrono on, the Chrono warp acts on
+    # notebook heads 0..chrono_heads-1 only; heads chrono_heads..H-1 keep g = 1, i.e. exactly plain RoPE
+    # (tau = position). -1 = all heads (the chrono arm, unchanged); 0 = no head clocked (== nochrono).
+    # The warp projection keeps all H outputs (torch.where), so params equal the chrono arm's.
+    chrono_heads: int = -1
     # N4 content-dependent read-out gate (real arm). The block's static
     # `pam_scale` is the only thing deciding how much of the memory read
     # reaches the residual, and it stays small (0.11-0.31 after 10 ep). N4

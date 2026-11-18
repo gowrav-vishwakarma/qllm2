@@ -81,6 +81,7 @@ from __future__ import annotations
 
 from typing import Dict
 
+import os
 import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint as grad_checkpoint
@@ -573,6 +574,20 @@ class RealPAMLayer(nn.Module):
             )
             self.warp_proj = NamedLinear(self.model_dim, self.decay_out)
             self.warp_proj._zero_init = True  # identity-init: g=1 == plain RoPE
+            # SPLIT key geometry (cfg.chrono_heads = k): heads >= k keep g = 1 (plain RoPE phase).
+            k_clk = cfg.n_heads if cfg.chrono_heads < 0 else int(cfg.chrono_heads)
+            if not 0 <= k_clk <= cfg.n_heads:
+                raise ValueError(f"chrono_heads={cfg.chrono_heads} outside 0..{cfg.n_heads}")
+            self.chrono_heads = k_clk
+            self.register_buffer('chrono_head_on', torch.arange(cfg.n_heads) < k_clk, persistent=False)
+            # Eval-time knockout (diagnostic): V13_CHRONO_KNOCKOUT=clock zeroes the read of the clocked heads
+            # (0..k-1), =rope zeroes the plain-RoPE heads (k..H-1), in this notebook and in its M2 readers.
+            ko = os.environ.get('V13_CHRONO_KNOCKOUT', '').strip()
+            if ko not in ('', 'clock', 'rope'):
+                raise ValueError(f"V13_CHRONO_KNOCKOUT={ko!r}: use clock or rope")
+            self.register_buffer('chrono_read_keep',
+                                 (~self.chrono_head_on if ko == 'clock' else self.chrono_head_on).float()
+                                 if ko else torch.ones(0), persistent=False)
 
         # N4: content-dependent per-head read-out gate, silu(W_g x + b_g) on
         # the memory read before o_proj. Zero-init W_g and b_g = silu^-1(1) so
@@ -718,6 +733,8 @@ class RealPAMLayer(nn.Module):
         g = torch.exp(
             self.warp_proj(tokens).alias(self.decay_out, self.heads)
                 .raw(batch, self.heads, time).float().clamp(-3.0, 3.0))  # [B,H,T] fp32
+        if self.chrono_heads < H:                                     # SPLIT: unclocked heads keep g = 1 exactly
+            g = torch.where(self.chrono_head_on.view(1, H, 1), g, torch.ones_like(g))
         run = torch.cumsum(g, dim=2)                                  # inclusive
         if clock is not None:
             run = run + clock.to(run.dtype).unsqueeze(-1)             # continue the clock
@@ -989,6 +1006,11 @@ class RealPAMLayer(nn.Module):
                     "rungs with --gen_every 0 (probe/val use the chunked path)")
             output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
 
+        if self.chrono and self.chrono_read_keep.numel():              # SPLIT knockout (eval diagnostic)
+            keep = self.chrono_read_keep.to(device=tokens.device)
+            output = output * named(keep.to(output.data.dtype), (self.heads,))  # named-exit: per-head mask
+            if self.expose and self._shared is not None:
+                self._shared['keep'] = keep
         if self.out_gate:
             # N4: per-token, per-head read-out gate (broadcast over head_row).
             gate = silu(self.gate_proj(tokens).alias(self.decay_out, self.heads))
@@ -1046,7 +1068,10 @@ class SharedRead(nn.Module):
         else:
             read = pam_shared_read(q, shared['write']) * (K ** -0.5)    # [BH,T,K]
         gate = nn.functional.silu(self.gate(h)).transpose(1, 2).reshape(B * H, T, 1)
-        y = (read * gate.to(read.dtype)).reshape(B, H, T, K).transpose(1, 2).reshape(B, T, H * K)
+        y = (read * gate.to(read.dtype)).reshape(B, H, T, K)
+        if 'keep' in shared:                                            # SPLIT knockout: the writer's head mask
+            y = y * shared['keep'].to(y.dtype).view(1, H, 1, 1)
+        y = y.transpose(1, 2).reshape(B, T, H * K)
         return named(self.o_proj(y.to(h.dtype)), (batch, time, self.model_dim))  # named-exit: shared-read boundary
 
 

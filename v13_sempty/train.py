@@ -244,6 +244,8 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
                            'chrono', 'out_gate', 'short_conv', 'echo',
                            'pam_layers', 'mlp_hidden', 'share_reads')
                if getattr(cfg, k) not in (False, 1, 0.0)]
+    if cfg.chrono_heads != -1:
+        _ladder.append('chrono_heads')
     if cfg.base_dt_bias != -4.0:
         _ladder.append('base_dt_bias')
     if _ladder and args.arch == 'pam':
@@ -1156,6 +1158,8 @@ def build_argparser():
                    help='micro-batches per step (exact: losses scaled by their weight share); 1 = off')
     p.add_argument('--chrono', action='store_true',
                    help='N1: Chrono-PAM content-modulated rotary retention (real arm)')
+    p.add_argument('--chrono_heads', type=int, default=-1,
+                   help='SPLIT key geometry: with --chrono, only notebook heads 0..k-1 get the clock; -1 = all')
     p.add_argument('--out_gate', action='store_true',
                    help='N4: per-head content-dependent read-out gate (real arm)')
     p.add_argument('--short_conv', action='store_true',
@@ -1242,6 +1246,8 @@ def main():
         cfg.reset_at_eos = True
     if args.chrono:
         cfg.chrono = True
+    if args.chrono_heads != -1:
+        cfg.chrono_heads = args.chrono_heads
     if args.out_gate:
         cfg.out_gate = True
     if args.short_conv:

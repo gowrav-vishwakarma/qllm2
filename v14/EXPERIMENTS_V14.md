@@ -5691,6 +5691,27 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
+### SPLIT key geometry: CHRONO_HEADS (Library owns the mechanism; built 2026-11-18 15:03 IST; Mind's twin (b) runs it)
+Spec: EXPERIMENTS_SEMPY "Tonight's 100M / 1B twins" (b) (2b112e4b). Bars are Mind's (3-save): BOTH = s8 @8k >= 0.40 AND t40 16k
+>= 0.70 AND val <= 3.435; RULES-ONLY / NEEDLES-ONLY / NEITHER as written there. Diagnostic: knockout of each head half.
+Why (the step-back behind it): the wio one-flag ablation says the clock buys needles (t40 16k 0.80 vs 0.35) and costs rules (s8 @8k
+0.343 vs 0.427), and our scope probe says more carry comes with less binding (EUREKA 299041e1). If heads specialise, a body can keep
+an episode memory (clocked keys: WHEN something was written) beside a rule memory (phase-free keys: WHAT, at any distance).
+Mechanism: with --chrono --chrono_heads k (env CHRONO_HEADS), the Chrono warp g_t = exp(clamp(W x, +-3)) acts on notebook heads
+0..k-1; heads k..H-1 get g = 1 exactly (torch.where), so tau = position and their (cos, sin) is plain RoPE bit for bit. M2 readers
+take the writer's per-head rotation, so the split carries over. warp_proj keeps all H outputs: params equal pam (102,882,596;
+nochrono 102,868,460). Eval knockout: V13_CHRONO_KNOCKOUT=clock zeroes the clocked heads' notebook read (and its M2 readers'),
+=rope the RoPE heads'. Probes read chrono_heads from the checkpoint config (default -1 = all heads).
+Tests (v13_sempty/tmp/test_chrono_heads.py, CPU fp32, wio geometry H=6, notebooks 3/7/11/15 + share_reads / out_gate / delta / echo):
+k=0 == CHRONO=0 bit-exact (random warp); k=H == CHRONO default bit-exact (random warp; clock active, 1.4e-2 vs nochrono); k=3 RoPE
+heads' (cos, sin) == plain RoPE bit-exact, clocked heads differ; two chunks 1.5e-6, prefill + 16 steps 1.8e-6, RoPE heads' carried clock
+== T; grads finite, warp grad 0 on unclocked heads; causal 0; both knockouts change the logits. Existing selftests (chrono parity,
+chrono decode, out_gate, shared reads with / without chrono) pass.
+Closest prior work: hybrid RoPE / NoPE attention (Yang et al. 2025, "Rope to Nope and Back Again"; Llama 4 interleaved NoPE layers);
+partial rotary (GPT-NeoX rotary_pct); complementary learning systems (McClelland, McNaughton & O'Reilly 1995) for the reading of one
+half as episode memory and the other as rule memory. Difference: the split is per head INSIDE one delta-rule notebook, and one half's
+phase is a learned content clock, so where a key sits in time (episode) is separated from what it binds (rule).
+
 ### 3r GUARD on CPU (PRE-REGISTERED 2026-11-18 10:28 IST, before any number; Mind / Lead)
 3r = the main run back on 3c's exact mix from step 700,000 (45.875B), Lead's call after the 3f +1.5B break (sci1_long3r_91a87ed).
 Same method as the 3f CPU guard below (scope_probe --guard_only, 8k, n 40), but during the user's day: 8 threads, nice 19, RAM floor 12 GB.

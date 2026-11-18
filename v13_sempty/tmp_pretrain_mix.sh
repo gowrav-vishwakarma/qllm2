@@ -45,6 +45,7 @@ LR="${LR:-2e-4}"
 DROPOUT="${DROPOUT:-0.0}"
 GRAD_CKPT="${GRAD_CKPT:-0}"    # 96 GB box: off (+23 % tok/s); 1 fits the 4090
 CHRONO="${CHRONO:-1}"
+CHRONO_HEADS="${CHRONO_HEADS:--1}"   # SPLIT key geometry: notebook heads with the clock (-1 = all)
 OUT_GATE="${OUT_GATE:-1}"
 # Retention ladder (one variable per run, stacked on chrono+gate; compare the
 # recall-horizon curve, holdout PPL is the guard):
@@ -99,6 +100,7 @@ echo "=== ${TAG} start $(date -u +%Y-%m-%dT%H:%M:%SZ) commit=$HASH log=$LOG ckpt
 EXTRA=()
 if [ "$GRAD_CKPT" = "1" ]; then EXTRA+=(--gradient_checkpointing); fi
 if [ "$CHRONO" = "1" ]; then EXTRA+=(--chrono); fi
+if [ "$CHRONO_HEADS" != "-1" ]; then EXTRA+=(--chrono_heads "$CHRONO_HEADS"); fi
 if [ "$OUT_GATE" = "1" ]; then EXTRA+=(--out_gate); fi
 if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
 if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
