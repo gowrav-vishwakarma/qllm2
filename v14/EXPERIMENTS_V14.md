@@ -5701,6 +5701,10 @@ WORSE, but that is well inside one se: in substance NO EFFECT on scope vs 44B (0
 Reading: the scope-aware mix (20 % other-quantity contrast) did not teach scope in 1B tokens at constant LR.
 LABEL (Lead, recorded 09:03 IST): "WORKS not met; NO EFFECT on scope (mean scope_fu 2k 0.653 vs 44B 0.55; 0.003 past the band edge, i.e.
 WORSE by the letter, inside one se); C 8k 0.607 and unit_acc 8k 0.713 hold their bars".
+GPU n-100 read of 696,390 (+1.5B; 09:13 IST; logs/v14_scope_3f_696390_*): 2k C +2.285 scope_fu 0.84 prec_u1 0.52 P_fu 0.14 unit_acc 0.89
+S_fu_held 0.37; 8k C +0.494 scope_fu 0.43 prec_u1 0.04 P_fu 0.22 unit_acc 0.56 S_fu_held 0.28. GUARD BROKEN on both cells (confirms the
+CPU read). Guard sequence under 3f: pass, pass, pass, break (45B), pass (+1.0B), break (+1.5B). Worse than 44B on every scope axis;
+the leak is in the plain state; unit_acc 8k below its bar. 3f does not settle: the over-application comes back about every 0.5B.
 
 ### DECAY REMEDY PARTIAL: C3 at 2k only (2026-11-18 04:40 IST; logs/v14_scope_dec_C3_82bd02bd_20261118_0434.*)
 Run SHARED beside tpp (Lead's split far window); the 55 % speed guard stopped it at 04:39 IST (tpp 82.8k -> 42.4k / 42.8k tok/s,
