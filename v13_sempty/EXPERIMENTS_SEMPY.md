@@ -6659,6 +6659,13 @@ prior, not a measurement; 3r measures it.
 **Accepted cost:** the main run gives up on teaching scope (41B already scope_fu 2k 0.73): the release notes must say the body
 knows a rule exists more than what it is about. Scope, the excursions and the LR question move to 100M / 1B twins on the 4090
 (suggested cell: far share 0.8 vs 1.6 % x constant LR as is vs half).
+**Reading (Lead GO 09:2x IST, recorded before any 3r number):** guard on every scored save, two consecutive breaks = stop and
+talk; NO WORKS bar on scope (not expected to improve); s8 / clk2 / t40 / HS / ARC-e guards as before, now against the 45B CHECK
+(s8 @8k 3-save >= 0.945 - 0.05; HS / ARC-e not below 45B by > 0.01; clk2 8k 3-save >= 0.78).
+**3f VERDICT (Lead, 09:2x IST 11-18): NO EFFECT on scope in the first settled window (scope_fu 2k mean 0.653 vs 0.55); the guard
+broke at 45B and at +1.5B; superseded by 3r.**
+**Next (4090, after the user's day, ordered by Lead):** 100M / 1B twins: far share 0.8 vs 1.6 % x constant LR as is vs half; the
+split-geometry arm; the no-far-docs GDN / nochrono cell. Write-ups due before that window.
 **Closest prior work:** none needed (a rollback to an earlier mix; plumbing, no claim).
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
