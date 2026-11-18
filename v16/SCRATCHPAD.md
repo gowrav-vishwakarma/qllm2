@@ -173,7 +173,7 @@ Opposite moves in 2 of 3 intervals (M6->M7 within one mix: told 0.81 -> 0.49, in
 
 ## Decisions (organiser)
 
-**2026-11-18 09:20 IST - main run goes back to the 3c mix (segment 3r); experiments leave the release run.** Stop-and-talk after
+**2026-11-18 09:32 IST - main run goes back to the 3c mix (segment 3r); experiments leave the release run.** Stop-and-talk after
 3f's second guard break (+1.5B: scope_fu 0.84 / 0.43, P_fu 0.14 / 0.22; first settled window NO EFFECT on scope, 0.653 vs 0.55;
 6bc4aac4). Both segments with the far protocol share at 1.6 % (3d, 3f) showed over-application excursions; M9 (9B) already has
 scope_fu 2k 0.81, so the unscoped rule is old, not made by the mixes (03c5a5d5). Decision with Mind (GO 09:40 IST): 3r = 3c's exact
