@@ -204,6 +204,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
                     - **SCOPE probe** (2026-11-17) 4-cell teacher-forced probe P/C/S/R at 2k+8k (held-out direction for S); standing 4-tuple (B,C,scope_fu,prec_u1) -> **run 41B/42.75B/43B: 43B scope_fu 2k 1.00 -> 3f fires; 3d worsened scope on all axes**; run `-`; v14/scope_probe.py; SCOPE probe
                       - **WIO SCOPE test** (2026-11-17) scope probe --fullctx on wio pam / nochrono / gdn (100M, 1B): phased vs flat keys and rule scope; diagnostic -> **pre-registered**; run `-`; -; WIO SCOPE test
                 - **DECAY B/C split** (2026-11-17) TOLD-MARGIN 8k n100 on decay ckpts vs pre-decay parents: does decay move B or C -> **carry erased: 2k dC -0.37 vs parent, -0.55 vs same-token twin (dB -0.85); LAWA -0.26; 8k unclear**; run `-`; -; DECAY B / C split
+                  - **DECAY REMEDY** (2026-11-17) rule block x2 inside a 0.25B LR decay (C3 from M9, C2 from M10); scope probe paired with the decay jsonls -> **NOT a reliable remedy: C3 PARTIAL (2k dC -0.175), C2 ERASED (-0.493); scope not worse on both; 8k unchanged**; run `95498f3 / 1b8607d`, code at `f2644b2f`; logs/v14_scope_dec*_{C3,C2,M9,M10}_*; DECAY REMEDY PARTIAL: C3 at 2k only
                   - **DECAY REMEDY rule x2** (2026-11-17) C2 / C3 (rule x2 in a 0.25B decay) vs M9 / M10: carry kept if 2k dC >= -0.10; scope must not worsen (+0.10) -> **pre-registered**; run `-`; -; DECAY REMEDY
   - **PKG-SUITE per-milestone package suite** (2026-11-05) bare vs package at every SCI-1 milestone from 137,331: R x K, rewrite, told rule (twin / fork), recall to 32k (kv / kvupd / hop2), MB held -> **running (rows per milestone) | checkpoint 9 (137,331, 9.0B): R x K 0.67 / 0.42 vs bare 0.01; rewrite 0.92 / 0.85 vs 0.01; told twin 0.83 / 0.22 vs 0.13 / 0.05; recall 32k 20-way 1.00 x3 vs 0.10-0.45; 3.67 MB state**; run `c93e3b7`, code at `current`; logs/v14_pkg_suite_c3b_c93e3b7_20261105_1347.jsonl; "PKG-SUITE"
     - **BENCH-PKG BABILong + RULER-style with the package** (2026-11-05) final SCI-1 model, bare vs package, BABILong qa1-5 to 32k + RULER-style (our generator: niah single / multikey, VT) to 32k, MB per row -> **running (pre-registered, descriptive; after the Nov 6 decay)**; code at `current`; -; "BENCH-PKG"
@@ -235,4 +236,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-217 experiments: v13_sempty 105, v14 90, v15 10, v16 12.
+218 experiments: v13_sempty 105, v14 91, v15 10, v16 12.

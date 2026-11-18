@@ -5736,6 +5736,16 @@ nothing from M10 (C2). Reading (2) for C2 waits for M10's scope tuple (next in t
 UPDATE 09:46 IST, M10 scope tuple (logs/v14_scope_dec_M10_*): 2k C +2.324 scope_fu 0.79 P_fu 0.06 prec_u1 0.47; 8k C +0.402 scope_fu
 0.16 P_fu 0.11 unit_acc 0.62. Reading (2) for C2 vs M10: P_fu 0.00 / 0.07 vs 0.06 / 0.11, scope_fu 0.69 / 0.04 vs 0.79 / 0.16 ->
 SCOPE NOT WORSE (a little lower, as a weaker rule would be). C2 = carry ERASED, scope not worse: no remedy.
+UPDATE 09:55 IST, C3 at 8k (logs/v14_scope_dec8k_C3_*): C +0.390 scope_fu 0.27 P_fu 0.25 prec_u1 0.01 unit_acc 0.58. 8k dC vs M9
+-0.010 (0.009), vs decay_M9 +0.060 (0.010). Scope vs M9 8k: P_fu 0.25 vs 0.21, scope_fu 0.27 vs 0.21 -> NOT WORSE (<= parent + 0.10).
+DECAY REMEDY VERDICT (both bodies, both lengths):
+- C3 (from M9): carry PARTIAL at 2k (-0.175), unchanged at 8k; scope not worse at 2k and 8k.
+- C2 (from M10): carry ERASED at 2k (-0.493), unchanged at 8k; scope not worse.
+- Rule x2 inside the decay is NOT a reliable remedy: one recipe, two parents, partial vs erased. The 2k carry loss in a decay is real;
+  the 8k carry is too small at these bodies (~0.4) for any decay arm to move it.
+Step back: the decay shrinks the rule's 2k margin and up-weighting rule data only sometimes holds it. Keeping the carry through a decay
+probably needs the carry to live somewhere the decay does not anneal (a write path or a state the LR schedule does not shrink), not
+more of the same data.
 
 ### DECAY B / C split RESULT (21:33 IST; logs/v14_told_margin_decay_*_n100_*; paired over the same 100 docs per length)
 | pair | 2k dC (se) | 2k dB (se) | 8k dC (se) | 8k dB (se) |
