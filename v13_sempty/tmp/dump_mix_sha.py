@@ -4,7 +4,7 @@ import ast, subprocess, sys, re
 log, n = sys.argv[1], int(sys.argv[2])
 line = next(l for l in open(log) if l.startswith('[args] '))
 a = ast.literal_eval(line[len('[args] '):].strip())
-a.update(device='cpu', resume='none', continue_from='', init_from='', checkpoint_dir='/tmp/dump_mix_ckpt', dump_batches=n)
+a.update(device='cpu', resume='auto', continue_from='', init_from='', checkpoint_dir='/tmp/dump_mix_ckpt_' + str(__import__('os').getpid()), dump_batches=n)
 for kv in sys.argv[3:]:
     k, v = kv.split('=', 1); a[k] = type(a[k])(v) if k in a and a[k] is not None and not isinstance(a[k], bool) else v
 argv = []
