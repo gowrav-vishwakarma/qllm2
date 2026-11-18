@@ -6712,6 +6712,13 @@ on the logs' exact [args]: ctl mix sha 9ae682b1... and wio far mix 72e954b7... i
 transformers 5.2.0 vs 4.57.6 changes no token). **3r PAUSED at step 721,000 (47.251B) -> sci1_long3r_91a87ed/seg3r_pause.pt**
 (6000, 20:48 IST; resume with sci1_cont_chain.sh CONT_FROM=seg3r_pause.pt + sci1_long3r_env.sh). Set A launched 20:50 IST on the
 6000 (worktree qllm_twins @ a3ffb14b, twins_chain.sh BOX=6000, tmux tw_pam_nofar / tw_nochrono_nofar / tw_gdn_nofar, 3 at once).
+**(a) gdn_nofar RESULT, 4090 (21:1x IST 11-18; 102.51M, 1.0B tokens on ctl's mix, SOLO ~115k tok/s, seed 43; logs/wio/*nt_gdn_nofar_10a4c1db*):**
+s8 D (2k / 4k) 3-save **0.474** (saves 0.424 / 0.505 / 0.492); s8 @8k 3-save 0.174; shift 0 / 2k / 4k / 8k 0.996 / 0.651 / 0.361 / 0.113,
+affine 0.992 / 0.516 / 0.367 / 0.235; t40 2k / 4k / 8k / 16k 0.736 / 0.536 / 0.372 / **0.283**; clk2 0.05 / 0.01; HS / ARC-e / PIQA
+0.272 / 0.456 / 0.602; val 3.387. Against the (single-save, other-env) ctl pam: s8 D 0.523 - 0.474 = +0.049 (OURS bar +0.10 not met);
+FAMILY bar 0.47 met by 0.004 -> **inside the 0.05 band of both bars: NO VERDICT (strict rule)**; the within-box read on the 6000
+(Set A: pam_nofar vs gdn_nofar vs nochrono_nofar) decides, and this run is the cross-box control for its gdn_nofar. Beside it, no bar:
+past the trained length ctl pam holds more (s8 @8k 0.278 vs 0.174; t40 16k 0.586 vs 0.283).
 **Proposed order** (one night ~10-12 h after the CHECKs): (a) gdn_nofar (3 h; closes the paper's "beyond the trained length" cell
 for the family), then (b) split (6.5 h; the one new mechanism), then (a) nochrono_nofar (6.2 h); (c) last (10 h; readability risk,
 and 3r's guard reads may already answer whether 0.8 % is quiet at 386M). Nothing launches before Lead's GO and the user's release.
