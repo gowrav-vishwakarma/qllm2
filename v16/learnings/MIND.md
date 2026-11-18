@@ -227,7 +227,7 @@ corpus address at this size; the retriever, not the mind, is the next lever.
 | PAM no clock | 102.87M | **0.427** | 0.478 / 0.408 / 0.353 | 0.54 | 0.273 / 0.464 / 0.592 | 3.427 | ~45k |
 | PAM (Chrono) | 102.88M | 0.343 | **0.900 / 0.817 / 0.803** | 0.42 | 0.274 / 0.451 / 0.597 | 3.425 | ~64k |
 | Mamba-2 | 102.61M | 0.259 | 0.753 / 0.433 / 0.419 | 0.02 | 0.275 / 0.459 / 0.587 | **3.381** | ~113k |
-| T++ | running | | | | | | |
+| T++ (trained at 4096) | 101.92M | 0.080 | 0.967 / 0.336 / 0.081 | 0.01 | 0.271 / 0.462 / 0.602 | 3.432 | ~82.5k |
 
 The pre-registered claim (pam >= gdn + 0.10 on s8 @8k) was NOT met. Example-rule carry is not an edge of the full model once far
 docs are in everyone's data. Mamba-2 cannot do shift_wide even at distance 0 (0.27; ~0.02 beyond).
