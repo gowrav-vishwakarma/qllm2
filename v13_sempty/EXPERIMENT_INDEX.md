@@ -152,3 +152,13 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 | seg3r (fallback from 3c weights) | NOT RUN (fallback; 3f started) | - | `sci1_long3r_env.sh` | "segment 3d" |
 | seg3c (chat sources cycle, CYCLE_SOURCES) | KEEP: all 4 chat sources re-opened as pass 2; chat back to ~20 % from 40.5B | 3a8d7fb | a31ed81 (CYCLE_SOURCES) + `sci1_long3c_env.sh` | "segment 3c" |
 | b386 (386M T++ / Mamba-2 on SCI-1 stage A + B to 4B) | PRE-REGISTERED (d4f33c0); smoke 5897f104 (tpp 385.75M 27.8k tok/s; m2 388.13M 32.6k); placement PROVISIONAL (78ccc6d4) | - | see "b386" section | "b386" |
+
+## Checkpoint removals on the 6000 (12:0x IST 2026-11-18, Lead; 6000 25 -> 55 GB free). Weights stay on d_drive (from_6000/checkpoints_v13_sempty/<run>/, .keep_note in each); optimizer state is gone, so a bit-exact resume needs a rerun from the code-at hash.
+
+| run dir | experiment | verdict | kept on d_drive | code at (rerun) |
+|---|---|---|---|---|
+| sci1_c3_95498f3 | s8reg C3: rule docs x2 in a 0.25B decay from M9 | decay remedy: partial / not reliable (353d0eef) | c3_end_step_141146_weights.pt (= best, tensor-equal) | 95498f3 (`git worktree add ../qllm_c3 95498f3`; s8reg C3 launcher, EXPERIMENTS_SEMPY "s8reg") |
+| sci1_c2_1b8607d | s8reg C2: rule docs x2 in the decay from M10 | decay remedy: erased at 2k (353d0eef) | c2_end_step_156405_weights.pt (= best, tensor-equal) | 1b8607d (s8reg C2 launcher) |
+| sci1_cont4_8284510 | SCI-1 cont4 (M10-worked, failed segment) | FAILED on reach (row above) | c4a_best_weights.pt (step 154,000 = best = latest), step_152590.pt full + c4a_step_152590_weights.pt | 8284510 (sci1_cont4_env.sh + sci1_cont_chain.sh) |
+| sci1_long3d_cf9dee1 / seg3d_end.pt | segment 3d end (673,500, 44.14B) | 3d closed (superseded by 3f) | seg3d_end_weights.pt (sha a250348d) | cf9dee1 |
+| sci1_long3f_91a87ed / seg3f_end.pt | segment 3f end (700,000, 45.875B) = 3r's parent | 3f NO EFFECT, superseded by 3r | seg3f_end.pt FULL (sha 8212ceb1) | 91a87ed |
