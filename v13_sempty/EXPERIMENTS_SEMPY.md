@@ -6673,6 +6673,8 @@ split-geometry arm; the no-far-docs GDN / nochrono cell. Write-ups due before th
 91a87ed, tmux sci1s3r, log logs/v13_sempty_sci1_long3r_91a87ed_20261118_0426.log, run dir sci1_long3r_91a87ed). [resume] shows the
 3c weights and all cursors (proto_far 90,932); first step 700,050 loss 1.848 lr 8e-4. Snapshots +0.25B 703,815 / +0.5B 707,630
 (tmux mind3rsnap) -> Library CPU guard.
+**3r +0.25B (snap 704,000; Library CPU guard 8k n 40):** P_fu 0.175, scope_fu 0.300 -> inside the guard (<= 0.20 / <= 0.30), scope at
+the edge; UNCLEAR by the n-40 bands (>= 0.35 broken / <= 0.15 clear). C +0.687, twin unit_acc 0.85.
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
