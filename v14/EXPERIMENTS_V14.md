@@ -5702,6 +5702,9 @@ match a target-named .done marker with a real-step-named file.
 RESULT 704,000 (+0.25B, 46.14B; 13:00 IST; logs/v14_cpuguard_3r_704000_1c5b5da2_20261118_1233.*): 8k n 40 P_fu 0.175, scope_fu 0.300 ->
 UNCLEAR by the n-40 bands; inside Mind's guard (P_fu <= 0.20, scope_fu <= 0.30), at the scope edge. Also B -2.85, C +0.687, twin
 unit_acc 0.85, S_fu_held 0.17, S_bound_fu 0.20. Next to 3f +1.0B (0.05 / 0.075) it leaks more; next to +1.5B (0.22 / 0.43) less.
+RESULT 708,000 (+0.5B, 46.40B; 14:55 IST; logs/v14_cpuguard_3r_708000_*): 8k n 40 P_fu 0.150, scope_fu 0.125 -> CLEAR. Also B -3.17,
+C +0.549, twin unit_acc 0.72, S_fu_held 0.12. Guard over the first two 3r saves: edge (0.175 / 0.300), then clear. No stop and talk.
+The 3c mix brings the scope leak down toward 44B (0.05 / 0.10) within 0.5B; the carry stays at 3f's level (C 8k 0.55-0.69).
 
 ### 3f GUARD on CPU, low power (PRE-REGISTERED 2026-11-18 04:54 IST by the clock, before any number; Lead message stamped 05:02 IST, received ~04:50)
 Why: tpp keeps the 4090 until ~10:10 IST, so the GPU read of +1.0B / +1.5B may not happen before the user's day, while the 6000
