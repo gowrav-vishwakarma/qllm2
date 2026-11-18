@@ -5733,6 +5733,9 @@ P_fu 0.00 unit_acc 0.98; 8k C +0.410 scope_fu 0.04 P_fu 0.07 unit_acc 0.68. Pair
 | C2 - M9 | -0.314 (0.058) | +0.009 (0.013) |
 Reading (1): C2 vs M10 -0.493 <= -0.30 -> ERASED (plain decay vs M10 was -0.551). Rule x2 kept about half from M9 (C3) but almost
 nothing from M10 (C2). Reading (2) for C2 waits for M10's scope tuple (next in the window). At 8k no decay arm moves C (all within 0.08).
+UPDATE 09:46 IST, M10 scope tuple (logs/v14_scope_dec_M10_*): 2k C +2.324 scope_fu 0.79 P_fu 0.06 prec_u1 0.47; 8k C +0.402 scope_fu
+0.16 P_fu 0.11 unit_acc 0.62. Reading (2) for C2 vs M10: P_fu 0.00 / 0.07 vs 0.06 / 0.11, scope_fu 0.69 / 0.04 vs 0.79 / 0.16 ->
+SCOPE NOT WORSE (a little lower, as a weaker rule would be). C2 = carry ERASED, scope not worse: no remedy.
 
 ### DECAY B / C split RESULT (21:33 IST; logs/v14_told_margin_decay_*_n100_*; paired over the same 100 docs per length)
 | pair | 2k dC (se) | 2k dB (se) | 8k dC (se) | 8k dB (se) |
