@@ -56,7 +56,7 @@ Status: `[ ]` open · `[~]` running · `[x]` done and in the paper. Owner in bra
 - [ ] **Decay vs far rule carry (Mind, 11-07):** state the four-way finding (plain decay 0.77 -> 0.23; lerp linear in l; rule-x2 decays from M10 0.42 -> 0.36 and from M9 0.77 -> 0.46, margin +1.86 -> -0.17; 0 / 600 b2s prompts reach 2k) in §7 as a limitation + cause; the paper cites M9 (rules) and Decay_M9 (benchmarks) side by side until a b2s_far release exists. [Mind]
 
 ## E. Findings of 2026-11-16 .. 11-18 to write into the paper (Lead, noted 11-18 07:13 IST; numbers + hashes are in the notebooks named)
-Each item says where it goes. Nothing here is in main.tex yet.
+Each item says where it goes. **Written into main.tex and data/numbers.json on 11-18 11:05 IST** (abstract, contribution 3, related work, new \S sec:wio with Table tab:wio, \S sec:axes, \S sec:excursion, the decay subsection, limitations, conclusion; 21 pages, builds clean). Still open from this list: figures for the five-arm table, the infrastructure appendix, and the number check by Mind / Library (item C).
 - [ ] **"What is ours" at equal data (wio, 5 arms, ~103M, 1.0B tokens, far-block mix; EXPERIMENTS_SEMPY "wio", bcebc850, bd68e6b0).**
   New §: a four-way table (gdn / nochrono / pam / mamba2, tpp when it lands) on s8 @8k (3-save mean, per task by distance), t40,
   clk2, HS / ARC-e / PIQA, val NLL, params, solo tok/s. State plainly: the pre-registered claim (pam >= gdn + 0.10 on s8 @8k, and

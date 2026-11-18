@@ -433,7 +433,40 @@
    "cont3": 1.49
   },
   "holdout_note": "M9 holdout reported as ppl 21.79 (best); nats pending",
-  "milestone_naming": "M10 = the long run sci1_long_3c2bf1f at 10.0B (M9 + 1B, cont3 mix; user 2026-11-06); the cont4 checkpoint (8284510, step 152,590, + worked) is M10-worked, a failed segment, not in this series"
+  "milestone_naming": "M10 = the long run sci1_long_3c2bf1f at 10.0B (M9 + 1B, cont3 mix; user 2026-11-06); the cont4 checkpoint (8284510, step 152,590, + worked) is M10-worked, a failed segment, not in this series",
+  "status_45B": {
+   "_note": "CHECKs bc1cb217 (43B), 7ef901ef (44B), bd68e6b0 (45B)",
+   "s8_8k": [
+    0.984,
+    0.977,
+    0.945
+   ],
+   "skill_8k": [
+    0.845,
+    0.735,
+    0.71
+   ],
+   "t40_16k": [
+    0.978,
+    0.808,
+    0.939
+   ],
+   "clk2_8k_docs": [
+    0.84,
+    0.79,
+    0.92
+   ],
+   "clk2_16k_read": [
+    0.6,
+    0.48,
+    0.68
+   ],
+   "hs_arce_piqa_45B": [
+    0.322,
+    0.55,
+    0.639
+   ]
+  }
  },
  "pythia_ref": {
   "source": "EXPERIMENTS_SEMPY 'SCI-1 reference block' (78c98e6; logs/sci1ref/); same harness, fp32; different data (the Pile): REFERENCE ONLY",
@@ -925,5 +958,303 @@
    "t40_8k_with": 0.69,
    "t40_8k_without": 0.85
   }
+ },
+ "wio_five_arm_far_mix": {
+  "_note": "Five bodies ~102M, identical 1.0B tokens (0.9B stable + 0.1B decay) of the SCI-1 mix WITH far rule documents; one seed; pre-registered c492727; verdict bcebc850 (claim not met); tables bd68e6b0, e97e0549; told scope 9f093b93. s8 @8k = mean of the last three saves (14,500 / 15,000 / end).",
+  "params_M": {
+   "pam": 102.88,
+   "nochrono": 102.87,
+   "gdn": 102.51,
+   "mamba2": 102.61,
+   "tpp": 101.92
+  },
+  "s8_8k_3save": {
+   "pam": 0.343,
+   "nochrono": 0.427,
+   "gdn": 0.408,
+   "mamba2": 0.259,
+   "tpp": 0.08
+  },
+  "s8_D_2k4k": {
+   "pam": 0.538,
+   "nochrono": 0.64,
+   "gdn": 0.64,
+   "mamba2": 0.32,
+   "tpp": 0.26,
+   "_note": "mamba2 / tpp computed from the per-task cells below"
+  },
+  "shift_0_2k_4k_8k": {
+   "pam": [
+    0.796,
+    0.61,
+    0.44,
+    0.233
+   ],
+   "nochrono": [
+    0.873,
+    0.709,
+    0.558,
+    0.345
+   ],
+   "gdn": [
+    0.897,
+    0.511,
+    0.326,
+    0.136
+   ],
+   "mamba2": [
+    0.27,
+    0.02,
+    0.018,
+    0.02
+   ],
+   "tpp": [
+    0.138,
+    0.072,
+    0.055,
+    0.007
+   ]
+  },
+  "affine_0_2k_4k_8k": {
+   "pam": [
+    0.656,
+    0.571,
+    0.529,
+    0.453
+   ],
+   "nochrono": [
+    0.711,
+    0.66,
+    0.628,
+    0.51
+   ],
+   "gdn": [
+    0.973,
+    0.894,
+    0.82,
+    0.681
+   ],
+   "mamba2": [
+    0.968,
+    0.625,
+    0.598,
+    0.555
+   ],
+   "tpp": [
+    0.527,
+    0.465,
+    0.438,
+    0.14
+   ]
+  },
+  "t40_2k_8k_16k": {
+   "pam": [
+    0.9,
+    0.817,
+    0.803
+   ],
+   "nochrono": [
+    0.478,
+    0.408,
+    0.353
+   ],
+   "gdn": [
+    0.681,
+    0.458,
+    0.325
+   ],
+   "mamba2": [
+    0.753,
+    0.433,
+    0.419
+   ],
+   "tpp": [
+    0.967,
+    0.336,
+    0.081
+   ]
+  },
+  "clk2_8k_16k": {
+   "pam": [
+    0.42,
+    0.1
+   ],
+   "nochrono": [
+    0.54,
+    0.06
+   ],
+   "gdn": [
+    0.17,
+    0.06
+   ],
+   "mamba2": [
+    0.02,
+    0.01
+   ],
+   "tpp": [
+    0.01,
+    0.0
+   ]
+  },
+  "val_nll": {
+   "pam": 3.425,
+   "nochrono": 3.427,
+   "gdn": 3.385,
+   "mamba2": 3.381,
+   "tpp": 3.432
+  },
+  "hs_arce_piqa": {
+   "pam": [
+    0.274,
+    0.451,
+    0.597
+   ],
+   "nochrono": [
+    0.273,
+    0.464,
+    0.592
+   ],
+   "gdn": [
+    0.275,
+    0.44,
+    0.594
+   ],
+   "mamba2": [
+    0.275,
+    0.459,
+    0.587
+   ],
+   "tpp": [
+    0.271,
+    0.462,
+    0.602
+   ]
+  },
+  "solo_tok_s_k": {
+   "pam": 64,
+   "nochrono": 45,
+   "gdn": 114,
+   "mamba2": 96,
+   "tpp": 83
+  },
+  "told_C_2k_8k": {
+   "pam": [
+    1.496,
+    0.082
+   ],
+   "nochrono": [
+    0.989,
+    0.07
+   ],
+   "gdn": [
+    0.968,
+    0.023
+   ]
+  },
+  "told_scope_fu_2k": {
+   "pam": 0.5,
+   "nochrono": 0.43,
+   "gdn": 0.31
+  }
+ },
+ "told_rule_axes": {
+  "_note": "TOLD-MARGIN and the four-cell scope probe (code 57ad8435; results 139fc9fe, c2c104f7, 03c5a5d5). twin gate = B + 5C exactly; Spearman told 8k vs B 0.96, vs C 0.73 (1c38ed70).",
+  "scope_fu_2k": {
+   "M9": 0.81,
+   "41B": 0.73,
+   "42.75B": 1.0,
+   "43B": 1.0,
+   "44B": 0.55
+  },
+  "prec_u1_2k": {
+   "41B": 0.49,
+   "42.75B": 0.99,
+   "43B": 0.95,
+   "44B": 0.42
+  },
+  "P_fu_2k_8k": {
+   "41B": [
+    0.06,
+    0.18
+   ],
+   "42.75B": [
+    0.95,
+    0.89
+   ],
+   "43B": [
+    0.42,
+    0.5
+   ],
+   "44B": [
+    0.0,
+    0.05
+   ]
+  },
+  "C_8k_3d_series": {
+   "42B": 0.453,
+   "42.25B": 1.092,
+   "42.5B": 0.588,
+   "42.75B": 3.644,
+   "43B": 2.452,
+   "43.35B": 0.859,
+   "43.80B": 0.581,
+   "44B": 0.471,
+   "pre_3d_mean": 0.427
+  },
+  "seg3f_first_window": {
+   "scope_fu_2k_mean": 0.653,
+   "reference_44B": 0.55,
+   "C_8k_mean": 0.607,
+   "unit_acc_8k_mean": 0.713,
+   "verdict": "WORKS not met; NO EFFECT on scope (6bc4aac4)"
+  },
+  "package_reads_41B": {
+   "train8k": {
+    "twin": 0.35,
+    "split": 0.69,
+    "cgate": 0.54,
+    "v04": 0.76
+   },
+   "mis8k_false_unit": {
+    "twin": 0.25,
+    "split": 0.51,
+    "cgate": 0.57,
+    "v04": 0.86
+   },
+   "mis2k_false_unit": {
+    "twin": 0.74,
+    "split": 0.96,
+    "cgate": 0.94,
+    "v04": 0.97
+   },
+   "hash": "1a786a4e"
+  }
+ },
+ "decay_bc_split": {
+  "_note": "Paired on 100 docs (3f61ea54; C3 c703578a; C2 156eaf73; verdict 353d0eef). dC at 2k / 8k.",
+  "decayM9_minus_M9": [
+   -0.373,
+   -0.07
+  ],
+  "decayM9_minus_M10": [
+   -0.551,
+   -0.071
+  ],
+  "LAWA_L1_minus_M9": [
+   -0.264,
+   -0.073
+  ],
+  "M10_minus_M9_control": [
+   0.178,
+   0.001
+  ],
+  "C3_minus_M9": [
+   -0.175,
+   -0.01
+  ],
+  "C2_minus_M10": [
+   -0.493,
+   0.008
+  ]
  }
 }
