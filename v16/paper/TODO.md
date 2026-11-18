@@ -86,8 +86,9 @@ Each item says where it goes. Nothing here is in main.tex yet.
   2k, 0.83 / 0.61 at 8k; 41ba344) but, like the contrast gate v0.4 (0.76 at 8k), fails the scope guard (false units 0.86-0.97 on
   other-quantity protocols; 1a786a4e): no decode-time read fixes an unbound rule; v0.3.1 stays. Cite contrastive decoding (Li 2022),
   CFG for LMs (Sanchez 2023), context-aware decoding (Shi 2023), Paulo, Marshall & Belrose 2024 (arXiv:2404.05971).
-- [ ] **SCI-1 status row:** 45B (0f660b03, 42d0280a, bd68e6b0): s8 @8k 0.94-0.98, skill 0.71-0.85, t40 16k 0.81-0.98, clk2 16k
-  0.79-0.92, HS / ARC-e / PIQA ~0.32 / 0.55 / 0.64; chat sources cycle since 40.5B (CYCLE_SOURCES, a31ed81). No 386M baseline yet
+- [ ] **SCI-1 status row:** 43B / 44B / 45B CHECKs (bc1cb217, 7ef901ef, bd68e6b0): s8 @8k 0.94-0.98, skill 0.71-0.85, t40 16k 0.81-0.98,
+  clk2 headline read on 8k docs (dilation 8 + c4) 0.84 / 0.79 / 0.92 and its 16k read (32k run) 0.60 / 0.48 / 0.68 (label both; earlier
+  notes called the first one "clk2 16k"), HS / ARC-e / PIQA ~0.32 / 0.55 / 0.64; chat sources cycle since 40.5B (CYCLE_SOURCES, a31ed81). No 386M baseline yet
   (b386 pre-registered d4f33c0 / b2300b0 / dcaaed5; 4-LR screen; ~102 h on the 4090).
 - [ ] **Infrastructure lessons for the reproducibility appendix:** probe outputs written to .part and kept only on exit 0 + parse;
   never delete on an empty checksum (812463b9); launch guard fails closed (89aff04); free-space gate (3c7ccb9).
