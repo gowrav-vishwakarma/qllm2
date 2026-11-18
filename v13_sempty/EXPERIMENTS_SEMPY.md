@@ -6646,6 +6646,56 @@ directions 334 / 331, not probed); (c) v2 patched 2,580 +- 271 tokens (pre-patch
 Snapshot 42.25B = snap_645000.pt (hard-linked as snap_644693.pt after a name mismatch made Library's watcher log it "skipped";
 scored in the next window). Window mix logged per snapshot in logs/v13_sempty_3d_snapshots_*.log.
 
+## Tonight's 100M / 1B twins on the 4090 (PRE-REGISTRATION DRAFTS, 15:2x IST 2026-11-18, before any number; Lead orders them; card = user's until released)
+
+Common: wio recipe (wio_chain.sh @ >= 227f3eb pins, ~103M, 0.9B wsd_stable + 0.1B decay, LR 1.2e-3, seed 43, SEQ 4096, readouts =
+s8 spread 0 / 2k / 4k / 8k (3-save mean of 14,500 / 15,000 / end), t40 2k..16k, clk2, HS / ARC-e / PIQA, val). Speeds measured on the
+wio arms (median step tok/s): gdn 114k, nochrono 49k, pam 63k. Readouts ~0.5 h per arm. 46B / 47B CHECKs (~25 min each) + the 47B
+scope tuple go first in the window (~1 h).
+
+### (a) nofar: GDN and clock-off PAM WITHOUT far docs (the missing cell for "holds beyond the trained length")
+**Question.** In ctl (no far docs; caa4da9) PAM carried rules past its 4k training length (s8 D 2k/4k 0.523, s8 @8k 0.278, t40 16k
+0.586) where Mamba-2 / T++ did not (0.149 / 0.074). Is that the delta-rule family (then GDN does it too) or ours, and is it the clock?
+**Arms.** gdn_nofar, nochrono_nofar: wio_chain arms with ctl's SOURCES / WEIGHTS (the wio mix with the far block's 2.0 % returned
+to dclm / fineweb: 0.23324 / 0.24116). Reference: ctl pam (no far) as measured; it ran on caa4da9 / qllm311, and wio pam matched it
+on the 2k/4k metric (0.538 vs 0.523), so it is used as is; if a verdict hangs within 0.05 of a bar, a pam_nofar rerun (4.5 h) is due.
+**Bars (3-save s8 D at 2k / 4k, the ctl metric; s8 @8k reported beside).** OURS: ctl pam - gdn_nofar >= 0.10 (gdn_nofar <= 0.42).
+FAMILY: gdn_nofar >= 0.47. In between: no verdict. CLOCK: nochrono_nofar vs ctl pam, same 0.10 rule. t40 16k reported, no bar.
+**Cost.** gdn 1.0B / 114k = 2.4 h + 0.5 h; nochrono 5.7 h + 0.5 h -> **~9.1 h** (gdn alone ~3 h).
+**Closest prior work.** Gated DeltaNet (Yang et al. 2024); our ctl. A control, no novelty claim.
+
+### (b) split key geometry: half the notebook heads clocked, half plain RoPE
+**Question.** wio: the clock buys needles (t40 16k 0.803 vs 0.353) and costs rules (s8 @8k 0.343 vs 0.427). Can one body have both
+if the keys of some heads are clocked (episodes) and the rest phase-free (rules)?
+**Change (code, ~1 h + parity test).** CHRONO_HEADS=k: the Chrono warp g_t applies to heads 0..k-1 only; heads k..H-1 keep g = 1
+(exactly plain RoPE, the nochrono path). k = H/2. Zero-init warp keeps exact RoPE parity at init for all heads (test: k = 0 equals
+nochrono and k = H equals pam, bit-exact forward on a fixed batch). Readers (SHARE_READS) use the writer's per-head rotation as now.
+**Bars (3-save).** BOTH: s8 @8k >= 0.40 (nochrono 0.427 - 0.03) AND t40 16k >= 0.70 (pam 0.803 - 0.10) AND val <= 3.435.
+RULES-ONLY / NEEDLES-ONLY: one of the two; NEITHER: below both (the geometries interfere). Diagnostic: s8 and t40 with the clocked
+heads' read zeroed vs the RoPE heads' read zeroed (eval-time knockout, as kn).
+**Cost.** ~56k tok/s expected -> 5.0 h + 0.5 h readouts + 1 h code / parity -> **~6.5 h**.
+**Closest prior work.** Hybrid RoPE / NoPE attention (Yang et al. 2025, "Rope to Nope and Back Again"; Llama 4 interleaved NoPE
+layers) and partial rotary (GPT-NeoX rotary_pct). Difference: the split is per head INSIDE a delta-rule notebook, and one half's
+phase is a learned content clock (Chrono), so it separates where a key is stored (episode) from how it is erased (rule).
+
+### (c) far share x LR at constant rate: is the 386M excursion an LR oscillation?
+**Question.** 3d and 3f (far protocol 1.6 %) swung (P_fu / scope_fu up, then back) at constant LR 8e-4; 3c (0.8 %) was quiet on its
+one save. Share, LR, or both?
+**Design.** Parent = wio pam stable_final (0.9B, constant LR 1.2e-3, far protocol 0.8 %). Four continuations of 0.4B each at
+constant LR: {0.8 %, 1.6 %} x {1.2e-3, 6e-4}, extra 0.8 % from dclm / fineweb. Saves every 0.1B (1,526 steps); GPU guard read at
+2k (n 100, the wio scope method; 8k is unreadable at 100M: C <= 0.08).
+**Validity.** Parent C 2k >= 0.5 (wio scope: 1.50); otherwise the cell is unreadable at 100M.
+**Reading.** EXCURSION in an arm = at any of its 4 reads P_fu 2k or scope_fu 2k >= parent + 0.25. LR-driven: 1.6 % @1.2e-3 swings
+and 1.6 % @6e-4 does not. Share-driven: both 1.6 % arms swing, neither 0.8 % arm. No arm swings: the excursion needs scale or
+40B+ of training; stop the cell (no 386M action from it).
+**Cost.** 4 x 0.4B / 63k = 7.1 h + 16 reads x ~10 min = 2.7 h -> **~10 h**. Pilot option: the two 1.6 % arms first (~5 h).
+**Closest prior work.** WSD / constant-LR training (Hägele et al. 2024) and small-scale proxies of training instabilities (Wortsman
+et al. 2023). Difference: a behaviour-level excursion (over-application of a told rule) after a mix change, not a loss spike.
+
+**Proposed order** (one night ~10-12 h after the CHECKs): (a) gdn_nofar (3 h; closes the paper's "beyond the trained length" cell
+for the family), then (b) split (6.5 h; the one new mechanism), then (a) nochrono_nofar (6.2 h); (c) last (10 h; readability risk,
+and 3r's guard reads may already answer whether 0.8 % is quiet at 386M). Nothing launches before Lead's GO and the user's release.
+
 ## segment 3r: back to 3c's mix after 3f's second guard break (PRE-REGISTERED 09:25 IST 2026-11-18, before any 3r number; Lead's stop-and-talk call 09:13, Mind agreed)
 
 **Why:** 3f's per-save guard sequence pass / pass / pass / BREAK (45B: P_fu 8k 0.33, scope_fu 8k 0.36) / pass (45.19B CPU) / BREAK
