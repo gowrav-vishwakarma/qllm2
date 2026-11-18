@@ -5728,6 +5728,15 @@ unit_acc 0.85, S_fu_held 0.17, S_bound_fu 0.20. Next to 3f +1.0B (0.05 / 0.075) 
 RESULT 708,000 (+0.5B, 46.40B; 14:55 IST; logs/v14_cpuguard_3r_708000_*): 8k n 40 P_fu 0.150, scope_fu 0.125 -> CLEAR. Also B -3.17,
 C +0.549, twin unit_acc 0.72, S_fu_held 0.12. Guard over the first two 3r saves: edge (0.175 / 0.300), then clear. No stop and talk.
 The 3c mix brings the scope leak down toward 44B (0.05 / 0.10) within 0.5B; the carry stays at 3f's level (C 8k 0.55-0.69).
+GPU n-100 scope 4-tuples (16:2x-16:52 IST, Lead: supersede the CPU reads; logs/v14_scope_3r_*):
+| save | C 2k / 8k | scope_fu 2k / 8k | P_fu 2k / 8k | prec_u1 2k | R_u2 2k | unit_acc 8k | guard |
+|---|---|---|---|---|---|---|---|
+| 46B 701,914 (3r +0.13B) | 3.107 / 0.713 | 0.93 / 0.38 | 0.09 / 0.15 | 0.70 | 0.30 | 0.85 | BROKEN (scope 8k) |
+| 704,000 (+0.25B) | 2.561 / 0.602 | 0.86 / 0.26 | 0.06 / 0.15 | 0.69 | 0.31 | 0.76 | pass |
+| 708,000 (+0.5B) | 2.095 / 0.515 | 0.76 / 0.17 | 0.09 / 0.14 | 0.55 | 0.45 | 0.65 | pass |
+GPU agrees with CPU on both 3r snapshots (CPU 0.30 / 0.125 scope_fu 8k). Guard sequence: break, pass, pass; no stop and talk.
+Reading: under 3c's mix the 3f residue decays monotonically in 0.5B on every axis: C 2k 3.1 -> 2.1, scope_fu 2k 0.93 -> 0.76, 8k
+0.38 -> 0.17, precedence u1 0.70 -> 0.55. Carry and over-application fall TOGETHER again (EUREKA 299041e1): no axis improves alone.
 
 ### 3f GUARD on CPU, low power (PRE-REGISTERED 2026-11-18 04:54 IST by the clock, before any number; Lead message stamped 05:02 IST, received ~04:50)
 Why: tpp keeps the 4090 until ~10:10 IST, so the GPU read of +1.0B / +1.5B may not happen before the user's day, while the 6000
