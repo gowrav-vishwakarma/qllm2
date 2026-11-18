@@ -6763,6 +6763,13 @@ s8 OK, HS -0.006 / ARC-e +0.003 OK, clk2 OK. Skill keeps sliding (0.845 / 0.735 
 
 Sequence since 45B: BREAK (45B) / pass (45.19B) / BREAK (+1.5B 3f) / BREAK (46B, 1,914 steps into 3r: the 3f state) / pass / pass:
 no two breaks in a row under 3r; scope_fu 8k falls 0.38 -> 0.26 -> 0.17 and C 8k 0.71 -> 0.60 -> 0.52 together (the trade again).
+**3r +1.0B (snap 715,500; CPU guard 8k n 40):** P_fu 0.150, scope_fu 0.025 -> pass (C +0.737, unit_acc 0.80).
+**47B CHECK (step 717,173, 47.0B tokens; 18:58-19:25 IST 11-18 on the 4090, beside nt_gdn_nofar yielding):** s8 @8k **0.958** (shift 0.970,
+affine 0.945; 46B 0.975), skill @8k **0.70** (46B 0.645), t40 16k **0.836** (8k 0.956; 46B 0.978), clk2 8k **0.89** / 32k-run @16k 0.56,
+HS / ARC-e / PIQA **0.320 / 0.561 / 0.649** (ARC-e and PIQA the run's best so far). Guards vs 45B: all pass.
+**47B scope (GPU n 100, Library window 2):** 2k C +2.061, scope_fu **0.50**, prec_u1 0.55, P_fu 0.00, unit_acc 0.97; 8k C +0.461,
+scope_fu 0.01, P_fu 0.00, unit_acc 0.64 -> CLEAR (the cleanest save of the series). Under 3r: pass x4 after the 46B (3f-state) break.
+3r paused at 721,000 (47.25B) for the 6000 test window.
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
