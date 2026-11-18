@@ -6644,6 +6644,23 @@ directions 334 / 331, not probed); (c) v2 patched 2,580 +- 271 tokens (pre-patch
 Snapshot 42.25B = snap_645000.pt (hard-linked as snap_644693.pt after a name mismatch made Library's watcher log it "skipped";
 scored in the next window). Window mix logged per snapshot in logs/v13_sempty_3d_snapshots_*.log.
 
+## segment 3r: back to 3c's mix after 3f's second guard break (PRE-REGISTERED 09:25 IST 2026-11-18, before any 3r number; Lead's stop-and-talk call 09:13, Mind agreed)
+
+**Why:** 3f's per-save guard sequence pass / pass / pass / BREAK (45B: P_fu 8k 0.33, scope_fu 8k 0.36) / pass (45.19B CPU) / BREAK
+(+1.5B = 696,390, GPU n 100: 8k scope_fu 0.43, P_fu 0.22; 2k scope_fu 0.84; twin unit_acc 8k 0.56 < 0.70; C 8k 0.49). First
+settled window = NO EFFECT on scope (0.653 vs 0.55). Both segments that doubled the far protocol share (3d, 3f: 1.6 % vs 3c's
+0.8 %) swung; the scope contrast did not stop it, and the release run's mix changed three times in two days to chase one cell.
+**Change:** sci1_long3r_env.sh = 3c's exact token shares (proto_far v1 0.8 %, proto4k 0.846 %, chat 19.9 %, same CYCLE_SOURCES),
+from 3f's next latest.pt (kept as seg3f_end.pt), all cursors kept, LR 8e-4 constant as before. Worktree qllm_sci1e @ 91a87ed.
+**What is known about 3c:** one save only (41B, 0.5B into 3c): P_fu 8k 0.18, scope_fu 2k 0.73 / 8k 0.17. "3c does not swing" is a
+prior, not a measurement; 3r measures it.
+**Guard (same as 3f, per save):** P_fu 8k <= 0.20 and scope_fu 8k <= 0.30; two saves in a row failing = stop and talk. Reads at
++0.25B / +0.5B (Library CPU guard, 8k n 40; the 4090 is the user's from 10:45), then the milestones as usual.
+**Accepted cost:** the main run gives up on teaching scope (41B already scope_fu 2k 0.73): the release notes must say the body
+knows a rule exists more than what it is about. Scope, the excursions and the LR question move to 100M / 1B twins on the 4090
+(suggested cell: far share 0.8 vs 1.6 % x constant LR as is vs half).
+**Closest prior work:** none needed (a rollback to an earlier mix; plumbing, no claim).
+
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
 **Why:** segment 3's chat sources did not cycle, so R7's <= 4-epoch sizing never applied: tuluif ran dry at 32.95B, chatsr at 34.43B,

@@ -103,3 +103,4 @@ seg3d_protofar	chatoff	2026-11-16	segment 3d: proto_far 0.8 -> 1.6 % (from dclm 
 b386	ctl_pam	2026-11-16	T++ (385.75M) and Mamba-2 (388.1M) on SCI-1 stage A + B to 4B, read at M1-M4 vs SCI-1 PAM	pre-registered	-	b0b2426	-	EXPERIMENTS_SEMPY "b386"
 seg3e_protofar2	seg3d_protofar	2026-11-17	segment 3e: proto_far2 (held-out scope direction removed)	PREPARED, NOT RUN (3f chosen by the 43B scope rule)	-	4ece7bb5	-	EXPERIMENTS_SEMPY "segment 3d" (3e re-armed)
 seg3f_scope	seg3d_protofar	2026-11-17	segment 3f: proto_far3 + proto4k2 scope docs from 44.14B (settled-window rule)	running: settled window WORKS NOT MET so far (scope_fu 2k 0.72 / 0.72); 45B excursion #1; +1.0B substitute 689,500 CPU guard CLEAR	91a87ed	91a87ed	logs/v14_scope_3f_* (Library)	EXPERIMENTS_SEMPY "3f AMENDMENT"
+seg3r	seg3f_scope	2026-11-18	segment 3r: back to 3c mix (proto_far 0.8 %) from 3f end after 2 guard breaks	running (pre-registered)	91a87ed	91a87ed	-	EXPERIMENTS_SEMPY "segment 3r"
