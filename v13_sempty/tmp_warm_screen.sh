@@ -28,7 +28,9 @@ if [ -z "${_WS_COPY:-}" ]; then
   _copy=$(mktemp /tmp/tmp_warm_screen.XXXXXX.sh) && cp "${BASH_SOURCE[0]}" "$_copy" \
     && REPO_ROOT="$REPO_ROOT" _WS_COPY=1 exec bash "$_copy" "$@"
 fi
-trap 'rm -f "${BASH_SOURCE[0]}"' EXIT
+# Capture the temp copy's path NOW: a trap body evaluates BASH_SOURCE when it fires, and inside a sourced file that refuses
+# (scripts/require_clean_tree.sh: exit 3) it named the guard itself, which the old trap deleted (Lead 2026-11-18). Only /tmp copies.
+_self="${BASH_SOURCE[0]}"; trap 'case "$_self" in /tmp/tmp_*.sh) rm -f "$_self";; esac' EXIT
 
 SCREEN="${SCREEN:-warmscreen}"
 INIT="${INIT:-checkpoints_v13_sempty/mix3b_delta_answ100_1c913ef/best_model.pt}"

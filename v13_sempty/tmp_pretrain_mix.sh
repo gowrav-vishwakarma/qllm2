@@ -30,7 +30,9 @@ if [ -z "${_MIX_COPY:-}" ]; then
   _copy=$(mktemp /tmp/tmp_pretrain_mix.XXXXXX.sh) && cp "${BASH_SOURCE[0]}" "$_copy" \
     && REPO_ROOT="$REPO_ROOT" _MIX_COPY=1 exec bash "$_copy" "$@"
 fi
-trap 'rm -f "${BASH_SOURCE[0]}"' EXIT
+# Capture the temp copy's path NOW: a trap body evaluates BASH_SOURCE when it fires, and inside a sourced file that refuses
+# (scripts/require_clean_tree.sh: exit 3) it named the guard itself, which the old trap deleted (Lead 2026-11-18). Only /tmp copies.
+_self="${BASH_SOURCE[0]}"; trap 'case "$_self" in /tmp/tmp_*.sh) rm -f "$_self";; esac' EXIT
 
 PRESET="${PRESET:-baseline_real_pm}"
 TAG="${TAG:-mix3b_chrono_gate}"
