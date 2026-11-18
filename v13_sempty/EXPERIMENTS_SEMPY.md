@@ -6692,6 +6692,19 @@ and 1.6 % @6e-4 does not. Share-driven: both 1.6 % arms swing, neither 0.8 % arm
 **Closest prior work.** WSD / constant-LR training (Hägele et al. 2024) and small-scale proxies of training instabilities (Wortsman
 et al. 2023). Difference: a behaviour-level excursion (over-application of a told rule) after a mix change, not a loss spike.
 
+**ADDENDA (Lead GO 20:4x IST 11-18, recorded before any of these numbers; the 6000 joins the window, 3r paused there):**
+- **Placement.** 4090 (wio env): gdn_nofar (done) -> split (b) -> SECOND SEEDS (seed 44) of the wio far-mix arms pam, nochrono, then
+  gdn. 6000 (paused main run): Set A = pam_nofar, nochrono_nofar, gdn_nofar concurrently in ONE environment; then Set B = (c).
+  65,536 tokens / step and the same accumulation on both boxes (no bigger batch); several arms at once instead; speed not quoted there.
+- **Seed 44 (REPLICATED rule for the clock's trade):** both effects keep their sign with at least half the seed-43 gap: t40 16k
+  pam - nochrono >= +0.22 (seed 43 +0.45) AND s8 @8k 3-save nochrono - pam >= +0.04 (seed 43 +0.084). gdn seed 44 reported beside,
+  no bar. Closest prior work as in wio.
+- **Set A:** the OURS / FAMILY / CLOCK bars of (a) are read within the 6000 (pam_nofar there replaces ctl pam as the reference).
+  The 4090 gdn_nofar is the cross-box control: the two gdn_nofar runs must agree within 0.05 on s8 D (3-save) and 0.03 on val;
+  otherwise the cross-box comparison is unusable and only within-box reads count.
+- **Set B:** parent = wio pam main stable_final copied with a sha; its parent tuple read on the 6000 first (validity C 2k >= 0.5).
+- **Gates before the 3r pause:** fp32 parity of one fixed batch through pam and gdn on both boxes within 1e-4 (else stop and talk),
+  and identical token streams (first 2,000 packed windows, ctl mix and wio far mix, sha). Pause at a save -> seg3r_pause.pt.
 **Proposed order** (one night ~10-12 h after the CHECKs): (a) gdn_nofar (3 h; closes the paper's "beyond the trained length" cell
 for the family), then (b) split (6.5 h; the one new mechanism), then (a) nochrono_nofar (6.2 h); (c) last (10 h; readability risk,
 and 3r's guard reads may already answer whether 0.8 % is quiet at 386M). Nothing launches before Lead's GO and the user's release.
