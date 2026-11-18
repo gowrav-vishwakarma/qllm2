@@ -54,3 +54,42 @@ Status: `[ ]` open · `[~]` running · `[x]` done and in the paper. Owner in bra
 4090 now: cx_m2 → A31 forks → knockout told-twin cells. 6000 after SCI-1's decay: the open-ended long run (PLAN_LONGRUN). 4090 after cx_m2 (Mind, 11-05 17:05): clk3 (eval) → eviction log (eval) → ablation ladder (lad_all first) → second seed (3 bodies) → two-bounce micro-bench / screen → state budget.
 - [ ] **s8 checkpoint jitter (Mind, 11-06):** 10 optimizer steps moved s8 D 0.423 -> 0.331 (C2 first save). Re-read the SCI-1 milestone series and the tier tables for ~±0.1 single-checkpoint jitter: report s8 as the mean over 3 adjacent saves + the mean target margin; the ctl gaps (0.523 / 0.149 / 0.074) are far outside it, the milestone swings are not. [Mind]
 - [ ] **Decay vs far rule carry (Mind, 11-07):** state the four-way finding (plain decay 0.77 -> 0.23; lerp linear in l; rule-x2 decays from M10 0.42 -> 0.36 and from M9 0.77 -> 0.46, margin +1.86 -> -0.17; 0 / 600 b2s prompts reach 2k) in §7 as a limitation + cause; the paper cites M9 (rules) and Decay_M9 (benchmarks) side by side until a b2s_far release exists. [Mind]
+
+## E. Findings of 2026-11-16 .. 11-18 to write into the paper (Lead, noted 11-18 07:13 IST; numbers + hashes are in the notebooks named)
+Each item says where it goes. Nothing here is in main.tex yet.
+- [ ] **"What is ours" at equal data (wio, 5 arms, ~103M, 1.0B tokens, far-block mix; EXPERIMENTS_SEMPY "wio", bcebc850, bd68e6b0).**
+  New §: a four-way table (gdn / nochrono / pam / mamba2, tpp when it lands) on s8 @8k (3-save mean, per task by distance), t40,
+  clk2, HS / ARC-e / PIQA, val NLL, params, solo tok/s. State plainly: the pre-registered claim (pam >= gdn + 0.10 on s8 @8k, and
+  nochrono loses the gap) was NOT met: pam 0.343 < gdn 0.408 < nochrono 0.427; mamba2 0.259. Rewrite the abstract / contribution
+  on rule carry accordingly: with far documents in everyone's data, example-rule carry is not an edge of the full model.
+- [ ] **The clock trades rules for needles (one-flag ablation, same table).** pam vs nochrono differ only in Chrono: t40 16k 0.80 vs
+  0.35 (gdn 0.33, mamba2 0.42), clk2 mixed, s8 lower at every distance on both tasks. This is the clean architectural result;
+  move the paper's mechanism claim to "a content-modulated clock on a delta-rule memory buys verbatim recall past the trained length".
+- [ ] **Gated DeltaNet as the closest prior work (related work + limitations).** Same recurrence; differences listed in
+  EXPERIMENTS_SEMPY (tied vs untied erase, 12 vs 4 write sites, decay form, short conv vs RoPE / Chrono). GDN leads val NLL
+  (3.385 vs 3.425) at ~1.8x our speed and fits affine maps better at distance 0 (0.97 vs 0.66-0.71). Mamba-2 leads NLL (3.381)
+  and cannot do shift_wide even at distance 0.
+- [ ] **Metric note (errata for §7):** the old "s8 D 0.52 vs 0.07 / 0.15" is the 2k / 4k mean on a mix WITHOUT far documents; on that
+  metric wio pam is 0.538 while nochrono = gdn = 0.64. Label every s8 number with its distances and whether far docs were in training.
+- [ ] **A told rule has four axes: presence (B), strength (C), scope, precedence (EXPERIMENTS_V14 "TOLD-MARGIN", "SCOPE", 57ad8435).**
+  Method §: twin gate = B + 5C exactly; the four-cell probe (one skeleton, held-out quantity direction; design due to the outside
+  reviewer). Results: single-save told 8k tracks B (Spearman 0.96-0.98), not the carry; at 41B / 44B scope_fu 2k is 0.73 / 0.55
+  and precedence u1 0.49 / 0.42: the body knows a rule exists, not what it is about. Limitations § gets this in plain words.
+- [ ] **Constant-LR excursions (EXPERIMENTS_V14 "3d series", "3f readout"; 88d742f0, 82bd02bd, fbc8cf33).** Doubling presence-only far
+  protocol docs (3d) gave a ~1B-token excursion: C 0.43 -> 3.64 at 42.75B with P_fu 0.89-0.95 and scope_fu 1.00, back to baseline
+  by 44B. A second, shorter one at 45B under the scope-aware mix (3f). Lesson for the methods §: judge a mix change on a settled
+  window (>= 1B after the switch) and on all four axes; a one-axis bar (dC) read "WORKS" on what was partly over-application.
+- [ ] **Decay erases the carry itself (DECAY B / C split, 3f61ea54; C3 partial, c703578a).** Paired on 100 docs: decay_M9 - M9
+  dC(2k) -0.37, LAWA -0.26, control +0.18 (ns); rule x2 inside the decay keeps about half (-0.175). Replaces the "read problem"
+  hypothesis (recorded as not supported). Goes with the existing "a learning-rate decay erases the far rule first" subsection.
+- [ ] **Package: negative results worth one paragraph each.** A32c (self-demos + split number read) met its bars (0.46 / 0.69 held-out
+  2k, 0.83 / 0.61 at 8k; 41ba344) but, like the contrast gate v0.4 (0.76 at 8k), fails the scope guard (false units 0.86-0.97 on
+  other-quantity protocols; 1a786a4e): no decode-time read fixes an unbound rule; v0.3.1 stays. Cite contrastive decoding (Li 2022),
+  CFG for LMs (Sanchez 2023), context-aware decoding (Shi 2023), Paulo, Marshall & Belrose 2024 (arXiv:2404.05971).
+- [ ] **SCI-1 status row:** 45B (0f660b03, 42d0280a, bd68e6b0): s8 @8k 0.94-0.98, skill 0.71-0.85, t40 16k 0.81-0.98, clk2 16k
+  0.79-0.92, HS / ARC-e / PIQA ~0.32 / 0.55 / 0.64; chat sources cycle since 40.5B (CYCLE_SOURCES, a31ed81). No 386M baseline yet
+  (b386 pre-registered d4f33c0 / b2300b0 / dcaaed5; 4-LR screen; ~102 h on the 4090).
+- [ ] **Infrastructure lessons for the reproducibility appendix:** probe outputs written to .part and kept only on exit 0 + parse;
+  never delete on an empty checksum (812463b9); launch guard fails closed (89aff04); free-space gate (3c7ccb9).
+- [ ] After the tpp arm and the wio scope probe land: update data/numbers.json (force-add) and main.tex in one pass; then ask Mind /
+  Library for the number check (item C).
