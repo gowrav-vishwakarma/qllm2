@@ -5698,7 +5698,9 @@ unit_acc 0.95 R_u2 0.44; 8k C +0.499 scope_fu 0.08 prec_u1 0.02 P_fu 0.06 unit_a
 SETTLED-WINDOW VERDICT (+0.75B / 45B / +1.0B-substitute): scope_fu 2k mean 0.653 (binomial se ~0.027), C 8k mean 0.607, unit_acc 8k
 mean 0.713. WORKS not met (scope_fu bar <= 0.30). The NO EFFECT band is 0.45-0.65; 0.653 is 0.003 above its edge, so by the letter it is
 WORSE, but that is well inside one se: in substance NO EFFECT on scope vs 44B (0.55), with C and unit_acc holding their bars.
-Reading: the scope-aware mix (20 % other-quantity contrast) did not teach scope in 1B tokens at constant LR. Lead names the label.
+Reading: the scope-aware mix (20 % other-quantity contrast) did not teach scope in 1B tokens at constant LR.
+LABEL (Lead, recorded 09:03 IST): "WORKS not met; NO EFFECT on scope (mean scope_fu 2k 0.653 vs 44B 0.55; 0.003 past the band edge, i.e.
+WORSE by the letter, inside one se); C 8k 0.607 and unit_acc 8k 0.713 hold their bars".
 
 ### DECAY REMEDY PARTIAL: C3 at 2k only (2026-11-18 04:40 IST; logs/v14_scope_dec_C3_82bd02bd_20261118_0434.*)
 Run SHARED beside tpp (Lead's split far window); the 55 % speed guard stopped it at 04:39 IST (tpp 82.8k -> 42.4k / 42.8k tok/s,
