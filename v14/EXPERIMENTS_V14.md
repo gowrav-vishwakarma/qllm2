@@ -5739,6 +5739,11 @@ Reading: under 3c's mix the 3f residue decays monotonically in 0.5B on every axi
 0.38 -> 0.17, precedence u1 0.70 -> 0.55. Carry and over-application fall TOGETHER again (EUREKA 299041e1): no axis improves alone.
 CPU guard 715,500 (+1.0B, 46.86B; 18:42 IST; logs/v14_cpuguard_3r_715500_*): 8k n 40 P_fu 0.150, scope_fu 0.025 -> CLEAR. C 8k +0.737,
 unit_acc 0.80, S_fu_held 0.00. Scope at 8k is back to the 44B level (0.10) or below; P_fu holds at ~0.15 (44B 0.05).
+GPU n-100 scope 4-tuple 47B (717,173 = 3r +1.12B; 19:38 IST; logs/v14_scope_3r_47B_717173_*): 2k B -5.74 C +2.061 scope_fu 0.50
+prec_u1 0.55 P_fu 0.00 unit_acc 0.97 R_u2 0.45; 8k B -5.76 C +0.461 scope_fu 0.01 P_fu 0.00 unit_acc 0.64 R_u2 0.98. Guard passes.
+47B ~= 44B on every axis (44B: C 8k 0.471, scope_fu 0.55 / 0.10, P_fu 0.00 / 0.05, prec_u1 0.42), scope a little better at 2k, precedence
+a little worse (0.55 vs 0.42). 3r closes the 3f excursion in ~1B tokens: the 3c mix is the quiet baseline we assumed, now measured.
+B fell to -5.7 (the '.' prior is strong again), the same B swing that drove the old told-8k headline.
 
 ### 3f GUARD on CPU, low power (PRE-REGISTERED 2026-11-18 04:54 IST by the clock, before any number; Lead message stamped 05:02 IST, received ~04:50)
 Why: tpp keeps the 4090 until ~10:10 IST, so the GPU read of +1.0B / +1.5B may not happen before the user's day, while the 6000
