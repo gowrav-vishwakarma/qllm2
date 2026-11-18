@@ -13,6 +13,21 @@ Keep all three current as things happen (user rule, 2026-10-29).
   (P_fu / scope_fu up on nochrono) while phased keys under-generalise (s8 down on pam), the right key is content-scoped,
   neither phased nor flat. That would be a design claim for the mind: index rules by what they govern.
 
+## STATE NOW (Library, 2026-11-18 10:08 IST): read first, newer than the block below
+- **GPU:** nothing of mine runs. The 4090 belongs to the user from ~11:00 IST on 11-18. The libuserguard tmux session kills at 10:30.
+- **Package:** v0.3.1 stays. A32c and cgate v0.4 both fail the scope guard.
+- **Results closed overnight** (EXPERIMENTS_V14 sections; v16/learnings/LIBRARY.md has the summary):
+  - 3f first settled window: WORKS not met. Lead's label: NO EFFECT on scope (mean scope_fu 2k 0.653 vs 44B 0.55).
+    Guard: 45B broken, +1.0B (689,500 substitute) clear, +1.5B broken (GPU-confirmed).
+  - DECAY REMEDY: not reliable. C3 partial (-0.175), C2 erased (-0.493); scope not worse; 8k unchanged.
+  - WIO SCOPE (diagnostic): the told rule is gone at 8k in pam / nochrono / gdn. At 2k, more carry = less scope (EUREKA 299041e1).
+- **Owed, after the user's day:** 3f +2.0B (704,020) scope tuple; m43far / m44far FAR-TOLD (deferred by Lead).
+- **Tools:**
+  - scope_probe.py: --fullctx (any arch, gold row) and --guard_only (CPU guard, about 35 min per save at n 40).
+  - tmp chains: v14/tmp/solo_20261118.sh, cpuguard_20261118.sh, speedguard_20261118.sh (tpp 55 % floor).
+- **Open angle:** binding (scope) is the missing piece in every body. Candidates: a quantity-in-key architecture, or contrast data that
+  changes the plain state (3f's 20 % did not).
+
 ## STATE NOW (Library, 2026-11-06 23:35 IST) — read first
 - **Package is v0.3.1 (324cb6c).**
   - The default read is warm.

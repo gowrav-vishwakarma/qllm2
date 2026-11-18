@@ -5640,6 +5640,21 @@ RWKV. Ours: a held-vs-noprot fork of the O(1) session state for a far rule, read
 vector added to the state. Also cited: contrastive decoding (Li et al. 2022), CFG for LMs (Sanchez et al. 2023), context-aware
 decoding (Shi et al. 2023).
 
+### WIO SCOPE test RESULT (2026-11-18 10:05 IST; --fullctx, gold row, n 100; logs/v14_scope_wio_{pam,nochrono,gdn}_*; DIAGNOSTIC ONLY)
+| arm (~103M, 1.0B tok) | C 2k / 8k | scope_fu 2k / 8k | P_fu 2k / 8k | prec_u1 2k | R_u2 2k | unit_acc 2k / 8k | S_fu_held 2k |
+|---|---|---|---|---|---|---|---|
+| pam (clock on) | 1.496 / 0.082 | 0.50 / 0.04 | 0.01 / 0.07 | 0.13 | 0.87 | 0.95 / 0.36 | 0.00 |
+| nochrono | 0.989 / 0.070 | 0.43 / 0.03 | 0.05 / 0.09 | 0.06 | 0.94 | 0.87 / 0.37 | 0.03 |
+| gdn | 0.968 / 0.023 | 0.31 / 0.10 | 0.08 / 0.19 | 0.01 | 0.99 | 0.75 / 0.24 | 0.12 |
+Validity: C 2k >= 0.10 on all three (readable); 0 tracebacks (gdn ran on the GPU in qllm_gdn).
+Reading (diagnostic, one 100-doc run per arm on 100M bodies; no design conclusion):
+- At 8k the told rule is essentially gone in all three (C <= 0.08, unit_acc 0.24-0.37 vs chance ~0.27). At 2k all carry it.
+- At 2k the order is the same on every axis: pam has the strongest carry (1.50) and the most over-application (scope_fu 0.50,
+  prec_u1 0.13); gdn the weakest carry (0.97) and the best binding (scope_fu 0.31, precedence right 0.99). nochrono sits between.
+- So across architectures, as across saves of one body: more carry comes with less scope. No arm has both.
+- The clock (pam vs nochrono, one flag) raises the 2k carry by +0.51 and the scope leak by +0.07, the same sign as its needle gain.
+This C (full context, gold row) is not comparable to the package-path C of the SCI-1 saves.
+
 ### WIO SCOPE test (PRE-REGISTERED 2026-11-17 23:35 IST, before any number; Lead GO via Mind; DIAGNOSTIC ONLY)
 Question (Mind's chrono EUREKA ffc22422 + SCOPE): does a phased key (pam, chrono on) vs a flat key (nochrono) vs GDN change how a
 told rule is scoped? Bodies: checkpoints_v13_sempty/wio_{pam,nochrono,gdn}_decay_227f3eb/latest.pt (100M, 1B tokens; only the
@@ -5719,6 +5734,33 @@ C3 2k: B -3.64, C 1.971, P_fu 0.13, scope_fu 0.81, prec_u1 0.45.
 Reading (1): C3 vs M9 dC -0.175 is between -0.30 and -0.10 = PARTIAL. Rule x2 in the decay keeps about half of what the plain decay
 erased (-0.37 -> -0.18). Reading (2) (scope vs the parent) is NOT decidable yet: M9's scope tuple was not run. C3's scope_fu 2k 0.81
 and P_fu 0.13 are high next to 44B (0.55 / 0.00), so the guard may well fail. C2, M9 and M10 are not run.
+UPDATE 09:23 IST, M9 scope tuple (logs/v14_scope_dec_M9_*; solo window): 2k B -3.86 C +2.145 scope_fu 0.81 prec_u1 0.51 P_fu 0.11
+unit_acc 1.00; 8k C +0.401 scope_fu 0.21 P_fu 0.21 unit_acc 0.59. M9's C equals its TOLD-MARGIN C on every doc (max |diff| 0.0000).
+Reading (2) at 2k: C3 P_fu 0.13 vs M9 0.11, scope_fu 0.81 vs 0.81 (bar: <= parent + 0.10) -> SCOPE NOT WORSE at 2k. 8k waits for
+C3's 8k run. So far: C3 = carry PARTIAL (-0.175), scope unchanged at 2k. The high scope_fu (0.81) is the M9-era body's own, not
+caused by rule x2: the unscoped rule predates the far-block data.
+UPDATE 09:35 IST, C2 (rule x2 in a 0.25B decay from M10; logs/v14_scope_dec_C2_*): 2k B -4.97 C +1.831 scope_fu 0.69 prec_u1 0.43
+P_fu 0.00 unit_acc 0.98; 8k C +0.410 scope_fu 0.04 P_fu 0.07 unit_acc 0.68. Paired per doc (units match on all 100):
+| pair | 2k dC (se) | 8k dC (se) |
+|---|---|---|
+| C2 - M10 (parent) | -0.493 (0.066) | +0.008 (0.013) |
+| C2 - decay_M9 | +0.059 (0.043) | +0.080 (0.011) |
+| C2 - M9 | -0.314 (0.058) | +0.009 (0.013) |
+Reading (1): C2 vs M10 -0.493 <= -0.30 -> ERASED (plain decay vs M10 was -0.551). Rule x2 kept about half from M9 (C3) but almost
+nothing from M10 (C2). Reading (2) for C2 waits for M10's scope tuple (next in the window). At 8k no decay arm moves C (all within 0.08).
+UPDATE 09:46 IST, M10 scope tuple (logs/v14_scope_dec_M10_*): 2k C +2.324 scope_fu 0.79 P_fu 0.06 prec_u1 0.47; 8k C +0.402 scope_fu
+0.16 P_fu 0.11 unit_acc 0.62. Reading (2) for C2 vs M10: P_fu 0.00 / 0.07 vs 0.06 / 0.11, scope_fu 0.69 / 0.04 vs 0.79 / 0.16 ->
+SCOPE NOT WORSE (a little lower, as a weaker rule would be). C2 = carry ERASED, scope not worse: no remedy.
+UPDATE 09:55 IST, C3 at 8k (logs/v14_scope_dec8k_C3_*): C +0.390 scope_fu 0.27 P_fu 0.25 prec_u1 0.01 unit_acc 0.58. 8k dC vs M9
+-0.010 (0.009), vs decay_M9 +0.060 (0.010). Scope vs M9 8k: P_fu 0.25 vs 0.21, scope_fu 0.27 vs 0.21 -> NOT WORSE (<= parent + 0.10).
+DECAY REMEDY VERDICT (both bodies, both lengths):
+- C3 (from M9): carry PARTIAL at 2k (-0.175), unchanged at 8k; scope not worse at 2k and 8k.
+- C2 (from M10): carry ERASED at 2k (-0.493), unchanged at 8k; scope not worse.
+- Rule x2 inside the decay is NOT a reliable remedy: one recipe, two parents, partial vs erased. The 2k carry loss in a decay is real;
+  the 8k carry is too small at these bodies (~0.4) for any decay arm to move it.
+Step back: the decay shrinks the rule's 2k margin and up-weighting rule data only sometimes holds it. Keeping the carry through a decay
+probably needs the carry to live somewhere the decay does not anneal (a write path or a state the LR schedule does not shrink), not
+more of the same data.
 
 ### DECAY B / C split RESULT (21:33 IST; logs/v14_told_margin_decay_*_n100_*; paired over the same 100 docs per length)
 | pair | 2k dC (se) | 2k dB (se) | 8k dC (se) | 8k dB (se) |
