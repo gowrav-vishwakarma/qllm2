@@ -1,0 +1,6 @@
+HEADER {"unit": "SCOPE probe", "hash": "353d0eef", "args": {"ckpt": "/home/gowrav/Development/qllm2/checkpoints_v13_sempty/wio_gdn_decay_227f3eb/latest.pt", "lengths": "2048,8192", "docs": 100, "device": "cuda", "out": "logs/v14_scope_wio_gdn_353d0eef_20261118_1001.jsonl", "fullctx": true, "guard_only": false}}
+fullctx arch gdn
+L 2048: 4-tuple B -4.99 C +0.968 scope_fu 0.31 prec_u1 0.01 | P_fu 0.08 twin unit_acc 0.75 | S_fu_held 0.12 S_bound_fu 0.12 | R_u2 0.99
+L 8192: 4-tuple B -4.44 C +0.023 scope_fu 0.10 prec_u1 0.00 | P_fu 0.19 twin unit_acc 0.24 | S_fu_held 0.12 S_bound_fu 0.09 | R_u2 1.00
+SUMMARY {"2048": {"B": -4.985199263095856, "P_fu": 0.08, "C": 0.9680423402786255, "C_mid_twin": 0.75, "S_fu": 0.31, "S_fu_held": 0.12, "S_bound_fu": 0.12, "R_u1": 0.01, "R_u2": 0.99}, "8192": {"B": -4.438449438810348, "P_fu": 0.19, "C": 0.02274684727191925, "C_mid_twin": 0.24, "S_fu": 0.1, "S_fu_held": 0.12, "S_bound_fu": 0.09, "R_u1": 0.0, "R_u2": 1.0}}
+SCOPE DONE

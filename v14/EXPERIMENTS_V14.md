@@ -5640,6 +5640,21 @@ RWKV. Ours: a held-vs-noprot fork of the O(1) session state for a far rule, read
 vector added to the state. Also cited: contrastive decoding (Li et al. 2022), CFG for LMs (Sanchez et al. 2023), context-aware
 decoding (Shi et al. 2023).
 
+### WIO SCOPE test RESULT (2026-11-18 10:05 IST; --fullctx, gold row, n 100; logs/v14_scope_wio_{pam,nochrono,gdn}_*; DIAGNOSTIC ONLY)
+| arm (~103M, 1.0B tok) | C 2k / 8k | scope_fu 2k / 8k | P_fu 2k / 8k | prec_u1 2k | R_u2 2k | unit_acc 2k / 8k | S_fu_held 2k |
+|---|---|---|---|---|---|---|---|
+| pam (clock on) | 1.496 / 0.082 | 0.50 / 0.04 | 0.01 / 0.07 | 0.13 | 0.87 | 0.95 / 0.36 | 0.00 |
+| nochrono | 0.989 / 0.070 | 0.43 / 0.03 | 0.05 / 0.09 | 0.06 | 0.94 | 0.87 / 0.37 | 0.03 |
+| gdn | 0.968 / 0.023 | 0.31 / 0.10 | 0.08 / 0.19 | 0.01 | 0.99 | 0.75 / 0.24 | 0.12 |
+Validity: C 2k >= 0.10 on all three (readable); 0 tracebacks (gdn ran on the GPU in qllm_gdn).
+Reading (diagnostic, one 100-doc run per arm on 100M bodies; no design conclusion):
+- At 8k the told rule is essentially gone in all three (C <= 0.08, unit_acc 0.24-0.37 vs chance ~0.27). At 2k all carry it.
+- At 2k the order is the same on every axis: pam has the strongest carry (1.50) and the most over-application (scope_fu 0.50,
+  prec_u1 0.13); gdn the weakest carry (0.97) and the best binding (scope_fu 0.31, precedence right 0.99). nochrono sits between.
+- So across architectures, as across saves of one body: more carry comes with less scope. No arm has both.
+- The clock (pam vs nochrono, one flag) raises the 2k carry by +0.51 and the scope leak by +0.07, the same sign as its needle gain.
+This C (full context, gold row) is not comparable to the package-path C of the SCI-1 saves.
+
 ### WIO SCOPE test (PRE-REGISTERED 2026-11-17 23:35 IST, before any number; Lead GO via Mind; DIAGNOSTIC ONLY)
 Question (Mind's chrono EUREKA ffc22422 + SCOPE): does a phased key (pam, chrono on) vs a flat key (nochrono) vs GDN change how a
 told rule is scoped? Bodies: checkpoints_v13_sempty/wio_{pam,nochrono,gdn}_decay_227f3eb/latest.pt (100M, 1B tokens; only the
