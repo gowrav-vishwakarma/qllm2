@@ -1190,6 +1190,8 @@ def build_argparser():
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
                         '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
+    p.add_argument('--dump_batches', type=int, default=0,
+                   help='data check: hash the first N micro-batches of the train loader, print the sha, exit (0 = off)')
     p.add_argument('--stream_worker', type=int, default=1,
                    help='1 = streaming batches built in one worker process '
                         '(own GIL, same order); 0 = in this process '
@@ -1408,6 +1410,19 @@ def main():
             loader = DataLoader(train_ds, batch_size=args.batch_size,
                                 shuffle=not is_streaming, num_workers=nw,
                                 drop_last=True)
+        if args.dump_batches > 0:
+            # Cross-box data check (Mind 2026-11-18): sha256 of the first N micro-batches' input_ids + labels, then exit.
+            import hashlib
+            h = hashlib.sha256()
+            for i, b in enumerate(loader):
+                if i >= args.dump_batches:
+                    break
+                for key in ('input_ids', 'labels'):
+                    h.update(b[key].to(torch.int64).cpu().numpy().tobytes())
+                if (i + 1) % 100 == 0:
+                    print(f"[dump] {i + 1} batches sha256 {h.hexdigest()}", flush=True)
+            print(f"[dump] DONE {min(i + 1, args.dump_batches)} batches x {args.batch_size} x {args.seq_len} sha256 {h.hexdigest()}", flush=True)
+            sys.exit(0)
         val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
         if not args.no_wiki_val:
             wv, _ = load_wikitext103_val(seq_len=args.seq_len)
