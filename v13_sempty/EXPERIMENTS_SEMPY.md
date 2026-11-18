@@ -6719,6 +6719,10 @@ affine 0.992 / 0.516 / 0.367 / 0.235; t40 2k / 4k / 8k / 16k 0.736 / 0.536 / 0.3
 FAMILY bar 0.47 met by 0.004 -> **inside the 0.05 band of both bars: NO VERDICT (strict rule)**; the within-box read on the 6000
 (Set A: pam_nofar vs gdn_nofar vs nochrono_nofar) decides, and this run is the cross-box control for its gdn_nofar. Beside it, no bar:
 past the trained length ctl pam holds more (s8 @8k 0.278 vs 0.174; t40 16k 0.586 vs 0.283).
+**(b) split STARTED 21:27 IST 11-18** (4090 SOLO, CHRONO=1 CHRONO_HEADS=3 confirmed in [config] / [ladder], 102,884,948 params, night
+chain restarted with ALLOW_CODE_DRIFT=1 on SCREEN_HASH 10a4c1db after a refused launch at 21:19; the refusal also deleted the launch
+guard: the launcher trap bug, fixed b558dd89). **(c) Set B parent read (6000, 21:2x IST):** wio pam main stable_final 2k: C +1.659 (valid,
+>= 0.5), scope_fu 0.69, prec_u1 0.20, P_fu 0.07, unit_acc 0.93. The 4 arms wait for free slots (< 3 trainers).
 **Proposed order** (one night ~10-12 h after the CHECKs): (a) gdn_nofar (3 h; closes the paper's "beyond the trained length" cell
 for the family), then (b) split (6.5 h; the one new mechanism), then (a) nochrono_nofar (6.2 h); (c) last (10 h; readability risk,
 and 3r's guard reads may already answer whether 0.8 % is quiet at 386M). Nothing launches before Lead's GO and the user's release.
