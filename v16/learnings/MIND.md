@@ -216,3 +216,53 @@ ARC-c 0.28 → 0.84); what fails asks the model to address (BM25 adds nothing; o
 contrast read cancels a fact already in state). nkr (pre-registered 6c9fb4f, runner b4b7499) reranks BM25's top-100 by the
 notebook's own query·key: it FAILED (ARC-c 0.260 vs BM25 0.278 vs random-of-100 0.266): the notebook keys are not a
 corpus address at this size; the retriever, not the mind, is the next lever.
+
+## 2026-11-16 .. 11-18 (key results with hashes; full write-ups in v13_sempty/EXPERIMENTS_SEMPY.md, sections named)
+
+**What is ours at equal data, with far docs in everyone's mix ("wio", bcebc850, bd68e6b0).** ~103M bodies, 1.0B tokens, same SCI-1 mix + far block, seed, venv pins:
+
+| arm | params | s8 @8k 3-save | t40 2k / 8k / 16k | clk2 8k | HS / ARC-e / PIQA | val NLL | solo tok/s |
+|---|---|---|---|---|---|---|---|
+| Gated DeltaNet | 102.51M | 0.408 | 0.681 / 0.458 / 0.325 | 0.17 | 0.275 / 0.440 / 0.594 | 3.385 | ~114k |
+| PAM no clock | 102.87M | **0.427** | 0.478 / 0.408 / 0.353 | 0.54 | 0.273 / 0.464 / 0.592 | 3.427 | ~45k |
+| PAM (Chrono) | 102.88M | 0.343 | **0.900 / 0.817 / 0.803** | 0.42 | 0.274 / 0.451 / 0.597 | 3.425 | ~64k |
+| Mamba-2 | 102.61M | 0.259 | 0.753 / 0.433 / 0.419 | 0.02 | 0.275 / 0.459 / 0.587 | **3.381** | ~113k |
+| T++ | running | | | | | | |
+
+The pre-registered claim (pam >= gdn + 0.10 on s8 @8k) was NOT met. Example-rule carry is not an edge of the full model once far
+docs are in everyone's data. Mamba-2 cannot do shift_wide even at distance 0 (0.27; ~0.02 beyond).
+
+**The clock trades rules for needles (one-flag ablation, ffc22422).** pam vs nochrono differ only in `chrono`: needles at 16k 0.80
+vs 0.35, s8 lower at every distance on both tasks (shift 8k 0.233 vs 0.345, affine 0.453 vs 0.510), language equal (3.425 / 3.427).
+The clean architectural result: a content-modulated clock on a delta-rule memory buys verbatim recall past the trained length.
+
+**s8 metric errata.** The old ctl "s8 D 0.52 vs 0.07 / 0.15" is the mean at 2k / 4k on a mix WITHOUT far docs. On that metric wio pam
+is 0.538 (= ctl), nochrono 0.639, gdn 0.638. Every s8 number must name its distances and whether far docs were trained.
+
+**GDN vs PAM, code-checked (EXPERIMENTS_SEMPY "wio", the precise erase comparison).** Same recurrence S_t = g_t S_{t-1}(I - b_e k k^T)
++ b_w v k^T. GDN: one tied beta (erase = write, replaces on every write), Mamba-2-style per-head decay, a delta state in all 12 layers,
+short conv + SiLU on q/k/v. PAM M2: untied write / erase gates (erase starts ~0.05, capped 0.95), one shared decay bias, notebooks in
+4 of 16 blocks (12 shared readers), RoPE / Chrono on q/k, no short conv. GDN fits affine maps far better at distance 0 (0.97 vs
+0.66-0.71); hypothesis (not tested): tied replace-on-write and 3x more write sites.
+
+**Constant-LR mix changes swing, then settle (3d / 3f; 88d742f0, 82bd02bd, fbc8cf33).** 3d (proto_far 0.8 -> 1.6 %) moved told carry
+C 0.45 / 1.09 / 0.59 / 3.64 / 2.45 / 0.47 over 42 .. 44B, with false units on no-protocol (P_fu ~0.9) and wrong scope (scope_fu
+1.00) at the peak, back to baseline by 44B: "dC works" was partly over-application. 3f (scope-aware docs) has one excursion at 45B
+(P_fu 8k 0.33, scope_fu 8k 0.36) that is clear again at 45.19B (0.05 / 0.075). Rule adopted: judge a mix change on a settled window
+(mean of saves >= 0.75-1B after the switch) and on all four told axes (presence, strength, scope, precedence), never one.
+
+**Decay erases the carry itself (Library 3f61ea54, c703578a).** Paired on 100 docs: decay_M9 - M9 dC(2k) -0.37 (-0.55 vs the
+same-token M10), LAWA -0.26; rule docs x2 inside the decay keep about half (-0.175). Replaces the "read problem" hypothesis.
+
+**Chat sources cycle (a31ed81, seg3c 3a8d7fb).** Segment 3's chat streams ran dry (tuluif 32.95B .. chatmt2 39.88B), so from 39.9B the
+run trained at 0 % chat; CYCLE_SOURCES re-opens a dry parquet source up to N passes with the pass saved beside the cursor. Lesson:
+an epoch cap in a sizing note is not a mechanism; check the stream actually cycles.
+
+**SCI-1 386M status (43 / 44 / 45B CHECKs; bc1cb217, 7ef901ef, bd68e6b0).** s8 @8k 0.984 / 0.977 / 0.945, skill @8k 0.845 / 0.735 /
+0.71, t40 16k 0.978 / 0.808 / 0.939, clk2 8k 0.84 / 0.79 / 0.92, HS / ARC-e / PIQA ~0.32 / 0.55 / 0.64. No 386M baseline yet (b386
+pre-registered d4f33c0; smoke 5897f104).
+
+**Infrastructure (reproducibility appendix).** Probe outputs go to .part and are kept only on exit 0 + a parse check; a decay save
+is deleted only after its json parses. Never delete on an empty == empty checksum after a dropped link (812463b9); honour skip
+markers and slim snapshots on the remote (18cd8698). Launchers fail closed when the launch guard is missing (89aff04); free-space
+gate before launch (3c7ccb9); a live log tracked in git makes the tree dirty and blocks guarded launches (a29ed174).

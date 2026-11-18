@@ -136,3 +136,19 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 
 ## Lineage (user rule, 2026-11-01): every row here also has a line in `v13_sempty/EXPERIMENT_LINEAGE.tsv` (id, parent = what it extended, date, what, verdict, run hash, code at, log / result file, section); `python3 scripts/exp_tree.py` renders the root `EXPERIMENT_TREE.md`.
 | sci1_cont4_worked (M10-worked, failed segment) | FAILED on reach, NEUTRAL on s8 (11-06 clean A/B vs the new M10: s8 0.418 vs 0.423, t40 8k 0.69 vs 0.85). Was: FAILED keep rule at M10 (+1B `worked`, step 152,590): s8 D 0.770 -> 0.418, far needles 0.98 -> 0.57, t40 16k 0.87 -> 0.33; `worked` dropped, decay branches from M9 | 8284510 | 8284510 (v13_sempty/tmp/sci1_cont4_env.sh; source sci1_env.sh + sci1_cont4_env.sh, sci1_cont_chain.sh) |
+
+## Rows of 2026-11-16 .. 11-18 (added 11-18; Lead's gap list). wio = ~103M bodies, 1.0B tokens (0.9B wsd_stable + 0.1B decay), SCI-1 mix + far block, seed 43, SEQ 4096; s8 = mean of shift_wide_new / affine_map_new @8192, 3-save = 14,500 / 15,000 / end.
+
+| id | verdict | run hash | code at (how to rerun) | section |
+|---|---|---|---|---|
+| wio_gdn (Gated DeltaNet, fla 0.3.2) | DONE: s8 @8k 3-save 0.408, t40 16k 0.325, val **3.385**, 102.51M, ~114k tok/s solo | 227f3eb | 227f3eb + `bash v13_sempty/tmp/wio_chain.sh` (SCREEN_HASH=227f3eb; arm gdn runs in ~/.venvs/qllm_gdn) | EXPERIMENTS_SEMPY "wio" |
+| wio_nochrono (PAM M2, RoPE, no Chrono) | DONE: s8 @8k 3-save **0.427** (best on rules), t40 16k 0.353, val 3.427, 102.87M | 227f3eb | same chain, arm nochrono | "wio" / "nochrono ARM RESULT" |
+| wio_pam (PAM M2, all on, Chrono) | DONE: s8 @8k 3-save 0.343, t40 16k **0.803** (best on needles), val 3.425, 102.88M; **claim NOT met** (bar pam >= gdn + 0.10 = 0.508) | 227f3eb | same chain, arm pam | "pam ARM RESULT + VERDICT" (bcebc850) |
+| wio_mamba2 | DONE: s8 @8k 3-save 0.259 (shift ~0.02 at every distance > 0), t40 16k 0.419, val **3.381** (best LM), 102.61M | 227f3eb | same chain, arm mamba2 (~/.venvs/qllm_gdn) | "wio" table (bd68e6b0) |
+| wio_tpp | RUNNING (4090, 11-18 from 04:29 IST) | 227f3eb | same chain, arm tpp | "wio" |
+| seg3d (SCI-1 386M: proto_far 0.8 % -> 1.6 %) | CLOSED: "dC WORKS, but HARMFUL on scope / presence / precedence; superseded by 3f" (C 0.43 -> 3.64 at 42.75B with P_fu ~0.9 and scope_fu 1.00, settled by 44B). Lesson: one-axis bar | cf9dee1 (40.5B -> 44.14B, steps 618,000 -> 673,500) | cf9dee1: `sci1_seg_switch.sh <run_dir> <tmux> v13_sempty/tmp/sci1_long3d_env.sh seg3c` on the 6000 | "segment 3d" + 3d ADDENDUM |
+| seg3e (proto_far2: held-out direction removed) | PREPARED, NOT RUN (superseded by 3f by the scope rule at 43B) | - | 4ece7bb5: `sci1_long3e_env.sh` via sci1_seg_switch.sh | "segment 3d" (3e re-armed) |
+| seg3f (proto_far3 + proto4k2 scope docs) | RUNNING (6000, from 44.14B, 20:30 IST 11-17). Settled window +0.75B / 45B: WORKS NOT MET (scope_fu 2k 0.72 / 0.72); 45B = excursion #1 (P_fu 8k 0.33, scope_fu 8k 0.36); +1.0B substitute 689,500 CPU guard CLEAR | 91a87ed | 91a87ed: `sci1_seg_switch.sh <run_dir> sci1s3f v13_sempty/tmp/sci1_long3f_env.sh seg3d` | "3f AMENDMENT" + 3f table |
+| seg3r (fallback from 3c weights) | NOT RUN (fallback; 3f started) | - | `sci1_long3r_env.sh` | "segment 3d" |
+| seg3c (chat sources cycle, CYCLE_SOURCES) | KEEP: all 4 chat sources re-opened as pass 2; chat back to ~20 % from 40.5B | 3a8d7fb | a31ed81 (CYCLE_SOURCES) + `sci1_long3c_env.sh` | "segment 3c" |
+| b386 (386M T++ / Mamba-2 on SCI-1 stage A + B to 4B) | PRE-REGISTERED (d4f33c0); smoke 5897f104 (tpp 385.75M 27.8k tok/s; m2 388.13M 32.6k); placement PROVISIONAL (78ccc6d4) | - | see "b386" section | "b386" |
