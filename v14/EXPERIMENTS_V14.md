@@ -5691,6 +5691,13 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
+### 3r GUARD on CPU (PRE-REGISTERED 2026-11-18 10:28 IST, before any number; Mind / Lead)
+3r = the main run back on 3c's exact mix from step 700,000 (45.875B), Lead's call after the 3f +1.5B break (sci1_long3r_91a87ed).
+Same method as the 3f CPU guard below (scope_probe --guard_only, 8k, n 40), but during the user's day: 8 threads, nice 19, RAM floor 12 GB.
+Saves: +0.25B (~703,815) and +0.5B (~707,630); each is labelled by its real step.
+Reading per save (fixed now): Mind's guard P_fu 8k <= 0.20 and scope_fu 8k <= 0.30. At n 40 the CPU bands still hold: either cell >= 0.35 =
+BROKEN; both <= 0.15 = CLEAR; otherwise UNCLEAR. Two broken in a row = stop and talk. No WORKS bar on scope.
+
 ### 3f GUARD on CPU, low power (PRE-REGISTERED 2026-11-18 04:54 IST by the clock, before any number; Lead message stamped 05:02 IST, received ~04:50)
 Why: tpp keeps the 4090 until ~10:10 IST, so the GPU read of +1.0B / +1.5B may not happen before the user's day, while the 6000
 trains ~2B more on 3f. This settles only the EXCURSION pair (45B = #1).
