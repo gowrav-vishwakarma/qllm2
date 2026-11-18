@@ -7,6 +7,24 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-18 10:07 IST (Library): carry and scope trade off across architectures too, not only across saves
+- **What we saw (9f093b93, logs/v14_scope_wio_*; DECAY REMEDY 353d0eef; 3f 0955b8f3).**
+  - The scope 4-tuple, full context with the gold row, on the three wio arms (~103M, 1.0B tokens):
+    - pam: carry 2k 1.50, scope_fu 0.50, precedence right 0.87;
+    - nochrono: 0.99 / 0.43 / 0.94;
+    - gdn: 0.97 / 0.31 / 0.99.
+  - At 8k the told rule is gone in all three.
+  - The same sign holds inside one body: every 3f / 3d peak of C came with scope_fu and P_fu peaks (+1.5B: C 2k 2.29, scope_fu 0.84).
+    A decay that erased carry lowered scope_fu (C2 0.69 vs M10 0.79).
+- **What it says.** In every body we have, the told rule is ONE unbound strength. Turning it up (the clock, more told data, a
+  stronger read) turns up its wrong use by the same amount. Nothing we have tried binds the rule to its quantity.
+- **What it means for Mind.**
+  - The clock's needle gain comes with a rule-binding cost, not only a rule-carry cost. pam vs nochrono, one flag: +0.51 carry,
+    +0.07 scope leak, and precedence right 0.87 vs 0.94.
+  - A body claim on told rules needs the 4-tuple, not C alone.
+  - Binding has to come from the architecture (a key that includes the quantity: Mind's "split key geometry" angle) or from contrast
+    data that actually changes the plain state. 3f's 20 % contrast did not (scope_fu 2k mean 0.653 vs 0.55 before).
+
 ## 2026-11-17 23:31 IST (Mind): at 100M / 1B the Chrono clock TRADES rules for needles; it is not what carries rules
 - Saw (wio, 227f3eb; logs/wio/*; EXPERIMENTS_SEMPY "pam ARM RESULT"): three ~103M arms, same 1.0B data + far block, only one flag apart
   for pam vs nochrono. s8 @8k 3-save: gdn 0.408, nochrono 0.427, pam (clock on) 0.343; pam is lowest on shift and affine at EVERY
