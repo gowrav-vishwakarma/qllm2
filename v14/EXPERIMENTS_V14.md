@@ -5693,6 +5693,12 @@ RESULT 696,390 (+1.5B; 08:52 IST; logs/v14_cpuguard_3f_696390_9daad17a_20261118_
 GUARD BROKEN (scope_fu >= 0.35). Also B -3.35, C +0.509, twin unit_acc 0.53, S_fu_held 0.35 (the plain state leaks), S_bound_fu 0.30.
 Sequence of the guard: 45B broken, +1.0B clear, +1.5B broken. Not two in a row by the letter of the rule, but excursions keep coming
 back under 3f. The GPU n-100 read of 696,390 is queued second in today's solo window and supersedes this one.
+GPU n-100 read of 689,500 (+1.0B substitute; 09:02 IST; logs/v14_scope_3f_689500_*): 2k C +1.921 scope_fu 0.52 prec_u1 0.56 P_fu 0.02
+unit_acc 0.95 R_u2 0.44; 8k C +0.499 scope_fu 0.08 prec_u1 0.02 P_fu 0.06 unit_acc 0.73 R_u2 0.98. Guard passes (agrees with the CPU read).
+SETTLED-WINDOW VERDICT (+0.75B / 45B / +1.0B-substitute): scope_fu 2k mean 0.653 (binomial se ~0.027), C 8k mean 0.607, unit_acc 8k
+mean 0.713. WORKS not met (scope_fu bar <= 0.30). The NO EFFECT band is 0.45-0.65; 0.653 is 0.003 above its edge, so by the letter it is
+WORSE, but that is well inside one se: in substance NO EFFECT on scope vs 44B (0.55), with C and unit_acc holding their bars.
+Reading: the scope-aware mix (20 % other-quantity contrast) did not teach scope in 1B tokens at constant LR. Lead names the label.
 
 ### DECAY REMEDY PARTIAL: C3 at 2k only (2026-11-18 04:40 IST; logs/v14_scope_dec_C3_82bd02bd_20261118_0434.*)
 Run SHARED beside tpp (Lead's split far window); the 55 % speed guard stopped it at 04:39 IST (tpp 82.8k -> 42.4k / 42.8k tok/s,
