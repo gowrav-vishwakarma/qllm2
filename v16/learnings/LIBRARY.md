@@ -262,3 +262,64 @@ Process lessons added:
   told 0.22 vs 0.83.
   The no-row contrast (A9) subtracts the evidence's own absence and is retired; the rule twin subtracts the held rule's
   absence and stays.
+
+## 2026-11-16 .. 11-18: the told rule, read in four axes (Library; details in v14/EXPERIMENTS_V14.md, sections named)
+- **TOLD-MARGIN (b47afc16, re-read 1c38ed70).** A teacher-forced read of the logits after the gold number, in three streams: held
+  (protocol in the state), noprot (no protocol) and twin = held + 4 (held - noprot).
+  - B = noprot gate (the body's own '.' prior). C = held - noprot gate (the carry). The twin's gate is exactly **B + 5C**
+    (Argon's audit: exact to 4e-6).
+  - Across 10 saves, told 8k tracks B (Spearman 0.96; gate_win vs B 0.979), not C (0.73). B spans 4.8 nats; C stays at 0.3-0.5
+    (SE 0.02-0.03).
+  - So the told-8k headline swings with the format prior. Since then a carry claim is read as C, with B beside it.
+- **GATE-FREE told read, offline (4db71183): NOT met.** The chosen twin16 gives 42B 0.68, but its SD is 0.124 (not halved from
+  twin4's 0.193) and its Spearman with B is 0.79. The post-hoc contrast gate (tau 0) passed all three bars, so it was re-registered
+  as cgate v0.4.
+- **Package reads that fail the scope guard; v0.3.1 stays.**
+  - A32c, self-demos + split number read (41ba344): MET its bars (a26 2k 0.46 / 0.69, train 8k 0.83 / 0.61 vs twin 0.53 / 0.31).
+  - Contrast gate v0.4 (1a786a4e): guards (a) 0.76, (c) 0.91 and (d) 0.49 met, but guard (b) fails. Its false unit on an
+    other-quantity protocol is 0.86 vs 0.30 at 8k, 0.97 vs 0.79 at 2k.
+  - Lesson: no decode-time read fixes a rule that is not bound to its quantity.
+- **SCOPE probe (code 57ad8435; Argon's four-cell design).** The 4-tuple (B, C, scope_fu, prec_u1) at 2k / 8k. Cells: P presence,
+  C strength, S scope (on the held-out direction: asked volume under a mass protocol, a pair absent from every training source),
+  R precedence.
+
+  | save | scope_fu (2k / 8k) | P_fu (2k / 8k) | prec_u1 (2k / 8k) | hash |
+  |---|---|---|---|---|
+  | 41B | 0.73 / 0.17 | 0.06 / 0.18 | 0.49 / 0.02 | 139fc9fe |
+  | 42.75B | 1.00 / 1.00 | 0.95 / 0.89 | 0.99 / 0.69 | 139fc9fe |
+  | 43B | 1.00 / 0.94 | 0.42 / 0.50 | - | 139fc9fe |
+  | 44B | 0.55 / 0.10 | 0.00 / 0.05 | 0.42 / 0.02 | c2c104f7 |
+
+  The body knows that a rule exists, not what it is about. EUREKA "told rules are not SCOPED" (00b97227): our data trains rule
+  presence and never rule scope.
+- **3d series verdict (2672840d).** Up-weighting far protocol docs raised C by +0.84 (median 0.72; +0.25 without the peaks):
+  C 8k 0.45, 1.09, 0.59, 3.64, 2.45, 0.86, 0.58, 0.47 from 42B to 44B. The peaks at 42.75B / 43B were scope over-application
+  (P_fu 0.89-0.95, scope_fu 1.00). HARM never fired.
+  - Lesson: a one-axis bar (dC) read "WORKS" on what was partly over-application. Judge a mix change on a settled window and on
+    all four axes.
+- **3f, the scope-aware mix (proto_far3 + proto4k2, e670df5a / 4ece7bb5; from 44.14B).**
+  - First window (82bd02bd): WORKS NOT MET. scope_fu 2k was 0.72 at both +0.75B and 45B (bar <= 0.30). NO EFFECT vs WORSE waits
+    for the +1.0B GPU read.
+  - 45B was excursion #1 (P_fu 8k 0.33, scope_fu 8k 0.36).
+  - The +1.0B substitute 689,500 is CLEAR on the CPU guard (fbc8cf33: P_fu 0.050, scope_fu 0.075), so there are no two in a row.
+- **DECAY B / C split (3f61ea54).** The LR decay erases the carry itself; the read was not the problem. Paired over 100 docs,
+  dC(2k):
+  - decay_M9 - M9: -0.373 (se 0.044);
+  - decay_M9 vs the same-token M10: -0.551;
+  - LAWA: -0.264;
+  - control M10 - M9: +0.178 (ns).
+
+  DECAY REMEDY (prereg f2644b2f): C3, with the rule block x2 inside the decay, gives dC -0.175 (0.036) vs M9 = PARTIAL (c703578a).
+  It keeps about half of the carry. Its scope guard is still undecided, because M9's tuple has not run.
+- **CPU guard method (b539d107).** scope_probe --guard_only: the P + C + S cells only, 8k, n 40, 16 threads. About 35 min per save
+  at 4.6 GB RSS. It reads the excursion guard when the GPU belongs to a training arm. Pre-registered reading: >= 0.35 = broken,
+  <= 0.15 = clear; a GPU n-100 read supersedes it.
+- **Prior work cited.**
+  - Contrastive decoding (Li et al. 2022); CFG for LMs (Sanchez et al. 2023); context-aware decoding (Shi et al. 2023).
+  - Paulo, Marshall & Belrose 2024 (arXiv:2404.05971).
+  - Contrast sets (Gardner et al. 2020); counterfactually augmented data (Kaushik et al. 2020); entity binding (Feng & Steinhardt
+    2023).
+  - Replay against forgetting (Robins 1995); annealing-phase data (MiniCPM, OLMo).
+- **What these days taught.** A told rule has four axes, and every lever we pulled moved them together. More told data made the rule
+  stronger and less scoped; the decay made it weaker. A read that amplifies the carry also amplifies the wrong binding. The missing
+  piece is binding (scope), and it has to come from data with contrast or from the architecture, not from the read.
