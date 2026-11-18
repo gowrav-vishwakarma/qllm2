@@ -6675,6 +6675,7 @@ split-geometry arm; the no-far-docs GDN / nochrono cell. Write-ups due before th
 (tmux mind3rsnap) -> Library CPU guard.
 **3r +0.25B (snap 704,000; Library CPU guard 8k n 40):** P_fu 0.175, scope_fu 0.300 -> inside the guard (<= 0.20 / <= 0.30), scope at
 the edge; UNCLEAR by the n-40 bands (>= 0.35 broken / <= 0.15 clear). C +0.687, twin unit_acc 0.85.
+**3r +0.5B (snap 708,000; CPU guard 8k n 40):** P_fu 0.150, scope_fu 0.125 -> **CLEAR** (C +0.549, unit_acc 0.72). Guard so far: edge, clear; no break.
 
 ## segment 3c: chat sources cycle (PRE-REGISTERED 15:59 IST 2026-11-16, before any number; user direction "base model WITH chat", Lead PRIORITY 1)
 
