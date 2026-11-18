@@ -1870,3 +1870,14 @@ auto --val_every 500 --save_every_steps 2500`, no `--gradient_checkpointing`.
    b2s_far?). Pre-register before launch (v13_sempty/tmp/ctl_chain.sh as the base).
 3. m9n (paper-only jitter calibration) when a gap appears.
 
+
+## Step back after the wio 5-arm table + 3f's second break (10:30 IST 2026-11-18)
+- Surprise: every axis has its own winner (nochrono rules, PAM needles, GDN / Mamba-2 language), and T++ is last on all three
+  beyond its length. The told rule is one unbound strength in every body (Library EUREKA 299041e1): carry and scope trade off
+  across saves (3d / 3f), across the decay, and across architectures (the clock: +0.51 carry, +0.07 leak).
+- What it says: the memory stores "how much a rule applies", not "to what". More data did not bind it (3f's scope docs, 1.5B tokens).
+- Bold angle: binding is a geometry question: give the rule a key that is the quantity's key (split key geometry: a rule
+  sub-space addressed by the quantity token, erase along it), so applying the rule needs the matching quantity to be read.
+  Test at 100M with the clock-off twin and a control, never on the release run.
+- State: 3r on the 6000 from 45.875B (3c mix); 4090 to the user 10:45-day end; next window: 0.8 vs 1.6 % x LR cell, split
+  geometry, the no-far-docs GDN / nochrono cell (write-ups due).
