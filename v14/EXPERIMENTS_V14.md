@@ -5724,6 +5724,15 @@ unit_acc 1.00; 8k C +0.401 scope_fu 0.21 P_fu 0.21 unit_acc 0.59. M9's C equals 
 Reading (2) at 2k: C3 P_fu 0.13 vs M9 0.11, scope_fu 0.81 vs 0.81 (bar: <= parent + 0.10) -> SCOPE NOT WORSE at 2k. 8k waits for
 C3's 8k run. So far: C3 = carry PARTIAL (-0.175), scope unchanged at 2k. The high scope_fu (0.81) is the M9-era body's own, not
 caused by rule x2: the unscoped rule predates the far-block data.
+UPDATE 09:35 IST, C2 (rule x2 in a 0.25B decay from M10; logs/v14_scope_dec_C2_*): 2k B -4.97 C +1.831 scope_fu 0.69 prec_u1 0.43
+P_fu 0.00 unit_acc 0.98; 8k C +0.410 scope_fu 0.04 P_fu 0.07 unit_acc 0.68. Paired per doc (units match on all 100):
+| pair | 2k dC (se) | 8k dC (se) |
+|---|---|---|
+| C2 - M10 (parent) | -0.493 (0.066) | +0.008 (0.013) |
+| C2 - decay_M9 | +0.059 (0.043) | +0.080 (0.011) |
+| C2 - M9 | -0.314 (0.058) | +0.009 (0.013) |
+Reading (1): C2 vs M10 -0.493 <= -0.30 -> ERASED (plain decay vs M10 was -0.551). Rule x2 kept about half from M9 (C3) but almost
+nothing from M10 (C2). Reading (2) for C2 waits for M10's scope tuple (next in the window). At 8k no decay arm moves C (all within 0.08).
 
 ### DECAY B / C split RESULT (21:33 IST; logs/v14_told_margin_decay_*_n100_*; paired over the same 100 docs per length)
 | pair | 2k dC (se) | 2k dB (se) | 8k dC (se) | 8k dB (se) |
