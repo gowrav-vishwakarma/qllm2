@@ -108,15 +108,20 @@ class IMBPools:
         rng.shuffle(words)
         w_ids = [ftok.convert_tokens_to_ids(w) for w in words]
 
-        # Disjoint word pools (all single-token words with leading space)
-        self.train_entities = w_ids[0:220]
-        self.eval_entities = w_ids[220:340]
-        self.train_hop = w_ids[340:700]
-        self.eval_hop = w_ids[700:960]
-        self.train_keys = w_ids[960:1300]
-        self.eval_keys = w_ids[1300:1500]
-        self.fact_vals = w_ids[1500:1900]
-        fallback_units = w_ids[1900:2100]
+        # Shared learned word pools (like v14/microbench.py: embeddings are trained, while
+        # EVERY document redraws fresh random entity->val / A->B->C / key->val bindings so
+        # zero associations can be memorised across documents!).
+        self.entities = w_ids[0:240]
+        self.hop_words = w_ids[240:640]
+        self.keys = w_ids[640:1140]
+        self.fact_vals = w_ids[1140:1640]
+        fallback_units = w_ids[1640:1900]
+        self.train_entities = self.entities
+        self.eval_entities = self.entities
+        self.train_hop = self.hop_words
+        self.eval_hop = self.hop_words
+        self.train_keys = self.keys
+        self.eval_keys = self.keys
 
         # 4 prose attribute types x 8 guaranteed single-token values each
         raw_attrs = {
@@ -246,7 +251,8 @@ def gen_prose_lure(P: IMBPools, rng: random.Random, L: int, eval_split: bool) ->
     enc = P.ftok.enc
     atype = rng.choice(tuple(P.attr_types.keys()))
     vals = P.attr_types[atype]
-    n_ents = 3 if eval_split else rng.choice((2, 3, 4))
+    # Include easy bootstrap rung n_ents=1,2 in training (v14 B0 lesson); eval always tests 3 (2 same-type lures!)
+    n_ents = 3 if eval_split else rng.choice((1, 2, 3, 4))
     ents = rng.sample(ent_pool, n_ents)
     picked_vals = rng.sample(vals, n_ents)
 
@@ -360,7 +366,8 @@ def gen_scope_doc(P: IMBPools, rng: random.Random, L: int, eval_split: bool,
 def gen_two_hop(P: IMBPools, rng: random.Random, L: int, eval_split: bool) -> EpisodeDoc:
     enc = P.ftok.enc
     pool = P.eval_hop if eval_split else P.train_hop
-    n_chains = 4 if eval_split else rng.choice((2, 3, 4))
+    # Include 1-chain and 2-chain bootstrap rungs in training; eval always tests 4 shuffled chains (8 hops)
+    n_chains = 4 if eval_split else rng.choice((1, 2, 3, 4))
     words = rng.sample(pool, 3 * n_chains)
     chains = [(words[3 * i], words[3 * i + 1], words[3 * i + 2]) for i in range(n_chains)]
 
@@ -451,9 +458,10 @@ def gen_rxk(P: IMBPools, rng: random.Random, L: int, eval_split: bool) -> Episod
     key_pool = P.eval_keys if eval_split else P.train_keys
     usable = [ch for ch in P.letters if ord(ch) - ord("a") + k_shift < 26]
 
-    picks = rng.sample(usable, 8)
-    demos, fact_letters = picks[:4], picks[4:8]
-    keys = rng.sample(key_pool, 4)
+    n_keys = 4 if eval_split else rng.choice((1, 2, 4))
+    picks = rng.sample(usable, 4 + n_keys)
+    demos, fact_letters = picks[:4], picks[4:4 + n_keys]
+    keys = rng.sample(key_pool, n_keys)
 
     demo_ids = enc("\nTransform rule:\n")
     for ch in demos:
@@ -470,7 +478,7 @@ def gen_rxk(P: IMBPools, rng: random.Random, L: int, eval_split: bool) -> Episod
     mid_gap = max(16, (L // 3))
     body = demo_ids + P.prose_slice(rng, mid_gap, eval_split) + fact_ids
 
-    qi = rng.randrange(4)
+    qi = rng.randrange(n_keys)
     q_key = keys[qi]
     in_ch = fact_letters[qi]
     gold_ch = chr(ord(in_ch) + k_shift)
@@ -497,17 +505,18 @@ def gen_facts_recall(P: IMBPools, rng: random.Random, L: int, eval_split: bool,
                      n_facts: int = 16) -> EpisodeDoc:
     enc = P.ftok.enc
     kpool = P.eval_keys if eval_split else P.train_keys
-    keys = rng.sample(kpool, n_facts)
-    vals = rng.sample(P.fact_vals, n_facts)
+    n_facts_actual = 16 if eval_split else rng.choice((1, 2, 4, 8, 16))
+    keys = rng.sample(kpool, n_facts_actual)
+    vals = rng.sample(P.fact_vals, n_facts_actual)
     body: list[int] = []
     for k_id, v_id in zip(keys, vals):
         body += enc("\nDefinition:") + [k_id] + enc(" refers to") + [v_id] + enc(".")
-    n_q = 2 if eval_split else 4
-    asked = rng.sample(range(n_facts), min(n_q, n_facts))
+    n_q = 2 if eval_split else min(4, n_facts_actual)
+    asked = rng.sample(range(n_facts_actual), min(n_q, n_facts_actual))
     tail = []
     for qi in asked:
         q_ids = enc("\nQuery:") + [keys[qi]] + enc(" refers to")
-        cands = _eight_cands(rng, vals[qi], [vals[j] for j in range(n_facts) if j != qi], P.fact_vals)
+        cands = _eight_cands(rng, vals[qi], [vals[j] for j in range(n_facts_actual) if j != qi], P.fact_vals)
         tail.append((q_ids, vals[qi], cands))
     return _pack_to_len(P, rng, body, tail, L, eval_split, pos_frac=0.05 if eval_split else None)
 
@@ -543,7 +552,13 @@ def make_train_batch(P: IMBPools, step_seed: int, batch_size: int, L: int) -> li
     return docs
 
 
-def collate_docs(docs: list[EpisodeDoc], device: torch.device, aux_lm_weight: float = 1.0):
+def collate_docs(docs: list[EpisodeDoc], device: torch.device, aux_lm_weight: float = 0.6):
+    """Equal per-document total answer weight (1.0 per doc, split 1/n_ans across its queries)
+    + ``aux_lm_weight`` (0.6) total real-prose LM weight per doc.
+
+    Fixes IMB17-R1's gradient hijack where 25-answer packed B2 docs took 25x the gradient of
+    1-answer two_hop / rxk / spread docs and starved token-embedding LM learning.
+    """
     arr = torch.tensor([d.ids for d in docs], dtype=torch.long, device=device)
     x, y = arr[:, :-1].contiguous(), arr[:, 1:].contiguous()
     B, T = y.shape
@@ -551,14 +566,14 @@ def collate_docs(docs: list[EpisodeDoc], device: torch.device, aux_lm_weight: fl
     for b, d in enumerate(docs):
         n_ans = len(d.answers)
         if n_ans == 0:
-            # Pure web LM window: weight proportional to average episode total weight (~3.0)
-            mask[b] = 3.0 / T
+            mask[b] = 1.0 / T
         else:
             if aux_lm_weight > 0:
-                mask[b] = (aux_lm_weight * n_ans) / max(1, T - n_ans)
+                mask[b] = aux_lm_weight / max(1, T - n_ans)
+            per_ans = 1.0 / n_ans
             for idx, gold, _ in d.answers:
                 assert int(y[b, idx - 1]) == gold
-                mask[b, idx - 1] = 1.0
+                mask[b, idx - 1] = per_ans
     return x, y, mask
 
 
@@ -706,7 +721,7 @@ def train_and_eval_arm(arm: str, seed: int, steps: int, batch_size: int, lr: flo
             pg["lr"] = cur_lr
 
         docs = make_train_batch(P, step_seed, batch_size, L)
-        x, y, mask = collate_docs(docs, device, aux_lm_weight=1.0)
+        x, y, mask = collate_docs(docs, device, aux_lm_weight=0.6)
 
         with torch.amp.autocast("cuda", dtype=torch.bfloat16, enabled=(device.type == "cuda")):
             if hasattr(model, "ce_from_lm"):

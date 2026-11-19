@@ -228,7 +228,7 @@ class DualPhaseWorkspaceLayer(nn.Module):
             nn.init.zeros_(self.sync_alpha.weight)                          # identity (1, 0) at init
             self.sync_gate = Linear(model_dim, heads, bias=True)
             nn.init.normal_(self.sync_gate.weight, std=0.02)
-            nn.init.constant_(self.sync_gate.bias, -1.0)
+            nn.init.constant_(self.sync_gate.bias, -2.2)                    # selective noun/scope lock, holds across clause
 
         # Bounce-1 output gate & projection
         self.out_gate = Linear(model_dim, heads, bias=True)
@@ -297,7 +297,7 @@ class DualPhaseWorkspaceLayer(nn.Module):
 
         alpha = as_float(self.sync_alpha(x)).to(batch, self.heads, time, self.head_pair)
         u_real = stack([cos(alpha), sin(alpha)], into=self.rot_pair)        # real carrier increment on S^1
-        s = 0.02 + 0.93 * sigmoid(as_float(self.sync_gate(x)).to(batch, self.heads, time))
+        s = 0.005 + 0.95 * sigmoid(as_float(self.sync_gate(x)).to(batch, self.heads, time))
         inc = (s * u_real).to(batch, self.heads, time, self.head_pair, self.rot_pair)
         keep = 1.0 - s
 
@@ -451,12 +451,15 @@ class CausalOperatorEngine(nn.Module):
             self.op_gates = Linear(self.dual_dim, self.op_gate_out, bias=True)
             with torch.no_grad():
                 H_op = cfg.op_heads
-                self.op_gates.bias[:H_op].fill_(-5.5)
-                self.op_gates.bias[H_op:2 * H_op].fill_(-1.5)
-                self.op_gates.bias[2 * H_op:].fill_(-3.5)
+                # Ultra-slow baseline retention (~760-token default half-life, can slow to 8k+);
+                # sparse write gate (-3.5 -> ~0.03 on prose, spikes on x -> y transitions);
+                # episode-reset erase gate (-6.0 -> ~0.0025 on prose so Omega_t survives 2k-4k filler!).
+                self.op_gates.bias[:H_op].fill_(-7.0)
+                self.op_gates.bias[H_op:2 * H_op].fill_(-3.5)
+                self.op_gates.bias[2 * H_op:].fill_(-6.0)
 
             self.op_read_gate = Linear(model_dim, self.op_heads, bias=True)
-            nn.init.constant_(self.op_read_gate.bias, 0.5)
+            nn.init.constant_(self.op_read_gate.bias, -2.0)                 # quiet on plain prose, opens on rule queries!
             self.op_out = Linear(self.op_rings_flat, model_dim, bias=False)
             nn.init.normal_(self.op_out.weight, std=0.01)
 
@@ -564,7 +567,7 @@ class CausalOperatorEngine(nn.Module):
             zeta_q = unit_circle(self.q_coord(he).to(*ring_layout), self.rot_pair, self.cplx)
             pred_c = om_unit * zeta_q
             pred_r = NamedTensor(pred_c.data, ring_layout)
-            rg = silu(as_float(self.op_read_gate(h)))                       # (batch, time, op_heads)
+            rg = sigmoid(as_float(self.op_read_gate(h)))                    # bounded in (0, 1): zero prose leak!
             op_feat = as_dtype(pred_r * rg, h.dtype).to(batch, time, self.op_rings_flat)
             total = total + self.op_out(op_feat)
 

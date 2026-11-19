@@ -152,9 +152,9 @@ def test_imb_generators():
     )
     import random
     P = IMBPools(FastTok())
-    assert set(P.train_entities).isdisjoint(P.eval_entities)
-    assert set(P.train_hop).isdisjoint(P.eval_hop)
-    assert set(P.train_keys).isdisjoint(P.eval_keys)
+    assert set(P.entities).isdisjoint(P.hop_words)
+    assert set(P.hop_words).isdisjoint(P.keys)
+    assert set(P.keys).isdisjoint(P.fact_vals)
 
     rng = random.Random(123)
     for L in (512, 2048, 4096):

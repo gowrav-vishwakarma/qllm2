@@ -58,3 +58,28 @@ Pre-registered **before any `IMB-17` training run** (2026-11-19 17:30 IST).
   - **Bar E3 (Beyond-Window O(1) Advantage over Attention):** At `4x` max train length (`@4096`), `pow_v17` beats `tpp` by **`>= +0.15`** on `prose_lure@4096` and `extrap_recall@4096`.
   - **Guard G1 (Language Modeling Quality):** `pow_v17` held-out real DCLM `web_nll` within **`<= +0.03` nats** of `pam_v2`.
   - **Follow-up Ablation Rule:** If `pow_v17` passes E1, run the two pre-built surgical ablations (`pow_sync_only` vs `pow_work_only`, already param-matched in `v17/model.py`) to attribute exact gains to Organ 1 (`S^1` Synchrony) vs Organ 2 (`3-Bounce + Causal Operator`).
+
+### 2.1 `IMB17-R1` Seed-42 Canary Verdict (`bedcf470`, `logs/v17_imb17_r1_bedcf470_20261119_1752.json`)
+Stopped after all 4 arms completed Seed 42 because the `tpp` (full softmax attention) calibration canary revealed two benchmark weighting bugs, while the one formed cell (`unseen_rules@0`) showed a massive margin lead for `pow_v17`:
+- **`unseen_rules@0` (held-out B2 rule parameters `{5, 9}`, `{7, 13, 17}` never seen in training):**
+  - **`pow_v17`: `0.9000` acc, `+7.855 nats` margin** (train loss `1.3105`)
+  - `pam_v2`: `0.8917` acc, `+4.748 nats` margin (train loss `1.3469`)
+  - `gdn_like`: `0.7083` acc, `+3.029 nats` margin (train loss `1.3967`)
+  - `tpp`: `0.5750` acc, `+0.431 nats` margin (train loss `1.7979`)
+- **Four root causes diagnosed from `tpp`'s `@512` canary (`prose_lure@512 = 0.117`, `two_hop@512 = 0.117`, `web_nll = 10.29`):**
+  1. Packed `B2` episodes had ~25 answer tokens (`mask = 25.0`) vs `1.0` for `two_hop` / `rxk` / `spread`, hijacking ~80% of every batch's gradient.
+  2. Disjoint zero-occurrence `eval_*` token IDs had untrained `N(0, 0.02)` embeddings at 38M tokens (unlike `v14/microbench.py`, which shares vocabulary words and redraws fresh random bindings per document).
+  3. Missing `size = 1, 2` bootstrap rungs on `prose_lure` / `two_hop` / `rxk` (`v14` B0 run-1 lesson).
+  4. In `CausalOperatorEngine`, `op_gates` erase bias `-3.5` (`e_op = 0.03` per filler token -> `0.97^{256} = 5e-4`, 23-token half-life!) evaporated `Omega_t` across spread filler, and unbounded `silu(+0.5)` on `op_read_gate` leaked rule logits onto plain prose (`web_nll 17.37`).
+
+---
+
+## 3. Pre-Registration: `IMB17-R2` (Calibrated 3-Seed Head-to-Head)
+
+Fixes applied before any `IMB17-R2` step:
+1. `collate_docs`: equal per-document answer weight (`1.0 / n_ans` per query) + `0.6` real DCLM prose weight per doc.
+2. Shared word pools (`entities`, `hop_words`, `keys`, `fact_vals`) with strictly fresh random bindings per eval doc (`seed >= 9e8`), while keeping `B2_NEW_TASKS` rule parameters and `SCOPE_HOLDOUT_PAIRS` domain pairs strictly unseen in training.
+3. Bootstrap curriculum sizes `1..4` in training; eval tests hard `3`-entity lure, `4`-chain (`8`-hop) `two_hop`, `4`-register `rxk_new`, and `16`-fact `@4096` recall.
+4. `CausalOperatorEngine`: `op_gates` biases `(-7.0, -3.5, -6.0)` so `Omega_t` retains `>600`-token default half-life across prose filler, and bounded `sigmoid(op_read_gate - 2.0)` so plain prose `web_nll` is protected.
+5. Same pre-registered bars **E1, E2, E3, G1** across `seeds = 42, 43, 44`, `4,000` steps × `batch = 16`.
+

@@ -1,0 +1,441 @@
+{
+  "header": {
+    "suite": "v17_IMB17",
+    "git_hash": "bedcf470",
+    "timestamp": "20261119_1752",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "args": {
+      "arms": "pow_v17,pam_v2,gdn_like,tpp",
+      "seeds": "42,43,44",
+      "steps": 3000,
+      "batch": 16,
+      "lr": 0.0008,
+      "trials": 120,
+      "dim": 384,
+      "layers": 4,
+      "heads": 6,
+      "head_dim": 64,
+      "base_mlp": 1024,
+      "out": "logs/v17_imb17_r1_bedcf470_20261119_1752.json"
+    }
+  },
+  "runs": [
+    {
+      "arm": "pow_v17",
+      "seed": 42,
+      "params": 31078928,
+      "state_kb": 544.59,
+      "tokens_trained": 38215680,
+      "train_sec": 418.3,
+      "eval": {
+        "prose_lure@512": {
+          "acc": 0.1083,
+          "margin": -0.428,
+          "n": 120
+        },
+        "prose_lure@2048": {
+          "acc": 0.0917,
+          "margin": -0.403,
+          "n": 120
+        },
+        "prose_lure@4096": {
+          "acc": 0.1083,
+          "margin": -0.358,
+          "n": 120
+        },
+        "scope_none@512": {
+          "acc": 1.0,
+          "margin": 1.207,
+          "n": 60
+        },
+        "scope_own@512": {
+          "acc": 0.0,
+          "margin": -2.478,
+          "n": 60
+        },
+        "scope_other@512": {
+          "acc": 0.9833,
+          "margin": 0.991,
+          "n": 60
+        },
+        "scope_override@512": {
+          "acc": 1.0,
+          "margin": 3.793,
+          "n": 60
+        },
+        "scope_4axis_mean@512": 0.7458,
+        "scope_none@2048": {
+          "acc": 0.95,
+          "margin": 1.208,
+          "n": 60
+        },
+        "scope_own@2048": {
+          "acc": 0.0,
+          "margin": -2.243,
+          "n": 60
+        },
+        "scope_other@2048": {
+          "acc": 0.9833,
+          "margin": 1.122,
+          "n": 60
+        },
+        "scope_override@2048": {
+          "acc": 1.0,
+          "margin": 3.825,
+          "n": 60
+        },
+        "scope_4axis_mean@2048": 0.7333,
+        "two_hop_new@512": {
+          "acc": 0.1333,
+          "margin": -3.464,
+          "n": 120
+        },
+        "two_hop_new@2048": {
+          "acc": 0.1,
+          "margin": -3.724,
+          "n": 120
+        },
+        "unseen_rules@0": {
+          "acc": 0.9,
+          "margin": 7.855,
+          "n": 120
+        },
+        "unseen_rules@2048": {
+          "acc": 0.0917,
+          "margin": -6.064,
+          "n": 120
+        },
+        "rxk_new@512": {
+          "acc": 0.0833,
+          "margin": -0.826,
+          "n": 120
+        },
+        "rxk_new@2048": {
+          "acc": 0.0667,
+          "margin": -0.714,
+          "n": 120
+        },
+        "extrap_recall@4096": {
+          "acc": 0.15,
+          "margin": -1.144,
+          "n": 240
+        },
+        "web_nll": 17.3723,
+        "intelligence_headline": 0.2167
+      }
+    },
+    {
+      "arm": "pam_v2",
+      "seed": 42,
+      "params": 31078058,
+      "state_kb": 481.59,
+      "tokens_trained": 38215680,
+      "train_sec": 228.0,
+      "eval": {
+        "prose_lure@512": {
+          "acc": 0.1417,
+          "margin": -0.377,
+          "n": 120
+        },
+        "prose_lure@2048": {
+          "acc": 0.05,
+          "margin": -0.351,
+          "n": 120
+        },
+        "prose_lure@4096": {
+          "acc": 0.1333,
+          "margin": -0.315,
+          "n": 120
+        },
+        "scope_none@512": {
+          "acc": 0.9167,
+          "margin": 1.026,
+          "n": 60
+        },
+        "scope_own@512": {
+          "acc": 0.0,
+          "margin": -2.141,
+          "n": 60
+        },
+        "scope_other@512": {
+          "acc": 0.8167,
+          "margin": 0.777,
+          "n": 60
+        },
+        "scope_override@512": {
+          "acc": 1.0,
+          "margin": 2.749,
+          "n": 60
+        },
+        "scope_4axis_mean@512": 0.6834,
+        "scope_none@2048": {
+          "acc": 0.9167,
+          "margin": 1.048,
+          "n": 60
+        },
+        "scope_own@2048": {
+          "acc": 0.0,
+          "margin": -2.026,
+          "n": 60
+        },
+        "scope_other@2048": {
+          "acc": 0.8333,
+          "margin": 0.879,
+          "n": 60
+        },
+        "scope_override@2048": {
+          "acc": 1.0,
+          "margin": 2.528,
+          "n": 60
+        },
+        "scope_4axis_mean@2048": 0.6875,
+        "two_hop_new@512": {
+          "acc": 0.1167,
+          "margin": -2.513,
+          "n": 120
+        },
+        "two_hop_new@2048": {
+          "acc": 0.0917,
+          "margin": -2.772,
+          "n": 120
+        },
+        "unseen_rules@0": {
+          "acc": 0.8917,
+          "margin": 4.748,
+          "n": 120
+        },
+        "unseen_rules@2048": {
+          "acc": 0.1,
+          "margin": -4.206,
+          "n": 120
+        },
+        "rxk_new@512": {
+          "acc": 0.075,
+          "margin": -0.776,
+          "n": 120
+        },
+        "rxk_new@2048": {
+          "acc": 0.1,
+          "margin": -0.697,
+          "n": 120
+        },
+        "extrap_recall@4096": {
+          "acc": 0.1375,
+          "margin": -1.013,
+          "n": 240
+        },
+        "web_nll": 10.1088,
+        "intelligence_headline": 0.2058
+      }
+    },
+    {
+      "arm": "gdn_like",
+      "seed": 42,
+      "params": 31091858,
+      "state_kb": 535.59,
+      "tokens_trained": 38215680,
+      "train_sec": 234.2,
+      "eval": {
+        "prose_lure@512": {
+          "acc": 0.1083,
+          "margin": -0.375,
+          "n": 120
+        },
+        "prose_lure@2048": {
+          "acc": 0.075,
+          "margin": -0.372,
+          "n": 120
+        },
+        "prose_lure@4096": {
+          "acc": 0.15,
+          "margin": -0.314,
+          "n": 120
+        },
+        "scope_none@512": {
+          "acc": 0.9833,
+          "margin": 1.181,
+          "n": 60
+        },
+        "scope_own@512": {
+          "acc": 0.0,
+          "margin": -2.355,
+          "n": 60
+        },
+        "scope_other@512": {
+          "acc": 1.0,
+          "margin": 0.874,
+          "n": 60
+        },
+        "scope_override@512": {
+          "acc": 1.0,
+          "margin": 4.625,
+          "n": 60
+        },
+        "scope_4axis_mean@512": 0.7458,
+        "scope_none@2048": {
+          "acc": 0.9833,
+          "margin": 1.17,
+          "n": 60
+        },
+        "scope_own@2048": {
+          "acc": 0.0,
+          "margin": -2.184,
+          "n": 60
+        },
+        "scope_other@2048": {
+          "acc": 0.9833,
+          "margin": 0.984,
+          "n": 60
+        },
+        "scope_override@2048": {
+          "acc": 1.0,
+          "margin": 4.341,
+          "n": 60
+        },
+        "scope_4axis_mean@2048": 0.7416,
+        "two_hop_new@512": {
+          "acc": 0.15,
+          "margin": -2.503,
+          "n": 120
+        },
+        "two_hop_new@2048": {
+          "acc": 0.1083,
+          "margin": -2.721,
+          "n": 120
+        },
+        "unseen_rules@0": {
+          "acc": 0.7083,
+          "margin": 3.029,
+          "n": 120
+        },
+        "unseen_rules@2048": {
+          "acc": 0.0417,
+          "margin": -7.852,
+          "n": 120
+        },
+        "rxk_new@512": {
+          "acc": 0.0917,
+          "margin": -0.607,
+          "n": 120
+        },
+        "rxk_new@2048": {
+          "acc": 0.1083,
+          "margin": -0.553,
+          "n": 120
+        },
+        "extrap_recall@4096": {
+          "acc": 0.1458,
+          "margin": -1.109,
+          "n": 240
+        },
+        "web_nll": 10.1404,
+        "intelligence_headline": 0.215
+      }
+    },
+    {
+      "arm": "tpp",
+      "seed": 42,
+      "params": 31098624,
+      "state_kb": null,
+      "tokens_trained": 38215680,
+      "train_sec": 146.2,
+      "eval": {
+        "prose_lure@512": {
+          "acc": 0.1167,
+          "margin": -0.366,
+          "n": 120
+        },
+        "prose_lure@2048": {
+          "acc": 0.075,
+          "margin": -0.357,
+          "n": 120
+        },
+        "prose_lure@4096": {
+          "acc": 0.1333,
+          "margin": -0.31,
+          "n": 120
+        },
+        "scope_none@512": {
+          "acc": 1.0,
+          "margin": 11.644,
+          "n": 60
+        },
+        "scope_own@512": {
+          "acc": 0.25,
+          "margin": -0.61,
+          "n": 60
+        },
+        "scope_other@512": {
+          "acc": 0.0167,
+          "margin": -3.313,
+          "n": 60
+        },
+        "scope_override@512": {
+          "acc": 0.8,
+          "margin": 1.257,
+          "n": 60
+        },
+        "scope_4axis_mean@512": 0.5167,
+        "scope_none@2048": {
+          "acc": 0.7833,
+          "margin": 3.942,
+          "n": 60
+        },
+        "scope_own@2048": {
+          "acc": 0.05,
+          "margin": -5.969,
+          "n": 60
+        },
+        "scope_other@2048": {
+          "acc": 0.95,
+          "margin": 5.982,
+          "n": 60
+        },
+        "scope_override@2048": {
+          "acc": 0.5667,
+          "margin": -0.002,
+          "n": 60
+        },
+        "scope_4axis_mean@2048": 0.5875,
+        "two_hop_new@512": {
+          "acc": 0.1167,
+          "margin": -2.96,
+          "n": 120
+        },
+        "two_hop_new@2048": {
+          "acc": 0.1,
+          "margin": -3.225,
+          "n": 120
+        },
+        "unseen_rules@0": {
+          "acc": 0.575,
+          "margin": 0.431,
+          "n": 120
+        },
+        "unseen_rules@2048": {
+          "acc": 0.1,
+          "margin": -3.261,
+          "n": 120
+        },
+        "rxk_new@512": {
+          "acc": 0.1167,
+          "margin": -0.501,
+          "n": 120
+        },
+        "rxk_new@2048": {
+          "acc": 0.0917,
+          "margin": -0.537,
+          "n": 120
+        },
+        "extrap_recall@4096": {
+          "acc": 0.1375,
+          "margin": -0.887,
+          "n": 240
+        },
+        "web_nll": 10.294,
+        "intelligence_headline": 0.1908
+      }
+    }
+  ]
+}
