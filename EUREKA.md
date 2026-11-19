@@ -7,6 +7,20 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-19 08:17 IST (Library): the same missing binding, now on names: the 100M bodies know WHICH values were said, not WHOSE
+- **What we saw (bc14df7a, logs/v14_natrec_{pam,nochrono}_63c0883f_*).**
+  - NATURAL RECALL: one fact in prose, a same-type lure about another person, and the question only 64 tokens later.
+  - pam acc 0.235 and nochrono 0.215 (chance 0.125). The lure wins as often as the gold (pam city 0.43 vs 0.46, job 0.32 vs 0.50).
+  - Free answers are generic ("the car is a ...").
+- **What it says.** It is the root of the scope entry below, seen on a second axis. A unit rule is carried but not bound to its
+  quantity; a person's fact is retrieved but not bound to the person. The bodies hold a bag of what was said.
+  - t40 works because its cue is the literal key string beside the value, so copying needs no binding.
+  - The clock's recall edge is therefore shown on literal-cue copying only (Lead: the paper says so).
+- **What it means for Mind.** Binding (value -> what it is about) is the shared missing piece of rules, scope and recall.
+  - Candidates: architecture (keys that carry the entity / quantity; the split geometry's RoPE half is one try), data with
+    contrast that changes the plain state, or scale.
+  - Next reads (pre-registered): the no-lure variant at 100M (pure recall), and SCI-1 386M at 47B (does the product body bind?).
+
 ## 2026-11-18 10:07 IST (Library): carry and scope trade off across architectures too, not only across saves
 - **What we saw (9f093b93, logs/v14_scope_wio_*; DECAY REMEDY 353d0eef; 3f 0955b8f3).**
   - The scope 4-tuple, full context with the gold row, on the three wio arms (~103M, 1.0B tokens):
