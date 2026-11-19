@@ -5743,6 +5743,22 @@ needs no binding.
 Not run (needs its own pre-registration): a no-lure single-fact variant, which tests pure prose recall without binding; and the same
 probe at 386M (SCI-1), where binding may exist.
 
+### NATURAL RECALL follow-ups (PRE-REGISTERED 2026-11-19 08:17 IST, before any number; Lead accepted UNREADABLE and ordered both)
+(a) NO-LURE variant on the 100M bodies (v14/natural_recall.py --nolure): the same-type lure is replaced by a second other-type fact,
+so the paragraph keeps 3 facts and only one fact of the asked type. This is pure prose recall with no name -> value binding needed.
+- Rest as the original: the same 4 styles, D 64 / 2k / 8k / 16k, n 200; its own rng stream (+5).
+- Bodies: pam, nochrono, split, gdn, mamba2, tpp; pam_s44 is the noise flag.
+- Bars as before: validity needs pam and nochrono acc >= 0.50 at D 64. Then pam - nochrono at 16k: >= +0.20 CONFIRMS, < +0.08
+  TEMPLATE-BOUND, between unclear; |pam - pam_s44| > 0.10 flags seed noise.
+- Stop rule (fixed now): pam and nochrono run first. If both fail validity, the other 100M bodies are skipped (no decision can change).
+(b) SCI-1 386M at 47B (step_717173 weights), BOTH the original (lure) probe and the no-lure variant. DESCRIPTIVE, no architectural
+claim (there is no twin at 386M).
+- Questions: does the product body bind name -> value at 64 tokens (lure probe: acc vs lure-win)? How far does natural recall reach
+  (no-lure acc at 2k / 8k / 16k; SCI-1 trains at a longer context than the wio bodies, so the D values are reported as distances only)?
+- Reported per distance and style: acc, free, lure-win. It goes on the user's final readout page as "natural recall".
+Order in the window: pam, nochrono (no-lure), then 47B lure, 47B no-lure, then the other 100M no-lure bodies if the gate passed.
+Closest prior work as before (NIAH / RULER, BABILong).
+
 ### SPLIT key geometry: CHRONO_HEADS (Library owns the mechanism; built 2026-11-18 15:03 IST; Mind's twin (b) runs it)
 Spec: EXPERIMENTS_SEMPY "Tonight's 100M / 1B twins" (b) (2b112e4b). Bars are Mind's (3-save): BOTH = s8 @8k >= 0.40 AND t40 16k
 >= 0.70 AND val <= 3.435; RULES-ONLY / NEEDLES-ONLY / NEITHER as written there. Diagnostic: knockout of each head half.

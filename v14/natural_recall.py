@@ -10,6 +10,7 @@ Scores per doc (one teacher-forced pass for the candidate read, plus up to 4 gre
   lure  = the lure's answer wins instead (binding failure);
   free  = greedy decode (4 tokens) starts with the gold answer word (case-insensitive).
 Same docs for every body: rng = Random(19000 * 1000 + D * 10 + style_index). D = 64 is the readability control.
+--nolure (follow-up (a), Lead 11-19): the same-type lure is replaced by a second other-type fact; rng + 5; lure_win is then always 0.
     python v14/natural_recall.py --ckpt <weights> --dists 64,2048,8192,16384 --docs 200 --out logs/v14_natrec_<body>_<hash>_<stamp>.jsonl
 """
 from __future__ import annotations
@@ -88,13 +89,18 @@ def first_tokens(enc):
     return out
 
 
-def make_doc(rng, enc, fill, D, style):
+def make_doc(rng, enc, fill, D, style, nolure=False):
     t = rng.choice(list(TYPES)); ans, wording, qs = TYPES[t]
     n_tgt, n_lure, n_oth = rng.sample(NAMES, 3)
     a_tgt, a_lure = rng.sample(ans, 2)
     t2 = rng.choice([x for x in TYPES if x != t]); a2 = rng.choice(TYPES[t2][0])
-    facts = [rng.choice(wording).format(n=n_tgt, a=a_tgt), rng.choice(wording).format(n=n_lure, a=a_lure),
-             rng.choice(TYPES[t2][1]).format(n=n_oth, a=a2)]
+    if nolure:                     # no same-type fact: the lure slot gets a second OTHER-type fact (paragraph stays 3 facts)
+        t3 = rng.choice([x for x in TYPES if x not in (t, t2)]); a3 = rng.choice(TYPES[t3][0])
+        facts = [rng.choice(wording).format(n=n_tgt, a=a_tgt), rng.choice(TYPES[t3][1]).format(n=n_lure, a=a3),
+                 rng.choice(TYPES[t2][1]).format(n=n_oth, a=a2)]
+    else:
+        facts = [rng.choice(wording).format(n=n_tgt, a=a_tgt), rng.choice(wording).format(n=n_lure, a=a_lure),
+                 rng.choice(TYPES[t2][1]).format(n=n_oth, a=a2)]
     rng.shuffle(facts)
     para = ' ' + ' '.join(facts)
     s0 = rng.randrange(0, len(fill) - 300 - D - 10)
@@ -102,7 +108,7 @@ def make_doc(rng, enc, fill, D, style):
     gap = [int(x) for x in fill[s0 + 300:s0 + 300 + D]]
     q = qs[style].format(n=n_tgt)
     ids = pre + enc(para) + enc('\n\n') + gap + enc('\n\n' + q)
-    return dict(type=t, style=style, name=n_tgt, gold=a_tgt, lure=a_lure, other_type=t2, question=q, ids=ids, D=D)
+    return dict(type=t, style=style, name=n_tgt, gold=a_tgt, lure=None if nolure else a_lure, other_type=t2, question=q, ids=ids, D=D)
 
 
 def main():
@@ -110,6 +116,7 @@ def main():
     ap.add_argument('--ckpt', required=True); ap.add_argument('--dists', default='64,2048,8192,16384')
     ap.add_argument('--docs', type=int, default=200); ap.add_argument('--device', default='cuda'); ap.add_argument('--out', required=True)
     ap.add_argument('--free_steps', type=int, default=4)
+    ap.add_argument('--nolure', action='store_true', help='no same-type fact (pure prose recall, no binding); own rng stream (+5)')
     a = ap.parse_args()
     h = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True, cwd=ROOT).stdout.strip()
     print('HEADER ' + json.dumps(dict(unit='NATURAL RECALL', hash=h, args=vars(a))), flush=True)
@@ -123,9 +130,9 @@ def main():
     for D in [int(x) for x in a.dists.split(',')]:
         recs = []
         for si, style in enumerate(STYLES):
-            rng = random.Random(19000 * 1000 + D * 10 + si)
+            rng = random.Random(19000 * 1000 + D * 10 + si + (5 if a.nolure else 0))
             for di in range(a.docs // len(STYLES)):
-                d = make_doc(rng, enc, fill, D, style); cands = ft[d['type']]
+                d = make_doc(rng, enc, fill, D, style, a.nolure); cands = ft[d['type']]
                 lg = body.last_logits(d['ids'])
                 cl = {w: float(lg[t]) for w, t in cands.items()}
                 top = max(cl, key=cl.get)
@@ -137,7 +144,7 @@ def main():
                         break
                     nxt = int(body.last_logits(ids).argmax())
                 text = tok.decode(gen).strip().lower()
-                rec = dict(D=D, doc=di, style=style, type=d['type'], gold=d['gold'], lure=d['lure'], name=d['name'],
+                rec = dict(D=D, doc=di, style=style, nolure=int(a.nolure), type=d['type'], gold=d['gold'], lure=d['lure'], name=d['name'],
                            n_tokens=len(d['ids']), acc=int(top == d['gold']), lure_win=int(top == d['lure']),
                            free=int(text.startswith(d['gold'].lower())), free_text=text,
                            margin=cl[d['gold']] - max(v for w, v in cl.items() if w != d['gold']), hash=h)
@@ -147,7 +154,7 @@ def main():
                  by_style={st: dict(acc=mean('acc', [r for r in recs if r['style'] == st]),
                                     free=mean('free', [r for r in recs if r['style'] == st])) for st in STYLES})
         summ[D] = s
-        print(f"D {D}: acc {s['acc']:.3f} free {s['free']:.3f} lure {s['lure']:.3f} (n {s['n']}, chance 0.125) | "
+        print(f"{'NOLURE ' if a.nolure else ''}D {D}: acc {s['acc']:.3f} free {s['free']:.3f} lure {s['lure']:.3f} (n {s['n']}, chance 0.125) | "
               + ' '.join(f"{st} {v['acc']:.2f}/{v['free']:.2f}" for st, v in s['by_style'].items()), flush=True)
     print('SUMMARY ' + json.dumps(summ), flush=True)
     print('NATREC DONE', flush=True)
