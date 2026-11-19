@@ -5728,6 +5728,20 @@ Verdict (Lead's bars, on acc pooled over the four styles at D 16384):
 Closest prior work: needle-in-a-haystack / RULER (Hsieh et al. 2024) and BABILong (Kuratov et al. 2024). Difference: read on O(1)
 bodies at equal data, beyond their trained length, with a same-type lure and natural question styles. A probe, no novelty claim.
 Cost: about 5 passes per doc (1 + 4 greedy steps). Measured on the first body in the window.
+RESULT (2026-11-19 08:15 IST; logs/v14_natrec_{pam,nochrono}_63c0883f_*; 4090 window opened 08:07): UNREADABLE at 100M, NO VERDICT.
+| body | D 64 acc / free / lure | D 2k | D 8k | D 16k |
+|---|---|---|---|---|
+| pam | 0.235 / 0.045 / 0.290 | 0.160 | 0.125 | 0.145 |
+| nochrono (stopped after 2k) | 0.215 / 0.050 / 0.265 | 0.155 | - | - |
+Validity failed: pam and nochrono are both below 0.50 at D 64 (chance 0.125). The chain was stopped after pam plus nochrono's first two
+distances, because no other body could change the decision (run-only-superior rule); the window went back to Mind at 08:15. pam took 6 min.
+What the failure says: at 64 tokens the lure wins as often as the gold (pam city 0.43 gold vs 0.46 lure, job 0.32 vs 0.50). The bodies
+retrieve WHICH values of the asked type were mentioned, but not WHOSE: the name -> value binding is missing even with no distance.
+Free answers are generic continuations ("the car is a", "the piano lesson is"). Same root as SCOPE (EUREKA 299041e1): the 100M bodies
+carry what was said, not what it was about. t40 works because its cue is the literal key string right next to the value, so copying
+needs no binding.
+Not run (needs its own pre-registration): a no-lure single-fact variant, which tests pure prose recall without binding; and the same
+probe at 386M (SCI-1), where binding may exist.
 
 ### SPLIT key geometry: CHRONO_HEADS (Library owns the mechanism; built 2026-11-18 15:03 IST; Mind's twin (b) runs it)
 Spec: EXPERIMENTS_SEMPY "Tonight's 100M / 1B twins" (b) (2b112e4b). Bars are Mind's (3-save): BOTH = s8 @8k >= 0.40 AND t40 16k
