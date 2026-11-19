@@ -6773,6 +6773,22 @@ length: pam 0.853 > nochrono 0.633 >> gdn 0.247.
 mix (4090 wio) it cost rules (pam 0.537 vs nochrono 0.639 s8 D). Interaction, one seed each and across boxes, so a hypothesis: far
 docs teach the plain delta notebook to carry rules at distance, and the clock's distance code is what a body uses when the data do
 not teach distance. The clock's recall edge holds in both mixes.
+**(c) Set B, first two arms (6000; 2k scope tuple, n 100, each +0.1B read; parent P_fu 0.07 / scope_fu 0.69 / C 1.659; swing bar
+= parent + 0.25 = P_fu >= 0.32 or scope_fu >= 0.94; recorded 16:3x IST 11-19):**
+
+| arm | read (B after switch) | 0.0 | 0.1 | 0.2 | 0.3 | 0.4 (end) |
+|---|---|---|---|---|---|---|
+| f08_lr12 (0.8 %, LR 1.2e-3) | P_fu | .07 | .05 | .01 | .00 | **.53** |
+| | scope_fu | .71 | .54 | .48 | .24 | .76 |
+| | C | 1.76 | 1.60 | 1.33 | 1.26 | 1.02 |
+| f16_lr12 (1.6 %, LR 1.2e-3) | P_fu | .07 | .23 | .13 | .00 | .29 |
+| | scope_fu | .68 | .67 | .62 | .15 | .82 |
+| | C | 1.71 | 1.92 | 1.76 | 1.00 | 1.93 |
+
+f08_lr12 = EXCURSION at 0.4B (P_fu 0.53); f16_lr12 = no excursion by the letter (P_fu max 0.29). Both dip at 0.3B (scope_fu 0.24 /
+0.15) and rebound at 0.4B: a constant-LR swing is reproduced at 100M, and it is not larger with the doubled share ("share-driven" not
+supported at LR 1.2e-3). The lr06 arms decide "LR-driven" (pending Lead's call on the 6000 window; 4090 rebooted 10:31 IST, local jobs
+restarted 16:23).
 **DATED NOTE (Lead decisions, 08:2x IST 2026-11-19; applies to the wio and twins sections):** (1) Every s8-based single-seed verdict
 among the delta-rule bodies is re-labelled **UNDETERMINED (underpowered: seed noise >= 0.28 on one same-box pair)**: the wio claim vs
 GDN (read "not met"; pam_s44 alone would clear its 0.508 bar; neither reading is evidence), "the clock costs rules with far docs",
