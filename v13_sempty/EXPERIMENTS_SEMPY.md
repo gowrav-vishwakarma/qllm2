@@ -6743,6 +6743,16 @@ Needles past the length are ours (t40 16k 0.853 vs 0.247 on the same box). CLOCK
 pam_s44 decay). **split seed-44 PRE-REGISTRATION (recorded before it starts):** REPLICATED if s8 @8k 3-save >= 0.40 AND t40 16k
 >= 0.60, AND s8 @8k >= nochrono_s44 s8 - 0.02 AND t40 16k >= pam_s44 t40 16k - 0.20. A CHRONO_HEADS 2 / 4 rung is worth one night
 only if split_s44 replicates (then: is the trade a dial?); nothing extra runs before.
+**Run-to-run noise estimate (one pair; Lead 11-19):** the same gdn_nofar (body, data shas, seed 43, recipe) on the 4090 vs the 6000:
+s8 D (2k / 4k, 3-save) 0.474 vs 0.570 (|d| 0.096), s8 @8k 0.174 vs 0.242 (0.068), t40 16k 0.283 vs 0.247 (0.036), val 3.387 vs
+3.3864 (0.001). Caveat: ONE pair (arch + kernel + interleaving differences, not only the seed); read as "s8 single-seed noise ~0.1
+at 100M / 1B", t40 noise ~0.04, val ~0.001.
+**Seed 45 PRE-REGISTRATION (Lead 11-19, recorded before any seed-45 arm starts):** pam_s45, nochrono_s45, split_s45 on the 6000
+(far mix, same recipe; max 3 trainers there; after / into Set B's slots). Cross-box reads are void, so the unit of replication is the
+WITHIN-BOX TRIO (pam, nochrono, split at one seed on one box): 4090 seed 43, 4090 seed 44, 6000 seed 45. For each trio count:
+(a) t40 16k pam - nochrono >= +0.22; (b) split t40 16k >= 0.60 AND >= pam - 0.20; (c) split s8 @8k 3-save >= nochrono - 0.02.
+A claim stands if it holds in at least 2 of 3 trios (and is reported with the count). The 6000 pause extends to ~Fri 01:00 IST
+(~28 h); 3r resumes after it with the 30 GB floor.
 **Proposed order** (one night ~10-12 h after the CHECKs): (a) gdn_nofar (3 h; closes the paper's "beyond the trained length" cell
 for the family), then (b) split (6.5 h; the one new mechanism), then (a) nochrono_nofar (6.2 h); (c) last (10 h; readability risk,
 and 3r's guard reads may already answer whether 0.8 % is quiet at 386M). Nothing launches before Lead's GO and the user's release.
