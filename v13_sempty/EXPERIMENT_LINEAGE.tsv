@@ -109,3 +109,6 @@ split_geom	wio_pam	2026-11-18	split key geometry: Chrono on half the notebook he
 far_lr_cell	seg3d_protofar	2026-11-18	far protocol share 0.8 vs 1.6 % x constant LR 1.2e-3 vs 6e-4 from wio pam stable_final, guard reads at 2k	pre-registered (draft)	-	-	-	EXPERIMENTS_SEMPY "Tonight's 100M / 1B twins"
 split_s44	split_geom	2026-11-19	split key geometry, seed 44 (replication)	running (pre-registered)	0e76eac5	887aaf15	-	EXPERIMENTS_SEMPY "Tonight's 100M / 1B twins"
 seed45_trio	split_s44	2026-11-19	seed 45 of pam / nochrono / split on the 6000: within-box trio count rule (a) t40 pam-nochrono >= 0.22, (b) split t40 >= 0.60 and >= pam-0.20, (c) split s8 >= nochrono-0.02; claim if >= 2 of 3 trios	running (pre-registered)	-	d75a27c	-	EXPERIMENTS_SEMPY "Tonight's 100M / 1B twins"
+gfd	v13_sempty:decay_bc	2026-11-19	gate-frozen decay pilot: plain vs dynamics-gates-frozen decay from wio pam stable_final; dC 2k paired	pre-registered	-	-	-	EXPERIMENTS_SEMPY "Three pre-registrations"
+plavg	seg3r	2026-11-19	uniform average of 3-4 3r plateau saves vs singles (zero-training read)	pre-registered	-	-	-	EXPERIMENTS_SEMPY "Three pre-registrations"
+gdn_srope	wio_gdn	2026-11-19	GDN + Selective RoPE (closest prior) at the wio recipe, 2 seeds; judged on t40 16k vs pam	pre-registered	-	-	-	EXPERIMENTS_SEMPY "Three pre-registrations"

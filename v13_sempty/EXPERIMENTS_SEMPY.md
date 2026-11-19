@@ -6796,6 +6796,50 @@ arms' max P_fu <= 0.15. **NOT LR-driven** = either lr06 arm swings. In between =
 (within-run dynamics, not a seed comparison). The lr12 pair already disagrees with "share-driven" (the 0.8 % arm swung more). An
 LR-DRIVEN reading does NOT change the main run's LR by itself: it leads to a proposal (e.g. a step to 4e-4 judged on the four-cell tuple
 over a settled window, with the decay finding in mind). 3r resumes from seg3r_pause.pt as soon as the lr06 reads are done.
+## Three pre-registrations (Lead 11-19, recorded 17:2x IST BEFORE any of them runs; order: gfd on the 4090 after gdn_s44, then gdn_srope; plavg in a Library window)
+
+**Margin finding for the paper (observation, with its seed count):** the pam seed difference is present already at distance 0 (shift
+M0 1.41 vs 5.05, 2 seeds): it is circuit STRENGTH at 1B, not survival over filler. Across the delta-rule bodies (1 seed each, 2 boxes),
+GDN's adjacent rule circuit is stronger (M0 3-9) but decays steeply with distance, while PAM's is weaker and flatter.
+
+### gfd: GATE-FROZEN DECAY pilot (100M, 4090, ~1.2 h; FIRST after gdn_s44)
+**Question.** A 1B-token-scale LR decay erases the told-rule carry itself (decay_M9 - M9 dC(2k) -0.37, 3f61ea54). Is the erasure in
+the memory's dynamics gates? **Arms (one parent, identical data / weights / seed; treatment vs control, so powered):** from wio pam
+main stable_final (step 13,733): (P) the plain wio decay (0.1B, LR 1.2e-3 -> 0, as the wio arms); (F) the same decay with these
+parameter groups FROZEN (requires_grad False before the optimizer is built): every notebook's dt_proj (weight, bias) + dt_bias
+(retention / forget rate), warp_proj (Chrono clock rate), erase_proj and write_proj (delta erase / write strength), and the global
+echo_gates. **Why these:** they set how long and how strongly the state keeps a rule (retention, time code, overwrite); if the decay
+sharpens them toward faster forgetting / stronger overwrite, freezing them should keep the carry while the rest (qkv / o projections,
+MLPs, readers, embeddings, the N4 out gate gate_proj, reader gates) still sharpens prose. Not frozen: everything else.
+**Reads (both arms, end save, paired docs):** dC at 2k vs the parent (scope tuple, n 100), the full four-cell tuple at 2k, s8 margins
+(M0 / M4k / M8k per task, 3-save), t40 2k / 8k / 16k, val. **Bars:** KEEPS if dC(F) >= -0.10 while dC(P) <= -0.25, with val(F) <= val(P)
++ 0.01. FAILS if dC(F) <= -0.25 (the erasure is not in these gates). UNCLEAR otherwise. If dC(P) > -0.25 (the plain decay does not
+erase at 100M), the pilot is UNREADABLE (say so). **Code needed:** train.py --freeze_params <regex> (default empty = off), parity:
+an empty regex reproduces the plain decay's first 50 steps bit-exact. **Closest prior:** layer freezing during fine-tuning (e.g. BitFit /
+partial fine-tuning) and WSD cooldown studies (Hägele 2024); difference: freezing only a recurrent memory's dynamics gates during an
+LR cooldown to protect an in-state skill.
+
+### plavg: PLATEAU-AVERAGE read (386M, zero training, a Library window on the 4090)
+Uniform average (weights only, fp32 mean) of 3-4 constant-LR 3r saves: 47B (717,173) plus the +0.25B / +0.5B snapshots after the 3r
+resume (and 48B if it lands first), vs each single save. Reads: the four-cell tuple (2k + 8k), C, s8 @8k (+ margins), t40 16k,
+HS / ARC-e, val. Reported descriptively; prior: LAWA L1 at M9 lost dC -0.26, so a loss is expected. Bar for "worth a release step":
+the average keeps C 8k >= min(singles) and its scope_fu / P_fu are no worse than the singles' mean, with val better than every single.
+Closest prior: LAWA / checkpoint averaging (Kaddour 2022, Sanyal 2023); plumbing, no claim.
+
+### gdn_srope: GDN + SELECTIVE RoPE (closest prior work as a trained baseline; 4090, 2 seeds, ~3.5 h each + 2-3 h setup)
+**Arms.** gdn_srope_s43, gdn_srope_s44 at the wio recipe (far mix, 1.0B, 0.9B stable + 0.1B decay, SEQ 4096) with Selective RoPE AS
+THEIR REPO RUNS IT ON GDN, no retuning: their layers/gated_deltanet.py (fla GDN + SelectiveRoPE) at their DEFAULT config, to be
+written into the run header verbatim (phase gate on / off, gate parametrization, phi rank 16 low-rank, conv k 4 (+ SiLU or not),
+temp bank type and theta 5e5, temp_grad off, bias off), GDN's short conv + gated output kept, our geometry (12 layers, 6 heads,
+head 64, expand_v 2). Env: a separate overlay venv with their package + its pinned fla commit; every difference from qllm_gdn stated.
+**Parity tests before launch:** (i) their layer with position_embedding = none equals our baseline_gdn (fla GatedDeltaNet) forward at
+shared weights; (ii) their own tests (SELECTIVE_ROPE_TESTING=1) pass; (iii) streamed (two chunks, carried rotary state) equals one
+full forward. **Judged on what is stable:** t40 2k / 8k / 16k and clk2 (s8 reported as margins only), against pam's two seeds (t40 16k
+0.803 / 0.786) and gdn's. **Bars (per seed pair):** OUR FORM ADDS if pam t40 16k >= gdn_srope + 0.15 on BOTH seeds; EQUAL if within
+0.08 on both; THEIRS BETTER if gdn_srope >= pam + 0.08 on both; mixed otherwise. **Stated now: if EQUAL, the clock's recall edge is
+the idea's (input-dependent cumulative rotation, Selective RoPE first), not ours.** Closest prior: Selective RoPE (Movahedi et al.,
+arXiv:2511.17388); this arm IS that prior work on our recipe.
+
 **Chrono vs Selective RoPE (closest prior work; arXiv:2511.17388, ICLR 2026; read from the paper AND their code,
 github.com/timurcarstensen/selective-rope src/selective_rope/modules/rotary.py + layers/gated_deltanet.py; Mind 17:xx IST 11-19):**
 - *Selective RoPE:* per head and PER CHANNEL PAIR (head_k_dim/2 angles), increments phi_t = conv1d_k4(W_phi l2norm(x_t)) (low-rank
