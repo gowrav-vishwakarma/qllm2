@@ -94,3 +94,19 @@ Each item says where it goes. **Written into main.tex and data/numbers.json on 1
   never delete on an empty checksum (812463b9); launch guard fails closed (89aff04); free-space gate (3c7ccb9).
 - [ ] After the tpp arm and the wio scope probe land: update data/numbers.json (force-add) and main.tex in one pass; then ask Mind /
   Library for the number check (item C).
+
+## F. Corrections the paper needs after the night of 11-18 / 11-19 (Lead, noted 11-19 08:08 IST; rewrite once the seed-44 / seed-45 trios land)
+- [ ] **Soften "the learned clock trades rules for recall" (abstract, contribution 3, sec:wio reading 3, conclusion).** Set A (6000, no far
+  docs, same box): pam_nofar s8 D 0.559 vs nochrono_nofar 0.404 (CLOCK bar met, +0.155), i.e. the clock HELPS rules there; on the far
+  mix (4090) it read -0.10. One seed each, different boxes: the sign is data-dependent or noise. Keep only what holds in both: the
+  clock raises recall beyond the window (t40 16k +0.22 and +0.45).
+- [ ] **State the s8 run-to-run noise.** The same gdn_nofar on two boxes: s8 D 0.474 vs 0.570, s8 @8k 0.174 vs 0.242, t40 16k 0.283 vs
+  0.247, val 3.387 vs 3.386 (one pair). Every single-seed s8 gap under ~0.10 in tab:wio is inside it; say so in the caption and in
+  reading (2). Cross-box comparisons are void by the pre-registered tolerance.
+- [ ] **Add Set A as a table** (pam_nofar / nochrono_nofar / gdn_nofar: s8 D .559 / .404 / .570; s8 @8k .258 / .121 / .242; t40 16k
+  .853 / .633 / .247; val 3.4225 / 3.4202 / 3.3864): rule carry without far training is the delta-rule family's (OURS not met, FAMILY met).
+- [ ] **The half-clocked notebook (CHRONO_HEADS = 3 of 6; 887aaf15):** s8 @8k 0.473, s8 D 0.695, t40 16k 0.692 (se 0.024; bar 0.70 missed
+  by 0.008 = RULES-ONLY by the letter), val 3.42483. Knockout: clocked half off 0.026 / 0.067 / 0.444, RoPE half off 0.177 / 0.369 /
+  0.306 (s8 @8k / s8 D / t40 16k): a joint code, not two modules; drop the "two key geometries: rules vs episodes" sentence in reading (3).
+- [ ] **Replication count:** within-box trios 4090-s43, 4090-s44, 6000-s45 (5c1b374f); report each claim as k of 3.
+- [ ] **Natural-text recall probe** (13c78ac3) beside t40 before the recall claim is stated without the word "template".
