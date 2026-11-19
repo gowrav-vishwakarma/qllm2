@@ -5691,6 +5691,20 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
+### BIND-LURE Step 0 (PRE-REGISTERED 2026-11-19 16:44 IST, before any number; Lead GO; code v14/bind_lure.py)
+Question: is a literal-cue binding probe READABLE on the 100M bodies? It gates Step 1 of the dual-phase proposal below.
+Doc: "[filler 256] Marta city: Lisbon.\nDaniel city: Vienna.\nRosa pet: dog.\n [filler D] \nMarta city:".
+- TARGET, a LURE (another entity, SAME relation word) and an OTHER (another relation), order shuffled.
+- One-word relation cues: city / car / lesson / job / pet. 8 answers per relation (natural_recall.TYPES).
+- D = 64 / 2048, n 200 per D, rng 21000*1000 + D.
+Scores: acc = the gold first token beats the 7 others (chance 0.125); lure-win; margin. One teacher-forced pass, last position.
+Bodies:
+- On CPU (16 threads, nice 10, stop if RAM available < 12 GB): wio pam, nochrono, pam_s44, nt_split, tpp.
+- gdn and mamba2 use CUDA-only kernels (fla / mamba). They are read on the GPU inside the natrecall2 window (~2 min each), same code.
+READABLE iff pam acc at D 64 is in [0.30, 0.90]. Noise = |pam - pam_s44| per D. Reported: acc and lure-win per body per D.
+Step 1 waits for (a) the SCI-1 47B natural-recall read and (b) Step 0 READABLE; Lead decides then.
+Closest prior work: associative recall / MQAR (Arora et al. 2023, Zoology) and bAbI-style entity tracking. A probe, no claim.
+
 ### PROPOSAL: dual-phase synchrony binding, N5 reborn (Library review of Argon's 16:31 IST idea, for Lead; NOT pre-registered, no GPU)
 Argon's idea (bridge c8eaa1c81757): one root under scope, the natural-recall lure and label_diag key cosine ~0.7.
 - Every rotary phase (RoPE, Selective RoPE, Chrono) is a cumulative integral of time, so it encodes WHEN, never WHOSE.
