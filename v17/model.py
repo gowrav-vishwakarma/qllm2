@@ -240,7 +240,8 @@ class DualPhaseWorkspaceLayer(nn.Module):
         self.n_bounces = max(1, int(cfg.n_bounces))
         if self.n_bounces > 1:
             nb = self.n_bounces - 1
-            self.bounce_norms = nn.ModuleList([RMSNorm(model_dim) for _ in range(nb)])
+            self.bounce_norms = nn.ModuleList([RMSNorm(model_dim, eps=1e-2) for _ in range(nb)])
+            self.bounce_ctx_norms = nn.ModuleList([RMSNorm(model_dim) for _ in range(nb)])
             self.bounce_q = nn.ModuleList([Linear(model_dim, self.inner, bias=False) for _ in range(nb)])
             self.bounce_gate = nn.ModuleList([Linear(model_dim, heads, bias=True) for _ in range(nb)])
             self.bounce_out = nn.ModuleList([Linear(self.inner, model_dim, bias=False) for _ in range(nb)])
@@ -251,7 +252,7 @@ class DualPhaseWorkspaceLayer(nn.Module):
             for bi in range(nb):
                 nn.init.zeros_(self.bounce_gate[bi].weight)
                 nn.init.constant_(self.bounce_gate[bi].bias, 1.2785)
-                nn.init.normal_(self.bounce_out[bi].weight, std=0.01)
+                nn.init.normal_(self.bounce_out[bi].weight, std=0.02)
                 if self.sync:
                     nn.init.zeros_(self.bounce_alpha[bi].weight)
 
@@ -331,7 +332,9 @@ class DualPhaseWorkspaceLayer(nn.Module):
         qkv_u = qkv.to(batch, time, self.qkv_slot, self.heads, self.head_feature)
         q = select(qkv_u, self.qkv_slot, 0).to(batch, self.heads, time, self.head_feature)
         k = select(qkv_u, self.qkv_slot, 1).to(batch, self.heads, time, self.head_feature)
-        v = select(qkv_u, self.qkv_slot, 2).to(batch, self.heads, time, self.head_feature)
+        # Residual value identity path: stored values live in the same feature space as entities!
+        x_heads = x.to(batch, time, self.heads, self.head_feature).to(batch, self.heads, time, self.head_feature)
+        v = 0.5 * x_heads + select(qkv_u, self.qkv_slot, 2).to(batch, self.heads, time, self.head_feature)
 
         rot_full, rot_time, clk_out, z_out = self._compute_rotations(x, batch, time, clk_in, z_in)
         q1 = self._turn_by_phasor(q, rot_full, batch, time)
@@ -386,14 +389,19 @@ class DualPhaseWorkspaceLayer(nn.Module):
         r1 = named(r1_raw, (batch, self.heads, time, self.head_feature))
         g1 = silu(as_float(self.out_gate(x))).to(batch, self.heads, time)
         y1 = as_dtype(r1 * g1, x.dtype).to(batch, time, self.inner)
-        h_work = x + self.o_proj(y1)
+        hop_vec = self.o_proj(y1)                                           # pure retrieved Hop-1 entity!
+        total_delta = hop_vec
 
-        # Organ 2A: Iterative Multi-Bounce Reasoning over S_t in SRAM
+        # Organ 2A: Pointer-Chasing Multi-Bounce Reasoning over S_t in SRAM
+        # Phase Closure: evaluate shared sync_alpha on pure retrieved hop_vec (uncontaminated by x),
+        # while query vector qb sees context (x + total_delta) to know WHICH relation to ask next!
         for bi in range(self.n_bounces - 1):
-            hb = self.bounce_norms[bi](h_work)
-            qb = self.bounce_q[bi](hb).to(batch, self.heads, time, self.head_feature)
+            h_hop = self.bounce_norms[bi](hop_vec)
+            h_ctx = self.bounce_ctx_norms[bi](x + total_delta)
+            qb = self.bounce_q[bi](h_ctx).to(batch, self.heads, time, self.head_feature)
             if self.sync:
-                ab = as_float(self.bounce_alpha[bi](hb)).to(batch, self.heads, time, self.head_pair)
+                ab = as_float(self.sync_alpha(h_hop) + self.bounce_alpha[bi](h_hop)).to(
+                    batch, self.heads, time, self.head_pair)
                 zb = as_complex(cos(ab), sin(ab), self.rot_pair)
                 rot_b = rot_time.to(batch, self.heads, time, self.head_pair, self.rot_pair) * zb
             else:
@@ -405,11 +413,12 @@ class DualPhaseWorkspaceLayer(nn.Module):
             else:
                 rb_raw = pam_shared_read(qb_raw.reshape(B * H, T, K), write_cache).view(B, H, T, K).float() * (K ** -0.5)
             rb = named(rb_raw, (batch, self.heads, time, self.head_feature))
-            gb = silu(as_float(self.bounce_gate[bi](hb))).to(batch, self.heads, time)
+            gb = silu(as_float(self.bounce_gate[bi](h_ctx))).to(batch, self.heads, time)
             yb = as_dtype(rb * gb, x.dtype).to(batch, time, self.inner)
-            h_work = h_work + self.bounce_out[bi](yb)
+            hop_vec = self.bounce_out[bi](yb)
+            total_delta = total_delta + hop_vec
 
-        return h_work - x, (S_out, clk_out, z_out, conv_out)
+        return total_delta, (S_out, clk_out, z_out, conv_out)
 
 
 # ── Organ 2B: Causal Phase-Operator Engine + Echo Transition Head ────────────

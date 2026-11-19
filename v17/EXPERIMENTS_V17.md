@@ -83,3 +83,26 @@ Fixes applied before any `IMB17-R2` step:
 4. `CausalOperatorEngine`: `op_gates` biases `(-7.0, -3.5, -6.0)` so `Omega_t` retains `>600`-token default half-life across prose filler, and bounded `sigmoid(op_read_gate - 2.0)` so plain prose `web_nll` is protected.
 5. Same pre-registered bars **E1, E2, E3, G1** across `seeds = 42, 43, 44`, `4,000` steps × `batch = 16`.
 
+### 3.1 `IMB17-R2` Seed-42 Verdict (`5677a3ed`, `logs/v17_imb17_r2_5677a3ed_20261119_1816.json`)
+- **`pow_v17` took #1 overall on Seed 42 (`headline = 0.310` > `pam_v2 0.305` > `gdn_like 0.300` > `tpp 0.288`), jumping `unseen_rules@0` to `0.983 (+6.36 nats)` vs `tpp` `0.867 (+2.98 nats)` and `unseen_rules@2048` (`2x` beyond training window) from `0.092 -> 0.500`!**
+- Stopped after Seed 42 because `380k` open-web DCLM tokens at ~50 epochs overfit `web_nll` (`10.3–12.5`) on every arm including `tpp`, keeping `prose_lure` and `two_hop` unformed even for full attention (`tpp = 0.167 / 0.108`), whereas the frozen, calibrated `v14.microbench` harness (`V14_EXT_ARMS`) already tests `two_hop`, `label_gap_new`, `B2 unseen rules`, and `B0` (`bind`, `rebind`, `facts` to `8192`) without open-web memorisation confounds.
+
+---
+
+## 4. Phase-Closure Upgrade + Pre-Registration: `V17-B1H` on Frozen `v14.microbench`
+
+### 4.1 Pointer-Chasing Phase-Closure (`DualPhaseWorkspaceLayer`)
+Tracing `two_hop` (`"Ana owns the dog. The dog is called Rex. Ana's pet is called -> Rex"`) revealed why untied multi-bounce struggled to cross Hop 1 -> Hop 2:
+1. **Residual Value Identity (`v = x_heads + v_proj(x)`):** Stored values start in the same feature manifold as entities.
+2. **Pure Hop Re-Addressing (`ab = sync_alpha(norm(hop_vec)) + bounce_alpha(norm(hop_vec))`):** Bounce `b` evaluates the **shared** `sync_alpha` phase map directly on the pure retrieved Hop-`(b-1)` entity `hop_vec` (uncontaminated by `x`), while `qb = bounce_q(norm(x + total_delta))` sees the full query relation (`"is called"`). Thus `"dog"` retrieved in Bounce 1 automatically locks onto `"dog"`'s exact write-time phase on `(S^1)^P` in Bounce 2!
+
+### 4.2 Pre-Registered Rules (`V17-B1H`, recorded before any `V17-B1H` step)
+- **Harness:** Untouched `v14.microbench` via `V14_EXT_ARMS="pow=v17.ext:build_pow"`.
+- **Arms:** `pow` (`POWLM` with Phase-Closure), `echo` (`V14LM` current PAM-v2 + Echo control), `tpp` (`Transformer++` full O(T) attention reference) — all matched to `~28.8M` params (`< 0.1%` diff), identical batches and tokens per seed.
+- **Training:** `--families rules --rule_tasks letter_shift,number_step,reverse3,label_category,two_hop,label_gap,shift_wide,step_wide,affine_map`, `6,000` steps × `B16`, `lr = 4e-4`, `3 seeds` (`i = 1..3`: `--seed 13i --init_seed 13i --doc_seed0 (i+50)*100M`, matching `v14 n9th`).
+- **Pre-Registered Bars:**
+  - **Bar H1 (`two_hop` Compositional Eureka — PRIMARY):** `pow` forms `two_hop` (mean over 2/4/8 shots `>= 0.75`; in-context chance `0.29`) in **`>= 2 of 3` seeds**, while `echo` and `tpp` form in `0 of 3` (or `pow` beats both by `>= +0.35` 3-seed mean).
+  - **Bar H2 (Unseen Rule Inference — Bar 3):** On held-out unseen rule parameters (`mean` of `shift_wide_new`, `step_wide_new`, `affine_map_new` across 2/4/8 shots), `pow` beats `tpp` by **`>= +0.25`** and is within `-0.05` (or ahead) of `echo`.
+  - **Guard H3 (OOD Word Binding, where `N9s` collapsed to `0.50`):** `pow` 3-seed mean on `label_gap_new` and `label_exact_new` **`>= 0.85`**.
+
+

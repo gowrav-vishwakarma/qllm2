@@ -1,0 +1,116 @@
+HEADER {"suite": "v17_IMB17", "git_hash": "5677a3ed", "timestamp": "20261119_1816", "device": "cuda", "gpu": "NVIDIA GeForce RTX 4090", "args": {"arms": "pow_v17,pam_v2,gdn_like,tpp", "seeds": "42,43,44", "steps": 4000, "batch": 16, "lr": 0.0008, "trials": 120, "dim": 384, "layers": 4, "heads": 6, "head_dim": 64, "base_mlp": 1024, "out": "logs/v17_imb17_r2_5677a3ed_20261119_1816.json"}}
+
+=== ARM pow_v17 | seed=42 | params=31,078,928 | O(1) state=544.6 KB ===
+W1119 18:16:45.393366 2263602 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+W1119 18:16:46.669561 2263602 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+  [pow_v17 s=42] step  250/4000 | loss=6.8309 | lr=8.00e-04 | tok=3.1M | 80.6k tok/s
+  [pow_v17 s=42] step  500/4000 | loss=4.5330 | lr=7.90e-04 | tok=6.3M | 85.3k tok/s
+  [pow_v17 s=42] step  750/4000 | loss=3.9033 | lr=7.65e-04 | tok=9.5M | 87.8k tok/s
+  [pow_v17 s=42] step 1000/4000 | loss=3.4668 | lr=7.28e-04 | tok=12.6M | 89.2k tok/s
+  [pow_v17 s=42] step 1250/4000 | loss=3.1527 | lr=6.80e-04 | tok=15.9M | 90.1k tok/s
+  [pow_v17 s=42] step 1500/4000 | loss=2.8543 | lr=6.22e-04 | tok=19.1M | 90.5k tok/s
+  [pow_v17 s=42] step 1750/4000 | loss=2.6764 | lr=5.57e-04 | tok=22.3M | 90.9k tok/s
+  [pow_v17 s=42] step 2000/4000 | loss=2.5012 | lr=4.88e-04 | tok=25.5M | 91.2k tok/s
+  [pow_v17 s=42] step 2250/4000 | loss=2.4104 | lr=4.18e-04 | tok=28.6M | 91.4k tok/s
+  [pow_v17 s=42] step 2500/4000 | loss=2.3115 | lr=3.50e-04 | tok=31.8M | 91.6k tok/s
+  [pow_v17 s=42] step 2750/4000 | loss=2.2932 | lr=2.86e-04 | tok=35.0M | 91.7k tok/s
+  [pow_v17 s=42] step 3000/4000 | loss=2.1753 | lr=2.30e-04 | tok=38.2M | 91.8k tok/s
+  [pow_v17 s=42] step 3250/4000 | loss=2.1837 | lr=1.83e-04 | tok=41.3M | 91.7k tok/s
+  [pow_v17 s=42] step 3500/4000 | loss=2.2014 | lr=1.49e-04 | tok=44.5M | 91.7k tok/s
+  [pow_v17 s=42] step 3750/4000 | loss=2.1617 | lr=1.27e-04 | tok=47.8M | 91.6k tok/s
+  [pow_v17 s=42] step 4000/4000 | loss=2.1026 | lr=1.20e-04 | tok=50.9M | 91.5k tok/s
+W1119 18:25:59.718102 2263602 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+W1119 18:26:01.169267 2263602 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+W1119 18:26:02.746185 2263602 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+W1119 18:26:04.637353 2263602 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/7] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+W1119 18:26:06.609277 2263602 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/8] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+W1119 18:26:09.396737 2263602 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/9] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+W1119 18:26:18.976040 2263602 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/10] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+W1119 18:26:20.549161 2263602 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/11] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+  [pow_v17 s=42 EVAL] headline=0.3100 | lure@2k=0.125 | scope4@2k=0.750 (S_hold=1.000) | 2hop@2k=0.117 | rules_new@0/2k=0.983/0.500 (M=-0.65) | rxk_new@2k=0.058 | rec@4k=0.171 | web_nll=12.4958
+
+=== ARM pam_v2 | seed=42 | params=31,078,058 | O(1) state=481.6 KB ===
+  [pam_v2 s=42] step  250/4000 | loss=6.6631 | lr=8.00e-04 | tok=3.1M | 166.1k tok/s
+  [pam_v2 s=42] step  500/4000 | loss=4.5730 | lr=7.90e-04 | tok=6.3M | 166.6k tok/s
+  [pam_v2 s=42] step  750/4000 | loss=4.0591 | lr=7.65e-04 | tok=9.5M | 167.0k tok/s
+  [pam_v2 s=42] step 1000/4000 | loss=3.6986 | lr=7.28e-04 | tok=12.6M | 166.4k tok/s
+  [pam_v2 s=42] step 1250/4000 | loss=3.4141 | lr=6.80e-04 | tok=15.9M | 167.3k tok/s
+  [pam_v2 s=42] step 1500/4000 | loss=3.0609 | lr=6.22e-04 | tok=19.1M | 167.4k tok/s
+  [pam_v2 s=42] step 1750/4000 | loss=2.8129 | lr=5.57e-04 | tok=22.3M | 167.3k tok/s
+  [pam_v2 s=42] step 2000/4000 | loss=2.5731 | lr=4.88e-04 | tok=25.5M | 167.6k tok/s
+  [pam_v2 s=42] step 2250/4000 | loss=2.4442 | lr=4.18e-04 | tok=28.6M | 167.4k tok/s
+  [pam_v2 s=42] step 2500/4000 | loss=2.3369 | lr=3.50e-04 | tok=31.8M | 167.6k tok/s
+  [pam_v2 s=42] step 2750/4000 | loss=2.3175 | lr=2.86e-04 | tok=35.0M | 167.9k tok/s
+  [pam_v2 s=42] step 3000/4000 | loss=2.2025 | lr=2.30e-04 | tok=38.2M | 168.0k tok/s
+  [pam_v2 s=42] step 3250/4000 | loss=2.1975 | lr=1.83e-04 | tok=41.3M | 167.8k tok/s
+  [pam_v2 s=42] step 3500/4000 | loss=2.2103 | lr=1.49e-04 | tok=44.5M | 167.8k tok/s
+  [pam_v2 s=42] step 3750/4000 | loss=2.1708 | lr=1.27e-04 | tok=47.8M | 168.0k tok/s
+  [pam_v2 s=42] step 4000/4000 | loss=2.1080 | lr=1.20e-04 | tok=50.9M | 168.0k tok/s
+  [pam_v2 s=42 EVAL] headline=0.3050 | lure@2k=0.150 | scope4@2k=0.717 (S_hold=0.883) | 2hop@2k=0.125 | rules_new@0/2k=0.958/0.483 (M=-0.27) | rxk_new@2k=0.050 | rec@4k=0.150 | web_nll=10.3019
+
+=== ARM gdn_like | seed=42 | params=31,091,858 | O(1) state=535.6 KB ===
+  [gdn_like s=42] step  250/4000 | loss=6.6334 | lr=8.00e-04 | tok=3.1M | 166.1k tok/s
+  [gdn_like s=42] step  500/4000 | loss=4.5763 | lr=7.90e-04 | tok=6.3M | 166.1k tok/s
+  [gdn_like s=42] step  750/4000 | loss=4.0568 | lr=7.65e-04 | tok=9.5M | 166.8k tok/s
+  [gdn_like s=42] step 1000/4000 | loss=3.6478 | lr=7.28e-04 | tok=12.6M | 167.4k tok/s
+  [gdn_like s=42] step 1250/4000 | loss=3.3353 | lr=6.80e-04 | tok=15.9M | 167.3k tok/s
+  [gdn_like s=42] step 1500/4000 | loss=2.9852 | lr=6.22e-04 | tok=19.1M | 167.4k tok/s
+  [gdn_like s=42] step 1750/4000 | loss=2.7604 | lr=5.57e-04 | tok=22.3M | 167.7k tok/s
+  [gdn_like s=42] step 2000/4000 | loss=2.5479 | lr=4.88e-04 | tok=25.5M | 167.8k tok/s
+  [gdn_like s=42] step 2250/4000 | loss=2.4430 | lr=4.18e-04 | tok=28.6M | 167.8k tok/s
+  [gdn_like s=42] step 2500/4000 | loss=2.3418 | lr=3.50e-04 | tok=31.8M | 167.7k tok/s
+  [gdn_like s=42] step 2750/4000 | loss=2.3254 | lr=2.86e-04 | tok=35.0M | 167.8k tok/s
+  [gdn_like s=42] step 3000/4000 | loss=2.2110 | lr=2.30e-04 | tok=38.2M | 167.7k tok/s
+  [gdn_like s=42] step 3250/4000 | loss=2.2181 | lr=1.83e-04 | tok=41.3M | 167.6k tok/s
+  [gdn_like s=42] step 3500/4000 | loss=2.2283 | lr=1.49e-04 | tok=44.5M | 167.5k tok/s
+  [gdn_like s=42] step 3750/4000 | loss=2.1845 | lr=1.27e-04 | tok=47.8M | 167.5k tok/s
+  [gdn_like s=42] step 4000/4000 | loss=2.1260 | lr=1.20e-04 | tok=50.9M | 167.4k tok/s
+  [gdn_like s=42 EVAL] headline=0.3000 | lure@2k=0.133 | scope4@2k=0.750 (S_hold=1.000) | 2hop@2k=0.100 | rules_new@0/2k=0.967/0.467 (M=-0.53) | rxk_new@2k=0.050 | rec@4k=0.163 | web_nll=10.3701
+
+=== ARM tpp | seed=42 | params=31,098,624 | O(1) state=inf KB ===
+  [tpp s=42] step  250/4000 | loss=6.8256 | lr=8.00e-04 | tok=3.1M | 270.2k tok/s
+  [tpp s=42] step  500/4000 | loss=4.7974 | lr=7.90e-04 | tok=6.3M | 269.5k tok/s
+  [tpp s=42] step  750/4000 | loss=4.3866 | lr=7.65e-04 | tok=9.5M | 269.0k tok/s
+  [tpp s=42] step 1000/4000 | loss=4.0350 | lr=7.28e-04 | tok=12.6M | 269.0k tok/s
+  [tpp s=42] step 1250/4000 | loss=3.7579 | lr=6.80e-04 | tok=15.9M | 269.7k tok/s
+  [tpp s=42] step 1500/4000 | loss=3.4843 | lr=6.22e-04 | tok=19.1M | 269.5k tok/s
+  [tpp s=42] step 1750/4000 | loss=3.2713 | lr=5.57e-04 | tok=22.3M | 269.9k tok/s
+  [tpp s=42] step 2000/4000 | loss=3.0597 | lr=4.88e-04 | tok=25.5M | 270.0k tok/s
+  [tpp s=42] step 2250/4000 | loss=2.8642 | lr=4.18e-04 | tok=28.6M | 269.4k tok/s
+  [tpp s=42] step 2500/4000 | loss=2.6686 | lr=3.50e-04 | tok=31.8M | 267.9k tok/s
+  [tpp s=42] step 2750/4000 | loss=2.5510 | lr=2.86e-04 | tok=35.0M | 267.7k tok/s
+  [tpp s=42] step 3000/4000 | loss=2.3738 | lr=2.30e-04 | tok=38.2M | 267.2k tok/s
+  [tpp s=42] step 3250/4000 | loss=2.3467 | lr=1.83e-04 | tok=41.3M | 266.6k tok/s
+  [tpp s=42] step 3500/4000 | loss=2.3172 | lr=1.49e-04 | tok=44.5M | 266.4k tok/s
+  [tpp s=42] step 3750/4000 | loss=2.2634 | lr=1.27e-04 | tok=47.8M | 266.5k tok/s
+  [tpp s=42] step 4000/4000 | loss=2.1757 | lr=1.20e-04 | tok=50.9M | 266.2k tok/s
+  [tpp s=42 EVAL] headline=0.2883 | lure@2k=0.158 | scope4@2k=0.500 (S_hold=0.983) | 2hop@2k=0.117 | rules_new@0/2k=0.867/0.550 (M=+0.06) | rxk_new@2k=0.117 | rec@4k=0.154 | web_nll=11.6977
+
+=== ARM pow_v17 | seed=43 | params=31,078,928 | O(1) state=544.6 KB ===
+  [pow_v17 s=43] step  250/4000 | loss=6.7594 | lr=8.00e-04 | tok=3.2M | 89.2k tok/s
+  [pow_v17 s=43] step  500/4000 | loss=4.5386 | lr=7.90e-04 | tok=6.5M | 87.9k tok/s
+  [pow_v17 s=43] step  750/4000 | loss=3.9391 | lr=7.65e-04 | tok=9.6M | 87.9k tok/s
+  [pow_v17 s=43] step 1000/4000 | loss=3.5175 | lr=7.28e-04 | tok=12.8M | 87.6k tok/s
+  [pow_v17 s=43] step 1250/4000 | loss=3.2094 | lr=6.80e-04 | tok=16.0M | 86.9k tok/s
+  [pow_v17 s=43] step 1500/4000 | loss=2.9568 | lr=6.22e-04 | tok=19.3M | 87.4k tok/s
+  [pow_v17 s=43] step 1750/4000 | loss=2.7022 | lr=5.57e-04 | tok=22.4M | 87.6k tok/s
+  [pow_v17 s=43] step 2000/4000 | loss=2.5345 | lr=4.88e-04 | tok=25.5M | 87.8k tok/s
+  [pow_v17 s=43] step 2250/4000 | loss=2.4570 | lr=4.18e-04 | tok=28.6M | 88.0k tok/s
+  [pow_v17 s=43] step 2500/4000 | loss=2.3903 | lr=3.50e-04 | tok=31.8M | 88.2k tok/s
+  [pow_v17 s=43] step 2750/4000 | loss=2.3029 | lr=2.86e-04 | tok=34.9M | 88.3k tok/s
+  [pow_v17 s=43] step 3000/4000 | loss=2.2653 | lr=2.30e-04 | tok=38.1M | 88.5k tok/s
+  [pow_v17 s=43] step 3250/4000 | loss=2.2643 | lr=1.83e-04 | tok=41.3M | 88.5k tok/s
+  [pow_v17 s=43] step 3500/4000 | loss=2.2150 | lr=1.49e-04 | tok=44.3M | 88.5k tok/s
+  [pow_v17 s=43] step 3750/4000 | loss=2.1859 | lr=1.27e-04 | tok=47.5M | 88.3k tok/s
+  [pow_v17 s=43] step 4000/4000 | loss=2.1540 | lr=1.20e-04 | tok=50.6M | 88.2k tok/s
+  [pow_v17 s=43 EVAL] headline=0.2525 | lure@2k=0.150 | scope4@2k=0.746 (S_hold=1.000) | 2hop@2k=0.100 | rules_new@0/2k=0.908/0.233 (M=-1.62) | rxk_new@2k=0.033 | rec@4k=0.154 | web_nll=12.7707
+
+=== ARM pam_v2 | seed=43 | params=31,078,058 | O(1) state=481.6 KB ===
+  [pam_v2 s=43] step  250/4000 | loss=6.5766 | lr=8.00e-04 | tok=3.2M | 157.2k tok/s
+  [pam_v2 s=43] step  500/4000 | loss=4.5252 | lr=7.90e-04 | tok=6.5M | 158.6k tok/s
+  [pam_v2 s=43] step  750/4000 | loss=4.0377 | lr=7.65e-04 | tok=9.6M | 158.3k tok/s
+  [pam_v2 s=43] step 1000/4000 | loss=3.6761 | lr=7.28e-04 | tok=12.8M | 159.1k tok/s
+  [pam_v2 s=43] step 1250/4000 | loss=3.3021 | lr=6.80e-04 | tok=16.0M | 158.6k tok/s
+  [pam_v2 s=43] step 1500/4000 | loss=2.9648 | lr=6.22e-04 | tok=19.3M | 158.2k tok/s
+  [pam_v2 s=43] step 1750/4000 | loss=2.7008 | lr=5.57e-04 | tok=22.4M | 157.4k tok/s
+  [pam_v2 s=43] step 2000/4000 | loss=2.4891 | lr=4.88e-04 | tok=25.5M | 156.9k tok/s

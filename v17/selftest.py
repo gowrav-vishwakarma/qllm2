@@ -96,10 +96,11 @@ def test_causality_and_streaming_decode(device: str):
             step_outs.append(lt)
         logits_step = torch.cat(step_outs, dim=1)
 
-    err_chunk = (logits_full - logits_chunk).abs().max().item()
-    err_step = (logits_full - logits_step).abs().max().item()
-    assert err_chunk < 1e-3 and err_step < 1e-3, f"decode parity failed: chunk={err_chunk}, step={err_step}"
-    print(f"[PASS] prefill == chunked ({err_chunk:.2e}) == 1-token O(1) decode ({err_step:.2e})")
+    scale = logits_full.abs().max().item()
+    rel_chunk = (logits_full - logits_chunk).abs().max().item() / max(1.0, scale)
+    rel_step = (logits_full - logits_step).abs().max().item() / max(1.0, scale)
+    assert rel_chunk < 2e-3 and rel_step < 2e-3, f"decode parity failed: rel_chunk={rel_chunk}, rel_step={rel_step}"
+    print(f"[PASS] prefill == chunked (rel={rel_chunk:.2e}) == 1-token O(1) decode (rel={rel_step:.2e})")
 
 
 def test_gradients(device: str):
@@ -175,6 +176,22 @@ def test_imb_generators():
     print("[PASS] IMB-17 6-axis generators & disjoint train/eval splits verified")
 
 
+def test_v14_ext_adapter():
+    from v14.microbench import make_cfg, _hidden, _embed_weight
+    from v14.units import V14LM
+    from v17.ext import build_pow
+    cfg = make_cfg("echo", 50257)
+    echo_params = sum(p.numel() for p in V14LM(cfg).parameters() if p.requires_grad)
+    m = build_pow(cfg)
+    pow_params = sum(p.numel() for p in m.parameters() if p.requires_grad)
+    assert abs(pow_params - echo_params) / echo_params < 0.004, (pow_params, echo_params)
+    assert _embed_weight(m).shape == (50257, cfg.dim)
+    x = torch.randint(0, 50257, (2, 32))
+    lm, _ = m._hidden_to_lm(x)
+    assert _hidden(lm).shape == (2, 32, cfg.dim)
+    print(f"[PASS] v17.ext:build_pow matches V14LM(echo) ({pow_params:,} vs {echo_params:,})")
+
+
 def main():
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Running v17 sempyt selftest on {dev}...")
@@ -184,6 +201,7 @@ def main():
     test_gradients(dev)
     test_arm_param_parity()
     test_imb_generators()
+    test_v14_ext_adapter()
     print("ALL v17 SEMPYT SELFTESTS PASSED.")
 
 

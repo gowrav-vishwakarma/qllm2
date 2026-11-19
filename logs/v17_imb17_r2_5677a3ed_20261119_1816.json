@@ -1,0 +1,545 @@
+{
+  "header": {
+    "suite": "v17_IMB17",
+    "git_hash": "5677a3ed",
+    "timestamp": "20261119_1816",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "args": {
+      "arms": "pow_v17,pam_v2,gdn_like,tpp",
+      "seeds": "42,43,44",
+      "steps": 4000,
+      "batch": 16,
+      "lr": 0.0008,
+      "trials": 120,
+      "dim": 384,
+      "layers": 4,
+      "heads": 6,
+      "head_dim": 64,
+      "base_mlp": 1024,
+      "out": "logs/v17_imb17_r2_5677a3ed_20261119_1816.json"
+    }
+  },
+  "runs": [
+    {
+      "arm": "pow_v17",
+      "seed": 42,
+      "params": 31078928,
+      "state_kb": 544.59,
+      "tokens_trained": 50896896,
+      "train_sec": 556.0,
+      "eval": {
+        "prose_lure@512": {
+          "acc": 0.175,
+          "margin": -0.305,
+          "n": 120
+        },
+        "prose_lure@2048": {
+          "acc": 0.125,
+          "margin": -0.324,
+          "n": 120
+        },
+        "prose_lure@4096": {
+          "acc": 0.1583,
+          "margin": -0.33,
+          "n": 120
+        },
+        "scope_none@512": {
+          "acc": 1.0,
+          "margin": 1.199,
+          "n": 60
+        },
+        "scope_own@512": {
+          "acc": 0.0,
+          "margin": -1.936,
+          "n": 60
+        },
+        "scope_other@512": {
+          "acc": 1.0,
+          "margin": 1.113,
+          "n": 60
+        },
+        "scope_override@512": {
+          "acc": 1.0,
+          "margin": 4.966,
+          "n": 60
+        },
+        "scope_4axis_mean@512": 0.75,
+        "scope_none@2048": {
+          "acc": 1.0,
+          "margin": 1.197,
+          "n": 60
+        },
+        "scope_own@2048": {
+          "acc": 0.0,
+          "margin": -1.794,
+          "n": 60
+        },
+        "scope_other@2048": {
+          "acc": 1.0,
+          "margin": 1.001,
+          "n": 60
+        },
+        "scope_override@2048": {
+          "acc": 1.0,
+          "margin": 5.013,
+          "n": 60
+        },
+        "scope_4axis_mean@2048": 0.75,
+        "two_hop_new@512": {
+          "acc": 0.15,
+          "margin": -1.005,
+          "n": 120
+        },
+        "two_hop_new@2048": {
+          "acc": 0.1167,
+          "margin": -1.222,
+          "n": 120
+        },
+        "unseen_rules@0": {
+          "acc": 0.9833,
+          "margin": 6.356,
+          "n": 120
+        },
+        "unseen_rules@2048": {
+          "acc": 0.5,
+          "margin": -0.648,
+          "n": 120
+        },
+        "rxk_new@512": {
+          "acc": 0.0583,
+          "margin": -1.04,
+          "n": 120
+        },
+        "rxk_new@2048": {
+          "acc": 0.0583,
+          "margin": -1.078,
+          "n": 120
+        },
+        "extrap_recall@4096": {
+          "acc": 0.1708,
+          "margin": -0.876,
+          "n": 240
+        },
+        "web_nll": 12.4958,
+        "intelligence_headline": 0.31
+      }
+    },
+    {
+      "arm": "pam_v2",
+      "seed": 42,
+      "params": 31078058,
+      "state_kb": 481.59,
+      "tokens_trained": 50896896,
+      "train_sec": 303.0,
+      "eval": {
+        "prose_lure@512": {
+          "acc": 0.1833,
+          "margin": -0.306,
+          "n": 120
+        },
+        "prose_lure@2048": {
+          "acc": 0.15,
+          "margin": -0.315,
+          "n": 120
+        },
+        "prose_lure@4096": {
+          "acc": 0.1583,
+          "margin": -0.334,
+          "n": 120
+        },
+        "scope_none@512": {
+          "acc": 0.9333,
+          "margin": 1.048,
+          "n": 60
+        },
+        "scope_own@512": {
+          "acc": 0.0,
+          "margin": -1.81,
+          "n": 60
+        },
+        "scope_other@512": {
+          "acc": 0.85,
+          "margin": 0.907,
+          "n": 60
+        },
+        "scope_override@512": {
+          "acc": 1.0,
+          "margin": 4.857,
+          "n": 60
+        },
+        "scope_4axis_mean@512": 0.6958,
+        "scope_none@2048": {
+          "acc": 0.9167,
+          "margin": 1.038,
+          "n": 60
+        },
+        "scope_own@2048": {
+          "acc": 0.0667,
+          "margin": -1.695,
+          "n": 60
+        },
+        "scope_other@2048": {
+          "acc": 0.8833,
+          "margin": 0.805,
+          "n": 60
+        },
+        "scope_override@2048": {
+          "acc": 1.0,
+          "margin": 4.927,
+          "n": 60
+        },
+        "scope_4axis_mean@2048": 0.7167,
+        "two_hop_new@512": {
+          "acc": 0.1417,
+          "margin": -0.99,
+          "n": 120
+        },
+        "two_hop_new@2048": {
+          "acc": 0.125,
+          "margin": -1.245,
+          "n": 120
+        },
+        "unseen_rules@0": {
+          "acc": 0.9583,
+          "margin": 4.315,
+          "n": 120
+        },
+        "unseen_rules@2048": {
+          "acc": 0.4833,
+          "margin": -0.274,
+          "n": 120
+        },
+        "rxk_new@512": {
+          "acc": 0.05,
+          "margin": -1.006,
+          "n": 120
+        },
+        "rxk_new@2048": {
+          "acc": 0.05,
+          "margin": -1.016,
+          "n": 120
+        },
+        "extrap_recall@4096": {
+          "acc": 0.15,
+          "margin": -1.05,
+          "n": 240
+        },
+        "web_nll": 10.3019,
+        "intelligence_headline": 0.305
+      }
+    },
+    {
+      "arm": "gdn_like",
+      "seed": 42,
+      "params": 31091858,
+      "state_kb": 535.59,
+      "tokens_trained": 50896896,
+      "train_sec": 304.0,
+      "eval": {
+        "prose_lure@512": {
+          "acc": 0.1667,
+          "margin": -0.286,
+          "n": 120
+        },
+        "prose_lure@2048": {
+          "acc": 0.1333,
+          "margin": -0.303,
+          "n": 120
+        },
+        "prose_lure@4096": {
+          "acc": 0.175,
+          "margin": -0.307,
+          "n": 120
+        },
+        "scope_none@512": {
+          "acc": 1.0,
+          "margin": 1.138,
+          "n": 60
+        },
+        "scope_own@512": {
+          "acc": 0.0,
+          "margin": -1.863,
+          "n": 60
+        },
+        "scope_other@512": {
+          "acc": 1.0,
+          "margin": 1.067,
+          "n": 60
+        },
+        "scope_override@512": {
+          "acc": 1.0,
+          "margin": 5.256,
+          "n": 60
+        },
+        "scope_4axis_mean@512": 0.75,
+        "scope_none@2048": {
+          "acc": 1.0,
+          "margin": 1.144,
+          "n": 60
+        },
+        "scope_own@2048": {
+          "acc": 0.0,
+          "margin": -1.754,
+          "n": 60
+        },
+        "scope_other@2048": {
+          "acc": 1.0,
+          "margin": 0.952,
+          "n": 60
+        },
+        "scope_override@2048": {
+          "acc": 1.0,
+          "margin": 5.345,
+          "n": 60
+        },
+        "scope_4axis_mean@2048": 0.75,
+        "two_hop_new@512": {
+          "acc": 0.15,
+          "margin": -1.019,
+          "n": 120
+        },
+        "two_hop_new@2048": {
+          "acc": 0.1,
+          "margin": -1.253,
+          "n": 120
+        },
+        "unseen_rules@0": {
+          "acc": 0.9667,
+          "margin": 5.414,
+          "n": 120
+        },
+        "unseen_rules@2048": {
+          "acc": 0.4667,
+          "margin": -0.531,
+          "n": 120
+        },
+        "rxk_new@512": {
+          "acc": 0.05,
+          "margin": -1.113,
+          "n": 120
+        },
+        "rxk_new@2048": {
+          "acc": 0.05,
+          "margin": -1.149,
+          "n": 120
+        },
+        "extrap_recall@4096": {
+          "acc": 0.1625,
+          "margin": -0.923,
+          "n": 240
+        },
+        "web_nll": 10.3701,
+        "intelligence_headline": 0.3
+      }
+    },
+    {
+      "arm": "tpp",
+      "seed": 42,
+      "params": 31098624,
+      "state_kb": null,
+      "tokens_trained": 50896896,
+      "train_sec": 191.2,
+      "eval": {
+        "prose_lure@512": {
+          "acc": 0.1667,
+          "margin": -0.253,
+          "n": 120
+        },
+        "prose_lure@2048": {
+          "acc": 0.1583,
+          "margin": -0.265,
+          "n": 120
+        },
+        "prose_lure@4096": {
+          "acc": 0.1417,
+          "margin": -0.294,
+          "n": 120
+        },
+        "scope_none@512": {
+          "acc": 1.0,
+          "margin": 15.641,
+          "n": 60
+        },
+        "scope_own@512": {
+          "acc": 0.3,
+          "margin": -0.371,
+          "n": 60
+        },
+        "scope_other@512": {
+          "acc": 0.4667,
+          "margin": 2.409,
+          "n": 60
+        },
+        "scope_override@512": {
+          "acc": 0.3833,
+          "margin": -0.313,
+          "n": 60
+        },
+        "scope_4axis_mean@512": 0.5375,
+        "scope_none@2048": {
+          "acc": 0.7667,
+          "margin": 3.823,
+          "n": 60
+        },
+        "scope_own@2048": {
+          "acc": 0.0833,
+          "margin": -4.623,
+          "n": 60
+        },
+        "scope_other@2048": {
+          "acc": 0.9833,
+          "margin": 5.805,
+          "n": 60
+        },
+        "scope_override@2048": {
+          "acc": 0.1667,
+          "margin": -4.408,
+          "n": 60
+        },
+        "scope_4axis_mean@2048": 0.5,
+        "two_hop_new@512": {
+          "acc": 0.1083,
+          "margin": -0.767,
+          "n": 120
+        },
+        "two_hop_new@2048": {
+          "acc": 0.1167,
+          "margin": -0.989,
+          "n": 120
+        },
+        "unseen_rules@0": {
+          "acc": 0.8667,
+          "margin": 2.984,
+          "n": 120
+        },
+        "unseen_rules@2048": {
+          "acc": 0.55,
+          "margin": 0.062,
+          "n": 120
+        },
+        "rxk_new@512": {
+          "acc": 0.15,
+          "margin": -0.655,
+          "n": 120
+        },
+        "rxk_new@2048": {
+          "acc": 0.1167,
+          "margin": -0.585,
+          "n": 120
+        },
+        "extrap_recall@4096": {
+          "acc": 0.1542,
+          "margin": -0.799,
+          "n": 240
+        },
+        "web_nll": 11.6977,
+        "intelligence_headline": 0.2883
+      }
+    },
+    {
+      "arm": "pow_v17",
+      "seed": 43,
+      "params": 31078928,
+      "state_kb": 544.59,
+      "tokens_trained": 50610176,
+      "train_sec": 573.5,
+      "eval": {
+        "prose_lure@512": {
+          "acc": 0.1333,
+          "margin": -0.274,
+          "n": 120
+        },
+        "prose_lure@2048": {
+          "acc": 0.15,
+          "margin": -0.305,
+          "n": 120
+        },
+        "prose_lure@4096": {
+          "acc": 0.0917,
+          "margin": -0.296,
+          "n": 120
+        },
+        "scope_none@512": {
+          "acc": 1.0,
+          "margin": 1.852,
+          "n": 60
+        },
+        "scope_own@512": {
+          "acc": 0.0,
+          "margin": -2.497,
+          "n": 60
+        },
+        "scope_other@512": {
+          "acc": 1.0,
+          "margin": 1.683,
+          "n": 60
+        },
+        "scope_override@512": {
+          "acc": 1.0,
+          "margin": 3.993,
+          "n": 60
+        },
+        "scope_4axis_mean@512": 0.75,
+        "scope_none@2048": {
+          "acc": 0.9833,
+          "margin": 1.816,
+          "n": 60
+        },
+        "scope_own@2048": {
+          "acc": 0.0,
+          "margin": -2.478,
+          "n": 60
+        },
+        "scope_other@2048": {
+          "acc": 1.0,
+          "margin": 1.69,
+          "n": 60
+        },
+        "scope_override@2048": {
+          "acc": 1.0,
+          "margin": 3.902,
+          "n": 60
+        },
+        "scope_4axis_mean@2048": 0.7458,
+        "two_hop_new@512": {
+          "acc": 0.1333,
+          "margin": -0.814,
+          "n": 120
+        },
+        "two_hop_new@2048": {
+          "acc": 0.1,
+          "margin": -0.967,
+          "n": 120
+        },
+        "unseen_rules@0": {
+          "acc": 0.9083,
+          "margin": 4.883,
+          "n": 120
+        },
+        "unseen_rules@2048": {
+          "acc": 0.2333,
+          "margin": -1.616,
+          "n": 120
+        },
+        "rxk_new@512": {
+          "acc": 0.0667,
+          "margin": -1.127,
+          "n": 120
+        },
+        "rxk_new@2048": {
+          "acc": 0.0333,
+          "margin": -1.179,
+          "n": 120
+        },
+        "extrap_recall@4096": {
+          "acc": 0.1542,
+          "margin": -1.177,
+          "n": 240
+        },
+        "web_nll": 12.7707,
+        "intelligence_headline": 0.2525
+      }
+    }
+  ]
+}
