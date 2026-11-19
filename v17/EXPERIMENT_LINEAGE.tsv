@@ -1,0 +1,3 @@
+id	parent	date	what	verdict	run_hash	code_at	log_or_result	section
+V17-0	v13_sempty:nt_pam_s44	2026-11-19	v17 sempyt Two-Organ POWLM selftest: stateful_scan, S1 zero-spin phasor, causality, O(1) decode parity, gradients, 6-arm param parity, IMB-17 generators	PASS (all invariants verified on CUDA)		current	stdout	"""1. The v17 Architecture"""
+IMB17-R1	V17-0	2026-11-19	IMB-17 3-seed equal-param head-to-head (pow_v17 vs pam_v2 vs gdn_like vs tpp, 31.08M params, train<=1024, eval 512..4096 across 6 intelligence+memory axes + DCLM web_nll)	running		current	logs/v17_imb17_*	"""2. Pre-Registration: IMB17-R1"""
