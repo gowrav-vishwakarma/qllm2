@@ -6723,6 +6723,26 @@ past the trained length ctl pam holds more (s8 @8k 0.278 vs 0.174; t40 16k 0.586
 chain restarted with ALLOW_CODE_DRIFT=1 on SCREEN_HASH 10a4c1db after a refused launch at 21:19; the refusal also deleted the launch
 guard: the launcher trap bug, fixed b558dd89). **(c) Set B parent read (6000, 21:2x IST):** wio pam main stable_final 2k: C +1.659 (valid,
 >= 0.5), scope_fu 0.69, prec_u1 0.20, P_fu 0.07, unit_acc 0.93. The 4 arms wait for free slots (< 3 trainers).
+**(b) split RESULT + VERDICT (4090 SOLO, 102.88M, 1.0B tokens, seed 43; chain DONE 02:41 IST 11-19; recorded 07:1x IST; logs/wio/*nt_split_10a4c1db*):**
+s8 @8k 3-save **0.473** (0.455 / 0.484 / 0.480; best of all wio-recipe arms: nochrono 0.427, gdn 0.408, pam 0.343); s8 D 0.695; shift
+0 / 2k / 4k / 8k 0.868 / 0.774 / 0.627 / 0.379, affine 0.715 / 0.701 / 0.676 / 0.567; t40 2k / 8k / 16k 0.844 / 0.742 / **0.692**
+(n 360 each, binomial se 0.019 / 0.023 / 0.024; pam 0.803, nochrono 0.353); clk2 0.43 / 0.05; HS / ARC-e / PIQA 0.271 / 0.466 / 0.610;
+val 3.4248 (best_val_loss 3.42482952; wio pam 3.42476004 = a coincidence to 4 decimals: per-source val differs, e.g. dclm 3.4329 vs
+3.4339, pysci 1.1397 vs 1.1213; 3 of 6 warp rows active in split vs 6 / 6 in pam). **VERDICT by the letter: RULES-ONLY** (s8 @8k
+0.473 >= 0.40 MET; val 3.4248 <= 3.435 MET; t40 16k 0.692 < 0.70 NOT MET by 0.008 = 0.33 se). Needles at 86 % of pam's and 2.0x
+nochrono's. One seed; the seed-44 arm (below) is the test. Knockout diagnostic (clock / rope half off) running on the 6000.
+**(a) Set A on the 6000 + CROSS-BOX VOID (07:1x IST 11-19):** gdn_nofar 6000: s8 D 3-save **0.570**, s8 @8k 0.242, t40 16k 0.247, val
+3.3864; 4090: 0.474 / 0.174 / 0.283 / 3.387. val agrees (0.001) but s8 D differs by **0.096 > the pre-registered 0.05 -> cross-box
+comparison VOID**; only within-box reads count. Same body, data, seed, recipe on two boxes (Blackwell vs Ada bf16 kernels, different
+interleaving) moves s8 D by ~0.1: **single-seed s8 gaps under ~0.10 are inside run-to-run noise** (split vs nochrono vs gdn on the
+4090 included); t40 gaps of 0.3-0.6 are far outside it. Within the 6000: pam_nofar s8 D **0.559**, s8 @8k 0.258, t40 16k **0.853**,
+val 3.4225 vs gdn_nofar 0.570 / 0.242 / 0.247 / 3.3864: **OURS NOT MET (pam - gdn = -0.011); FAMILY MET (gdn_nofar 0.570 >= 0.47,
+outside the 0.05 band): carrying induced rules past the 4k training length without far docs is a delta-rule-family property.**
+Needles past the length are ours (t40 16k 0.853 vs 0.247 on the same box). CLOCK: nochrono_nofar readouts pending (val 3.4202).
+**Seeds order changed (Lead 03:08):** 4090 = pam_s44 -> **split_s44** -> nochrono_s44 -> gdn_s44 (chain restarted 06:59, adopted the
+pam_s44 decay). **split seed-44 PRE-REGISTRATION (recorded before it starts):** REPLICATED if s8 @8k 3-save >= 0.40 AND t40 16k
+>= 0.60, AND s8 @8k >= nochrono_s44 s8 - 0.02 AND t40 16k >= pam_s44 t40 16k - 0.20. A CHRONO_HEADS 2 / 4 rung is worth one night
+only if split_s44 replicates (then: is the trade a dial?); nothing extra runs before.
 **Proposed order** (one night ~10-12 h after the CHECKs): (a) gdn_nofar (3 h; closes the paper's "beyond the trained length" cell
 for the family), then (b) split (6.5 h; the one new mechanism), then (a) nochrono_nofar (6.2 h); (c) last (10 h; readability risk,
 and 3r's guard reads may already answer whether 0.8 % is quiet at 386M). Nothing launches before Lead's GO and the user's release.
