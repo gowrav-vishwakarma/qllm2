@@ -5704,6 +5704,9 @@ Bodies:
 READABLE iff pam acc at D 64 is in [0.30, 0.90]. Noise = |pam - pam_s44| per D. Reported: acc and lure-win per body per D.
 Step 1 waits for (a) the SCI-1 47B natural-recall read and (b) Step 0 READABLE; Lead decides then.
 Closest prior work: associative recall / MQAR (Arora et al. 2023, Zoology) and bAbI-style entity tracking. A probe, no claim.
+STATUS 16:45 IST: ON HOLD, NOT RUN. The user paused all three sessions (relayed by Lead). Step 0 had not started, so it stays unstarted.
+The gdn / mamba2 GPU reads were taken back out of the natrecall2 chain. Only the armed natrecall2 follow-ups (prereg 55f4e9ae) and the
+user guard keep running.
 
 ### PROPOSAL: dual-phase synchrony binding, N5 reborn (Library review of Argon's 16:31 IST idea, for Lead; NOT pre-registered, no GPU)
 Argon's idea (bridge c8eaa1c81757): one root under scope, the natural-recall lure and label_diag key cosine ~0.7.
