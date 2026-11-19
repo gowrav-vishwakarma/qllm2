@@ -225,6 +225,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 - **FAR-TOLD told rule under the far block** <- A28 held read: plain vs protocol twin (2026-11-07) protocol twin, train wording 2k / 8k + a26 2k, 100 docs, at M11 (baseline) and every milestone from M12 while proto_far / b2s_far ramp -> **pre-registered (descriptive; Mind's keep rule decides)**; code at `current`; -; "FAR-TOLD"
 - **3d HARM readout** (2026-11-17) plain no-protocol false-unit (noprot gate_win) 2k+8k per save; trigger fu8k>=0.30 at 2 consecutive 3d saves = HARMFUL -> **never fired (0.55,0.18,0.21,0.00,0.01); but P_fu showed 0.89 at 42.75B**; run `-`; logs/v14_fartold_watch.log; 3d HARM readout
   - **proto_far2** (2026-11-17) far protocol docs with 25% no-protocol + 10% other-quantity contrast (bare-value answers); remedy if HARM trigger fires -> **ready (not in stream)**; run `-`; v14/test_proto_far2.py; proto_far2
+- **NATURAL RECALL** <- v13_sempty:t40 (2026-11-19) natural-prose fact recall at 2k/8k/16k (lure, 4 question styles incl. synonym), contrastive acc + free answer, 7 bodies -> **running**; run `-`, code at `(this commit)`; logs/v14_natrec_*; NATURAL RECALL probe
 
 ## v15
 
@@ -243,4 +244,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-225 experiments: v13_sempty 110, v14 93, v15 10, v16 12.
+226 experiments: v13_sempty 110, v14 94, v15 10, v16 12.

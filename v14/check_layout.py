@@ -48,6 +48,7 @@ SKIP_FILES = frozenset({
     "told_margin.py",    # TOLD-MARGIN teacher-forced unit / gate margins
     "cgate.py",          # CONTRAST GATE guards: gated told read (raw logits ops, like a32c.py)
     "scope_probe.py",    # SCOPE probe: teacher-forced twin logits (raw logits ops, like told_margin.py)
+    "natural_recall.py", # NATURAL RECALL probe: last-position logits + greedy ids (raw logits ops, like scope_probe.py)
     "dil3.py",           # DIL3 slow-head clock dilation (raw torch state copies + Mind's clk3 hook)
     "ruler_pkg.py",      # BENCH-PKG RULER-style generator (bare vs package, raw torch state copies + ckpt meta)
     "a11_keyswap.py",    # A11: key-swap relevance eval (frozen-mind short reads, raw torch)

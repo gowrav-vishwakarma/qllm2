@@ -5691,6 +5691,44 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
+### NATURAL RECALL probe (PRE-REGISTERED 2026-11-19 07:25 IST, before any number; Lead 07:1x IST; code v14/natural_recall.py)
+Why: after the night, the claim that survives is the clock's exact recall past the trained length. Set A without far docs:
+t40 16k pam_nofar 0.853 vs gdn_nofar 0.247. wio: pam 0.80 vs nochrono 0.35. Split t40 16k 0.692. That rests on t40, a 20-way
+"Key: value" template. The user's realistic-tests rule asks for a natural variant before the paper leans on it.
+Design:
+- One fact stated once in ordinary prose, inside a 3-fact paragraph (the TARGET; a SAME-TYPE LURE about another person; an
+  OTHER-TYPE fact; order shuffled).
+- Before it, 256 tokens of held-out filler. After it, D tokens of held-out filler (the holdout cache FILL), then a natural question.
+- Five fact types (city, car colour, piano-lesson weekday, job, pet), 3 statement wordings each, 8 answers per type (first tokens
+  distinct, checked).
+- Four question styles, 50 docs each = n 200 per distance:
+  - direct: "Which city did X move to? Answer:";
+  - cloze: "These days X lives in";
+  - indirect: "I keep forgetting where X ended up living. It was";
+  - synonym: the cue word swapped, e.g. moved -> relocated, colour -> shade, piano lesson -> keyboard class, job -> occupation.
+- Distances D = 64 (readability control), 2048, 8192, 16384. The wio bodies trained at SEQ 4096, so 8k and 16k are beyond the
+  trained length.
+- Docs are identical for every body (rng 19000*1000 + D*10 + style).
+Scores per doc:
+- acc: the gold answer's first token beats the other 7 candidates of its type (chance 0.125). One teacher-forced pass, last
+  position (run_skillpack_probe.Body, same read path for every arch).
+- free: a greedy 4-token answer starts with the gold word.
+- lure: the lure's answer wins (binding failure).
+- margin: gold minus best other candidate.
+Bodies: the 4090 end saves (decay latest.pt): wio pam, nochrono, gdn (qllm_gdn venv), mamba2, tpp; nt_split (clock on 3 of 6 heads);
+pam_s44 (seed 44, if its readouts have landed). pam vs pam_s44 is the seed-noise floor.
+Verdict (Lead's bars, on acc pooled over the four styles at D 16384):
+- CONFIRMS the clock's recall edge if pam - nochrono >= +0.20.
+- TEMPLATE-BOUND if pam - nochrono < +0.08.
+- In between: unclear.
+- Validity: pam and nochrono must each reach acc >= 0.50 at D 64; otherwise the probe is unreadable at 100M (no verdict).
+- If |pam - pam_s44| at 16k > 0.10, the verdict is flagged as within seed noise.
+- Reported beside it, with no bars: free, lure, per style (synonym is the realistic headline per the user's rule), 2k / 8k, all
+  bodies, and paired bootstrap SEs over docs.
+Closest prior work: needle-in-a-haystack / RULER (Hsieh et al. 2024) and BABILong (Kuratov et al. 2024). Difference: read on O(1)
+bodies at equal data, beyond their trained length, with a same-type lure and natural question styles. A probe, no novelty claim.
+Cost: about 5 passes per doc (1 + 4 greedy steps). Measured on the first body in the window.
+
 ### SPLIT key geometry: CHRONO_HEADS (Library owns the mechanism; built 2026-11-18 15:03 IST; Mind's twin (b) runs it)
 Spec: EXPERIMENTS_SEMPY "Tonight's 100M / 1B twins" (b) (2b112e4b). Bars are Mind's (3-save): BOTH = s8 @8k >= 0.40 AND t40 16k
 >= 0.70 AND val <= 3.435; RULES-ONLY / NEEDLES-ONLY / NEITHER as written there. Diagnostic: knockout of each head half.
