@@ -114,3 +114,19 @@ Each item says where it goes. **Written into main.tex and data/numbers.json on 1
   0.803. Rewrite sec:wio: the claim vs Gated DeltaNet is UNDETERMINED, not "not met" (the pre-registered verdict stays quoted, with the
   note that the test was underpowered); remove readings that rest on single-seed s8 gaps within the delta-rule family; keep T++'s
   collapse, the recall edge (two seeds, two mixes) and val. Natural-text recall unreadable at 100M (bc14df7a): say "literal-cue copying".
+
+## G. Prior work found 11-19 that the paper MUST cite and distinguish (Lead, 11-19 16:40 IST; pointed out by the outside reviewer, each verified on arXiv by Lead)
+- [ ] **Selective RoPE** (Movahedi, Carstensen, Afzal, Hutter, Orvieto, Cevher; arXiv:2511.17388, ICLR 2026): input-dependent rotary angles,
+  accumulated by a cumulative sum over positions (omega = W q, conv1d, temp * cumsum, then RoPE), with a sigmoid phase gate; added to
+  Gated Linear Attention, to a forgetting transformer and to Gated DeltaNet (~400M / 10B tokens); reports copying with length
+  extrapolation, MQAR, MAD, state tracking. This is the closest prior work to our clock and it predates it. What differs in ours: one
+  positive scalar clock rate per head that warps a fixed geometric frequency bank (a monotone "subjective time", exact RoPE at init,
+  clamp exp(+-3)) instead of free per-channel angles; the clock shared by reader layers; test-time dilation; and the evaluation on
+  needles at 4x the trained length. State this in Related work and in "What is new"; the claim "a content-modulated clock" alone is not new.
+- [ ] **Gated DeltaNet-2** (Hatamizadeh, Choi, Kautz; arXiv:2605.22791): channel-wise erase and write gates decoupled, 1.3B / 100B FineWeb-Edu,
+  best on RULER needle tasks. Our notebook already has untied erase / write gates; cite as concurrent and say what differs (scalar per-key
+  gates, sparse notebooks, shared reads).
+- [ ] **Semidirect Fourier Delta Attention** (Zhang; arXiv:2607.11897): complex phase decay on a delta-rule state, chunk-WY theory, toy state
+  tracking only. Cite for the phase + delta-rule combination.
+- [ ] **The baseline this demands:** Gated DeltaNet + Selective RoPE on our data and probes (t40 beyond length, s8 with seeds). Without it
+  "what is ours" in the clock is the specific form, not the idea. Pre-register before running.
