@@ -26,7 +26,7 @@ def _build_matched(v14_cfg, label: str, **overrides) -> POWLM:
         n_layers=v14_cfg.n_layers,
         n_heads=v14_cfg.n_heads,
         head_dim=v14_cfg.head_dim,
-        op_rings=max(64, (v14_cfg.dim // 2 // v14_cfg.n_heads) * v14_cfg.n_heads),
+        op_rings=max(48, (v14_cfg.dim // 4 // v14_cfg.n_heads) * v14_cfg.n_heads),
         op_heads=v14_cfg.n_heads,
         **overrides,
     )
@@ -51,6 +51,6 @@ def build_pow_sync(v14_cfg) -> POWLM:
 
 
 def build_pow_work(v14_cfg) -> POWLM:
-    """Ablation 2: Organ 2 (3-Bounce + Causal Operator) only, Chrono without S^1 Synchrony."""
+    """Ablation 2: Organ 2 (2-Bounce + Causal Operator) only, Chrono without S^1 Synchrony."""
     return _build_matched(v14_cfg, "pow_work",
-                          sync_phasor=False, n_bounces=3, operator_engine=True)
+                          sync_phasor=False, n_bounces=2, operator_engine=True)

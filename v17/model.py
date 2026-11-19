@@ -144,11 +144,11 @@ class POWConfig:
     warp_min: float = -4.5            # clk3 finding: wider slow-clock floor
     warp_max: float = 3.0
     short_conv_k: int = 4             # local token-pair awareness on qkv (0 = off)
-    # Organ 2A: Iterative SRAM Workspace bounces per layer (1 = standard 1-pass)
-    n_bounces: int = 3
+    # Organ 2A: Iterative SRAM Workspace bounces per layer (1 = standard 1-pass, 2 = 2-hop Phase-Closure per layer)
+    n_bounces: int = 2
     # Organ 2B: Causal Phase-Operator Engine
     operator_engine: bool = True
-    op_rings: int = 192               # number of 2D relational phase rings
+    op_rings: int = 96                # number of 2D relational phase rings
     op_heads: int = 6
     echo: bool = True                 # causal token-transition memory
     # Anti-laziness MLP scale init (seed-44 autopsy: smaller init prevents static MLP shortcutting)
@@ -784,7 +784,7 @@ def build_arm(arm: str, vocab_size: int = 50257, dim: int = 384,
                               n_bounces=1, operator_engine=False, echo=True,
                               mlp_scale_init=0.4),
         "pow_work_only": dict(use_rope=True, chrono=True, sync_phasor=False, short_conv_k=4,
-                              n_bounces=3, operator_engine=True, echo=True,
+                              n_bounces=2, operator_engine=True, echo=True,
                               mlp_scale_init=0.4),
     }
     if arm not in arm_overrides:
