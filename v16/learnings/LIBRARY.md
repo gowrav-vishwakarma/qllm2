@@ -323,3 +323,21 @@ Process lessons added:
 - **What these days taught.** A told rule has four axes, and every lever we pulled moved them together. More told data made the rule
   stronger and less scoped; the decay made it weaker. A read that amplifies the carry also amplifies the wrong binding. The missing
   piece is binding (scope), and it has to come from data with contrast or from the architecture, not from the read.
+
+## 2026-11-18 .. 11-19 (Library)
+- **3r guard reads (a2eb1513, 7c221913).** Back on 3c's mix, the 3f excursion decays in about 1B tokens on every axis:
+  - scope_fu 2k: 0.93, 0.86, 0.76, 0.50;
+  - C 2k: 3.1, 2.6, 2.1, 2.1.
+  47B equals 44B (C 8k 0.46, scope_fu 0.50 / 0.01, P_fu 0.00). Carry and over-application fall together.
+- **SPLIT key geometry, CHRONO_HEADS (887aaf15; Library owns the mechanism, Mind ran it).**
+  - Mechanism: the Chrono clock on notebook heads 0..k-1, plain RoPE on the rest.
+  - Parity: bit-exact at k=0 (= nochrono) and at k=H (= pam).
+  - The split arm, from Mind / Lead: s8 @8k 0.473, t40 16k 0.692 (bar 0.70).
+  - Seed caveat: pam seeds 43 / 44 read s8 @8k 0.343 / 0.620, so single-seed s8 verdicts are UNDETERMINED. t40 is stable (0.803 / 0.786).
+- **NATURAL RECALL (prereg 13c78ac3, result bc14df7a): UNREADABLE at 100M, no verdict.**
+  - Setup: a prose fact plus a same-type lure.
+  - At D 64: pam acc 0.235, nochrono 0.215 (chance 0.125); the lure wins as often as the gold.
+  - The 100M bodies know WHICH values were said, not WHOSE.
+  - So the paper shows the clock's recall edge on literal-cue copying (t40) only.
+  - EUREKA (55f4e9ae): the missing binding is the same root as SCOPE.
+  - Follow-ups pre-registered (55f4e9ae): a no-lure variant on the 100M bodies, and both probes on SCI-1 47B (descriptive). Pending a 4090 window.
