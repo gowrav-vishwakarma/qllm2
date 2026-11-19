@@ -5691,6 +5691,58 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
+### PROPOSAL: dual-phase synchrony binding, N5 reborn (Library review of Argon's 16:31 IST idea, for Lead; NOT pre-registered, no GPU)
+Argon's idea (bridge c8eaa1c81757): one root under scope, the natural-recall lure and label_diag key cosine ~0.7.
+- Every rotary phase (RoPE, Selective RoPE, Chrono) is a cumulative integral of time, so it encodes WHEN, never WHOSE.
+- Keys are additive (role + entity), so same-role facts collide.
+- Fix: a non-cumulative carrier phasor per plane. z~_t = (1 - s_t) z_{t-1} + s_t u_t, u_t = (cos a_t, sin a_t), a_t = W h_t;
+  z_t = z~_t / |z~_t|. It is composed with the Chrono rotation of q / k.
+
+(1) The N9s bug claims, checked against the code at 07f7d5d^ (v14/units.py _salient_phase / _echo_read; 07f7d5d is the removal):
+- Bug 1, the angle is a real EMA: TRUE in form. psi_t = (1 - s_t) psi_{t-1} + s_t a_t is a linear EMA of angles. Its real defect is
+  WRAPAROUND: +3.0 and -3.0 rad average to 0, the opposite direction, while the phasor mean is pi. "It spins on filler" holds only as
+  "it moves toward each filler token's angle"; the phasor does the same (see (2)).
+- Bug 1b, "zero sal_proj starved the gate": TRUE for N9s (a = 0 => u = 0 => psi = 0 whatever s). It is ALSO TRUE for the proposed
+  phasor: at init u_t = z_{t-1} = (1, 0), so dz/ds = u - z = 0. Only W_a gets gradient at step 0 (du/da = (0, 1)). That is harmless,
+  but it is not a fix.
+- Bug 2, N9s sat on the echo head (fed by raw E[x_t] + 3 lags), not in the notebooks (layers 3/7/11/15): TRUE by the code. This is a
+  design choice rather than a bug, but the notebooks never got a content phase.
+(2) The algebra:
+- "Renormalising holds z exactly through filler": exact ONLY if s_t = 0. For s > 0 the angle moves by ~ s * sin(angle(u) - angle(z)) per
+  token, the same first order as the real EMA. Measured on a 16k-token filler path (filler angles near 0, start +2.0 rad):
+  - s = 1e-3: phasor ends at 0.000, real EMA at 0.000;
+  - s = 1e-4: phasor 0.61, real EMA 0.39.
+  So the hold comes from the GATE, as with any retention gate. Holding 16k needs s <~ 1e-5 on filler (sigmoid logit <~ -11.5).
+  Proposal: init b_s = -8, and report the learned s on filler.
+- Init parity: TRUE. With W_a = 0, u = z = (1, 0) at every t; composing with Chrono, cos*1 - sin*0 = cos and sin*1 + cos*0 = sin bit
+  for bit. It is the same parity argument as CHRONO_HEADS.
+- Kernel: q / k are rotated before the fused kernel, as now, so there is no kernel change. BUT the per-step-normalised recurrence is
+  nonlinear: it needs a sequential T-step loop (slow at 4k) and breaks chunked prefill == decode unless carried exactly.
+  Correction: run the LINEAR recurrence on the unnormalised z~ (a chunked scan, as N9s used) and normalise only at the read. The
+  direction is an s-weighted EMA of unit vectors; the hold is exact at s = 0; it is wrap-safe and parallel. Guard |z~| with an eps.
+(3) Closest prior work and the one-line difference:
+- HRR / holographic binding (Plate 1995) and tensor-product binding (Smolensky 1990): binding by multiplication.
+- Temporal-synchrony binding of entities to roles (von der Malsburg 1981; Shastri & Ajjanagadde 1993 SHRUTI; Singer & Gray 1995).
+- Phase binding in vision nets (complex autoencoders, Lowe et al. 2022; AKOrN, Miyato et al. 2025).
+- RotatE (Sun et al. 2019).
+- Selective RoPE (Movahedi et al., ICLR 2026, arXiv:2511.17388): a content-driven CUMULATIVE phase on GLA / GDN.
+- Our own: V6 HSB (phase binding into a VECTOR state failed: facts superpose) and the v14 N5 row.
+- Difference: a held, resettable phase (a gated attractor on the circle, not a cumulative sum) composed with the time rotation of
+  keys and queries INSIDE an O(1) delta-rule MATRIX notebook. Same-entity facts phase-lock at any distance; same-role facts of other
+  entities interfere destructively, and the delta erase of one does not touch the other.
+(4) A readable screen. The natural-recall lure probe is unreadable at 100M. B0 (from-scratch tiny bodies) never learned lookup
+(run 3 INVALID). So:
+- Step 0, the gate (CPU, ~1 h): a LITERAL-cue lure probe, t40-style tokens with two entities sharing one relation ("Marta city:
+  Lisbon. Daniel city: Vienna. [filler D] Marta city:"), read on wio pam / nochrono / gdn / pam_s44 at D = 64 / 2k, n 200.
+  - Readable iff pam acc at D 64 is in [0.30, 0.90] (above chance, below ceiling). pam vs pam_s44 gives the seed noise.
+  - If it is not readable, wait for the SCI-1 47B natural-recall read (queued) and stop here.
+- Step 1 (GPU, Lead's call): continue wio pam stable_final for 0.2B at the stable LR, phasor ON vs OFF, 2 seeds each (4 runs, ~55 min
+  each at ~63k tok/s), then the Step-0 probe + natural recall (lure) + the scope 2k tuple.
+  - Noise = the OFF seed pair's spread.
+  - SUPPORTS if ON - OFF on lure-probe acc at 2k >= max(0.10, 2 x noise) AND lure-win falls AND val NLL is within +0.01.
+  - Else NO SUPPORT, and the phasor path is removed.
+- Ordered after the SCI-1 47B natural-recall read: if 386M already binds with a lure, the need is scale, not this.
+
 ### NATURAL RECALL probe (PRE-REGISTERED 2026-11-19 07:05 IST, before any number; Lead 07:1x IST; code v14/natural_recall.py)
 Why: after the night, the claim that survives is the clock's exact recall past the trained length. Set A without far docs:
 t40 16k pam_nofar 0.853 vs gdn_nofar 0.247. wio: pam 0.80 vs nochrono 0.35. Split t40 16k 0.692. That rests on t40, a 20-way
