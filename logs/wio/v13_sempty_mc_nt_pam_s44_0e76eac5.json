@@ -1,0 +1,22 @@
+{
+ "ckpt": "checkpoints_v13_sempty/nt_pam_s44_decay_0e76eac5/latest.pt",
+ "results": {
+  "hellaswag": {
+   "acc": 0.2741485759808803,
+   "acc_norm": 0.2748456482772356,
+   "n": 10042
+  },
+  "arc_easy": {
+   "acc": 0.4663299663299663,
+   "acc_norm": 0.4095117845117845,
+   "n": 2376
+  },
+  "piqa": {
+   "acc": 0.5914036996735582,
+   "acc_norm": 0.5854189336235038,
+   "n": 1838
+  }
+ },
+ "sec": 54.9,
+ "fp32": false
+}

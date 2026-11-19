@@ -6773,6 +6773,15 @@ length: pam 0.853 > nochrono 0.633 >> gdn 0.247.
 mix (4090 wio) it cost rules (pam 0.537 vs nochrono 0.639 s8 D). Interaction, one seed each and across boxes, so a hypothesis: far
 docs teach the plain delta notebook to carry rules at distance, and the clock's distance code is what a body uses when the data do
 not teach distance. The clock's recall edge holds in both mixes.
+**pam seed 44 (4090, same box / env / recipe / data as wio pam seed 43; only SEED differs; 08:2x IST 11-19; logs/wio/*nt_pam_s44_0e76eac5*):**
+s8 @8k 3-save **0.620** (saves 0.604 / 0.609 / 0.649; seed 43: **0.343**); s8 D 0.817 (seed 43 0.537); shift 0 / 2k / 4k / 8k
+.997 / .978 / .915 / .692 (s43 .796 / .610 / .440 / .233); affine .720 / .713 / .662 / .549 (s43 .656 / .571 / .529 / .453);
+t40 2k / 4k / 8k / 16k .867 / .839 / .839 / **.786** (s43 .900 / - / .817 / .803); clk2 .61 / .14 (s43 .42 / .10); HS / ARC-e / PIQA
+.274 / .466 / .591 (s43 .274 / .451 / .597); val 3.4397 (s43 3.4248).
+**SEED NOISE ON s8 IS LARGE: same box, only the seed changed, s8 @8k +0.277 (0.343 -> 0.620), s8 D +0.28; t40 16k moved -0.017
+and val +0.015.** So the s8 differences of the single-seed wio table (pam 0.343 / nochrono 0.427 / gdn 0.408 / split 0.473) and the
+pre-registered wio claim verdict are inside seed noise; the cross-box pair (0.096) underestimated it. Needles are stable across seeds.
+The trio rule (>= 2 of 3 within-box trios) is now the only basis for any rule-carry statement; t40 statements are robust so far.
 **Run-to-run noise estimate (one pair; Lead 11-19):** the same gdn_nofar (body, data shas, seed 43, recipe) on the 4090 vs the 6000:
 s8 D (2k / 4k, 3-save) 0.474 vs 0.570 (|d| 0.096), s8 @8k 0.174 vs 0.242 (0.068), t40 16k 0.283 vs 0.247 (0.036), val 3.387 vs
 3.3864 (0.001). Caveat: ONE pair (arch + kernel + interleaving differences, not only the seed); read as "s8 single-seed noise ~0.1
