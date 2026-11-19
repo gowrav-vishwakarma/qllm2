@@ -6773,6 +6773,28 @@ length: pam 0.853 > nochrono 0.633 >> gdn 0.247.
 mix (4090 wio) it cost rules (pam 0.537 vs nochrono 0.639 s8 D). Interaction, one seed each and across boxes, so a hypothesis: far
 docs teach the plain delta notebook to carry rules at distance, and the clock's distance code is what a body uses when the data do
 not teach distance. The clock's recall edge holds in both mixes.
+**DATED NOTE (Lead decisions, 08:2x IST 2026-11-19; applies to the wio and twins sections):** (1) Every s8-based single-seed verdict
+among the delta-rule bodies is re-labelled **UNDETERMINED (underpowered: seed noise >= 0.28 on one same-box pair)**: the wio claim vs
+GDN (read "not met"; pam_s44 alone would clear its 0.508 bar; neither reading is evidence), "the clock costs rules with far docs",
+split's rule lead, Set A's CLOCK and OURS verdicts. None is flipped in our favour; the original verdict lines stay. **What stands:**
+T++'s collapse past its window (structural: shift ~0.01 at distance, needles 0.08 at 16k); the recall edge (t40 16k pam 0.80 / 0.79 on
+two seeds vs 0.33-0.35; Set A 0.85 vs 0.63 vs 0.25); val and the benchmarks. (2) No new experiment whose verdict is a small s8 gap at
+100M / 1B (an SD ~0.2 would need dozens of seeds per arm): no CHRONO_HEADS 2 / 4 rung, no seeds beyond the queued trios. (3) Queued
+runs continue (t40 replication + a 3-seed spread): split_s44, nochrono_s44, gdn_s44 (4090), the s45 trio (6000); Set B continues
+(one shared parent: a within-run swing read, not a seed comparison). Report per arm s8 @8k, s8 D, t40 2k / 8k / 16k, clk2, val, and
+per-arm mean / min / max over seeds at the end. (4) The half-clocked body pays a real recall cost (t40 16k 0.692 vs pam 0.80 / 0.79)
+and its rule gain is inside s8 noise: no case to change the main run's body; the line closes with the trios unless split_s44 / s45
+reach pam's t40. (6) The 6000 returns to 3r when the s45 trio and Set B end (~Fri 01:00 IST).
+**Why is s8 seed-sensitive at 1B? (Mind's read of the logs, Lead (5); no run):** (i) the variance sits almost all in shift_wide:
+shift @8k 0.225 (s43) vs 0.720 (s44), affine @8k 0.460 vs 0.578. (ii) It moves during the decay: s44 shift @8k 0.375 at step 14,000
+(0.917B, 0.07B into the decay) -> 0.672 at 14,500 -> 0.682 -> 0.720 (end); s43 0.147 -> 0.263 -> 0.212 -> 0.225 while its shift @2k
+climbs 0.438 -> 0.680 over the same saves. So shift at distance is still being ACQUIRED at the read point; seed 44 crossed its
+transition by 14,500, seed 43 is mid-way (its 2k is rising, 8k has not followed). (iii) It is decoupled from language loss: seed 44 is
+WORSE on holdout val at every logged step (2k 4.086 vs 4.042 ... 13,733 3.587 vs 3.563; end 3.440 vs 3.425) yet far better on shift.
+(iv) No b2s / b2s_far val is logged (val_sources exclude them), so the per-source answer-loss trajectory is not in the logs.
+**Implication:** a skill mid-transition at the read point gives a bimodal, seed-dependent score; a later read (e.g. 2B) or a
+time-to-threshold metric (the step at which shift @4k first crosses 0.5, from saves every ~0.1B) would have lower variance. Needs
+denser saves / probe reads in the main phase; nothing run.
 **pam seed 44 (4090, same box / env / recipe / data as wio pam seed 43; only SEED differs; 08:2x IST 11-19; logs/wio/*nt_pam_s44_0e76eac5*):**
 s8 @8k 3-save **0.620** (saves 0.604 / 0.609 / 0.649; seed 43: **0.343**); s8 D 0.817 (seed 43 0.537); shift 0 / 2k / 4k / 8k
 .997 / .978 / .915 / .692 (s43 .796 / .610 / .440 / .233); affine .720 / .713 / .662 / .549 (s43 .656 / .571 / .529 / .453);
