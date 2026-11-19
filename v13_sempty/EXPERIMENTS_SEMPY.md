@@ -6796,6 +6796,49 @@ arms' max P_fu <= 0.15. **NOT LR-driven** = either lr06 arm swings. In between =
 (within-run dynamics, not a seed comparison). The lr12 pair already disagrees with "share-driven" (the 0.8 % arm swung more). An
 LR-DRIVEN reading does NOT change the main run's LR by itself: it leads to a proposal (e.g. a step to 4e-4 judged on the four-cell tuple
 over a settled window, with the decay finding in mind). 3r resumes from seg3r_pause.pt as soon as the lr06 reads are done.
+**Chrono vs Selective RoPE (closest prior work; arXiv:2511.17388, ICLR 2026; read from the paper AND their code,
+github.com/timurcarstensen/selective-rope src/selective_rope/modules/rotary.py + layers/gated_deltanet.py; Mind 17:xx IST 11-19):**
+- *Selective RoPE:* per head and PER CHANNEL PAIR (head_k_dim/2 angles), increments phi_t = conv1d_k4(W_phi l2norm(x_t)) (low-rank
+  W_phi, rank 16 by default; optional SiLU after the conv), optionally times a sigmoid phase gate (per head or per channel), optional
+  + exp(bias); angle_t,i = temp_i * cumsum_t(phi)_i, with temp_i a FIXED (non-trainable by default) RoPE frequency bank (theta 5e5) or
+  the tan(phi/2) "rfa" bank. Increments are free in sign and size per channel (no clamp); default init (kaiming / nn.Linear), so at
+  init the angles are a cumsum of small random increments, NOT RoPE. In their GDN the layer keeps GDN's short conv on q / k / v and
+  its gated RMSNorm output. Their repo pins fla at a git commit (not 0.3.2) and torch < 2.9.
+- *Chrono (ours, v13_sempty/model.py PAMLayer ~l.565 / 715-740):* ONE positive scalar rate per head, g_t = exp(clamp(W x_t, -3, 3))
+  in (0.05, 20), tau_t = cumsum_t(g) (exclusive), angle_t,i = tau_t * inv_freq_i with the standard RoPE bank (10,000): the rate warps
+  the WHOLE frequency bank of a head uniformly (a learned per-head clock speed, monotone time); W zero-init so g = 1 and the rotation
+  is EXACTLY RoPE at init (parity test); no conv, no gate, no l2norm; the carried decode state is one clock value per head; in M2 the
+  12 reader blocks reuse the writer's rotation (SHARE_READS); and because the clock is one rate per head it can be DILATED at eval
+  (clk2: g x 8) - a per-channel free angle has no single "speed" to dilate. CHRONO_HEADS lets a subset of heads keep g = 1.
+- *Difference in one line:* Selective RoPE learns free per-channel phase increments (an input-dependent rotation code); Chrono learns
+  a per-head monotone time warp of RoPE (an input-dependent clock) that starts as exact RoPE and stays dilatable. Same family idea
+  (input-dependent cumulative rotation in a linear-recurrent body), different form. **Claim downgrade:** "a content-modulated clock on a
+  delta-rule memory" is NOT a new idea after 2511.17388; what is ours is the form (monotone per-head rate, RoPE-exact init, shared
+  readers, dilation) and the measured recall edge, to be tested against GDN + Selective RoPE.
+**Baseline price "GDN + Selective RoPE" (wio recipe, not run, needs a pre-registration):** their layers/gated_deltanet.py is fla's GDN
++ SelectiveRoPE (low-rank phi, conv, gate). Path: a separate overlay venv with their package and its fla commit (fla 0.3.2 API may not
+match; ~2-3 h setup + test), a v13_sempty/baseline_gdn_srope.py wrapper at our geometry (12 layers, 6 heads x 64 / expand_v 2), arm
+"gdn_srope" in the twins chain. Parity tests: (i) their layer with position_embedding=none vs our baseline_gdn (fla GatedDeltaNet)
+forward-equal at shared weights; (ii) their own tests (SELECTIVE_ROPE_TESTING=1); (iii) streamed vs full forward. Cost on the 4090:
+GDN ran ~114k tok/s solo -> ~2.5 h + an assumed 10-25 % rope overhead -> ~3 h train + 0.5 h readouts; per seed. Read on t40 16k
+(the claim that survives the noise) and clk2, with s8 only as a margin trio.
+**Margin re-read (Argon (B); zero training; margins ARE stored: mean_target_margin = gold logit - max of the 7 other candidates, per
+task and distance; 3-save means):** M0 / M4k / M8k (shift | affine):
+pam s43 +1.41 / -0.27 / -1.11 | +0.79 / +0.34 / -0.07; pam s44 +5.05 / +2.35 / +0.82 | +1.28 / +0.88 / +0.36; nochrono +2.20 / +0.19 /
+-0.70 | +1.35 / +0.67 / +0.22; split +1.91 / +0.54 / -0.46 | +1.21 / +0.92 / +0.40; gdn +3.28 / -1.20 / -2.52 | +4.93 / +1.93 / +0.91;
+6000 nofar: pam +3.07 / +0.36 / -0.72 | +1.56 / -0.35 / -0.76; nochrono +4.89 / -0.32 / -1.28 | +1.23 / -0.84 / -1.11; gdn +9.09 / +0.50 /
+-1.22 | +5.87 / -0.42 / -1.01. **The seed spread does NOT shrink:** the two pam seeds differ already at distance 0 (shift M0 1.41 vs
+5.05): the circuit's STRENGTH at 1B is what varies (acquisition), not its survival over filler. The carry ratio M8k / M0 is unstable
+where M0 is small (s43 shift -0.79 vs s44 +0.16) and is not a lower-variance read. Side observation: GDN builds a much stronger
+adjacent circuit (M0 3-9) that decays steeply with distance; PAM's adjacent margin is smaller and decays less. pam_s45 adds a third
+point when its readouts land.
+**Release-recipe pilots (Lead (C); view, nothing run):** (ii) the GATE-FROZEN DECAY is worth a 100M pilot and is well powered: two
+decays (plain vs gates frozen: dt / warp / erase / write / echo) continued from ONE parent (wio pam stable_final) see identical data and
+start from identical weights, so their difference is a treatment effect, not seed noise (unlike the seed comparisons). Read: dC at 2k
+(scope tuple, paired docs), s8 margins, t40, val; ~0.1B each, ~1.2 h for both on the 4090. It tests directly WHERE the decay erases
+the carry (3f61ea54: decay dC -0.37). (i) uniform averaging of 3r plateau saves needs no pilot at all: it is a zero-training read on
+saves we will have (average 3-4 weights-only saves on CPU, read the four-cell tuple + C on the 4090), but LAWA L1 already lost dC -0.26,
+so expect a loss; worth one read, not a run.
 **DATED NOTE (Lead decisions, 08:2x IST 2026-11-19; applies to the wio and twins sections):** (1) Every s8-based single-seed verdict
 among the delta-rule bodies is re-labelled **UNDETERMINED (underpowered: seed noise >= 0.28 on one same-box pair)**: the wio claim vs
 GDN (read "not met"; pam_s44 alone would clear its 0.508 bar; neither reading is evidence), "the clock costs rules with far docs",
