@@ -6758,6 +6758,21 @@ the examples adjacent (shift @0 0.93 -> 0.007): the rule circuit runs THROUGH th
 adjacent and fade with distance (s8 D 0.37), and needles fall MORE (0.692 -> 0.306) than without the clocked heads (-> 0.444). The two
 halves are not modules; the split works as a joint code (clocked heads index / apply, phase-free heads hold content that survives
 distance?). One seed, eval-time zeroing of a jointly trained model: diagnostic, no claim.
+**(a) Set A COMPLETE (6000, within-box, ctl mix = no far docs, seed 43; 08:01 IST 11-19; logs/wio/*nt_*_nofar_a3ffb14b* on the 6000):**
+
+| arm | s8 D (2k/4k) 3-save | s8 @8k | shift 0 / 2k / 4k / 8k | affine 0 / 2k / 4k / 8k | t40 2k / 8k / 16k | clk2 8k / 16k | HS / ARC-e / PIQA | val |
+|---|---|---|---|---|---|---|---|---|
+| pam_nofar | **0.559** | **0.258** | .950 / .796 / .585 / .276 | .748 / .497 / .359 / .239 | .961 / .917 / **.853** | .41 / .05 | .273 / .463 / .592 | 3.4225 |
+| nochrono_nofar | 0.404 | 0.121 | .998 / .738 / .422 / .141 | .717 / .284 / .171 / .102 | .803 / .717 / .633 | .16 / .02 | .274 / .453 / .592 | 3.4202 |
+| gdn_nofar | **0.570** | 0.242 | .999 / .840 / .557 / .271 | .986 / .513 / .371 / .212 | .647 / .311 / .247 | .05 / .02 | .273 / .466 / .591 | **3.3864** |
+
+**VERDICTS (pre-registered bars, within the 6000):** OURS NOT MET (pam - gdn = -0.011). **FAMILY MET** (gdn_nofar 0.570 >= 0.47).
+**CLOCK MET: pam - nochrono = +0.155 >= +0.10** (outside the 0.05 band; ~1.5x the one-pair noise estimate). Needles past the
+length: pam 0.853 > nochrono 0.633 >> gdn 0.247.
+**Reading:** without far docs the clock HELPS rule carry past the training length (+0.155 s8 D, +0.137 s8 @8k); with far docs in the
+mix (4090 wio) it cost rules (pam 0.537 vs nochrono 0.639 s8 D). Interaction, one seed each and across boxes, so a hypothesis: far
+docs teach the plain delta notebook to carry rules at distance, and the clock's distance code is what a body uses when the data do
+not teach distance. The clock's recall edge holds in both mixes.
 **Run-to-run noise estimate (one pair; Lead 11-19):** the same gdn_nofar (body, data shas, seed 43, recipe) on the 4090 vs the 6000:
 s8 D (2k / 4k, 3-save) 0.474 vs 0.570 (|d| 0.096), s8 @8k 0.174 vs 0.242 (0.068), t40 16k 0.283 vs 0.247 (0.036), val 3.387 vs
 3.3864 (0.001). Caveat: ONE pair (arch + kernel + interleaving differences, not only the seed); read as "s8 single-seed noise ~0.1
