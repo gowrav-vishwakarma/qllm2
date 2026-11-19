@@ -6796,7 +6796,7 @@ arms' max P_fu <= 0.15. **NOT LR-driven** = either lr06 arm swings. In between =
 (within-run dynamics, not a seed comparison). The lr12 pair already disagrees with "share-driven" (the 0.8 % arm swung more). An
 LR-DRIVEN reading does NOT change the main run's LR by itself: it leads to a proposal (e.g. a step to 4e-4 judged on the four-cell tuple
 over a settled window, with the decay finding in mind). 3r resumes from seg3r_pause.pt as soon as the lr06 reads are done.
-## Three pre-registrations (Lead 11-19, recorded 17:2x IST BEFORE any of them runs; order: gfd on the 4090 after gdn_s44, then gdn_srope; plavg in a Library window)
+## Three pre-registrations (Lead 11-19, recorded 16:44 IST BEFORE any of them runs; order: gfd on the 4090 after gdn_s44, then gdn_srope; plavg in a Library window)
 
 **Margin finding for the paper (observation, with its seed count):** the pam seed difference is present already at distance 0 (shift
 M0 1.41 vs 5.05, 2 seeds): it is circuit STRENGTH at 1B, not survival over filler. Across the delta-rule bodies (1 seed each, 2 boxes),
@@ -6841,7 +6841,7 @@ the idea's (input-dependent cumulative rotation, Selective RoPE first), not ours
 arXiv:2511.17388); this arm IS that prior work on our recipe.
 
 **Chrono vs Selective RoPE (closest prior work; arXiv:2511.17388, ICLR 2026; read from the paper AND their code,
-github.com/timurcarstensen/selective-rope src/selective_rope/modules/rotary.py + layers/gated_deltanet.py; Mind 17:xx IST 11-19):**
+github.com/timurcarstensen/selective-rope src/selective_rope/modules/rotary.py + layers/gated_deltanet.py; Mind 16:3x IST 11-19):**
 - *Selective RoPE:* per head and PER CHANNEL PAIR (head_k_dim/2 angles), increments phi_t = conv1d_k4(W_phi l2norm(x_t)) (low-rank
   W_phi, rank 16 by default; optional SiLU after the conv), optionally times a sigmoid phase gate (per head or per channel), optional
   + exp(bias); angle_t,i = temp_i * cumsum_t(phi)_i, with temp_i a FIXED (non-trainable by default) RoPE frequency bank (theta 5e5) or
