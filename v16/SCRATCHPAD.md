@@ -173,6 +173,16 @@ Opposite moves in 2 of 3 intervals (M6->M7 within one mix: told 0.81 -> 0.49, in
 
 ## Decisions (organiser)
 
+**2026-11-19 06:37 IST - step back after Set A (same-box, no far docs) and the cross-box control.** Lead's reads, Mind's tables pending:
+gdn_nofar s8 D 0.570 / @8k 0.242 / t40 16k 0.247; pam_nofar 0.559 / 0.258 / 0.853. OURS bar not met (-0.011), FAMILY met. The same
+gdn_nofar on the 4090 read s8 D 0.474: the cross-box tolerance (0.05) failed, cross-box reads are void, and s8 run-to-run noise at
+100M / 1B is ~0.1, so every single-seed s8 gap under 0.10 this week is inside the noise (including the split's 0.473 vs 0.427 / 0.408).
+What survives three settings (far mix on the 4090, no-far mix on the 6000, one-flag ablation): the clock gives exact recall far past
+the trained length (t40 16k 0.80-0.85 vs 0.25-0.35); T++ and Mamba-2 lose rules at distance; rule carry is the delta-rule family's.
+What it means: the paper's claim is the clock as an episodic index of an O(1) delta-rule state, with the half-clocked notebook as the
+candidate that keeps rules too (one seed). Next: seeds (3 on the arms that matter), the per-half knockout, a natural-text recall probe
+beside t40 before we lean on it, then decide whether the main run's body should become the split before more tokens are spent on it.
+
 **2026-11-18 09:32 IST - main run goes back to the 3c mix (segment 3r); experiments leave the release run.** Stop-and-talk after
 3f's second guard break (+1.5B: scope_fu 0.84 / 0.43, P_fu 0.14 / 0.22; first settled window NO EFFECT on scope, 0.653 vs 0.55;
 6bc4aac4). Both segments with the far protocol share at 1.6 % (3d, 3f) showed over-application excursions; M9 (9B) already has
