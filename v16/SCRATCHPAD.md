@@ -173,6 +173,18 @@ Opposite moves in 2 of 3 intervals (M6->M7 within one mix: told 0.81 -> 0.49, in
 
 ## Decisions (organiser)
 
+**2026-11-19 08:17 IST - SEED NOISE re-reads the week (setback; step back).** pam seed 44 vs 43 on the same box: s8 @8k 0.620 vs 0.343, s8 D
+0.817 vs 0.537; t40 16k 0.786 vs 0.803; val 3.440 vs 3.425. Every single-seed s8 verdict among the delta-rule bodies is UNDETERMINED
+(wio claim vs GDN, "the clock costs rules", split's rule lead, Set A CLOCK / OURS); none is flipped in our favour. What stands: T++'s
+structural collapse; the clock's recall edge on t40 (two seeds, two mixes, two boxes); val; benchmarks. Natural-text recall is unreadable
+at 100M (no name -> value binding; bc14df7a), so the recall edge is shown on literal-cue copying only. What it really says: at 100M / 1B
+the rule skill is still being acquired and switches on at a seed-dependent time, so a single read at 1B measures timing, not the body;
+we spent four days of 100M arms on a probe that could not resolve them, and only the second seed showed it. Lesson for every future
+pre-registration: name the noise (a seed pair) BEFORE the bar. Decisions: no more experiments whose verdict is a small s8 gap at this
+scale; the queued trios finish (3-seed spreads, t40 replication); the half-clocked body gives no case to change the main run's body
+(t40 cost real, rule gain inside noise); the 6000 returns to 3r ~Fri 01:00. Different angle to weigh next: judge bodies on what is
+stable (recall beyond length, val, cost) and on the 386M model's own trajectory, and treat rule carry as a property the family has.
+
 **2026-11-19 06:37 IST - step back after Set A (same-box, no far docs) and the cross-box control.** Lead's reads, Mind's tables pending:
 gdn_nofar s8 D 0.570 / @8k 0.242 / t40 16k 0.247; pam_nofar 0.559 / 0.258 / 0.853. OURS bar not met (-0.011), FAMILY met. The same
 gdn_nofar on the 4090 read s8 D 0.474: the cross-box tolerance (0.05) failed, cross-box reads are void, and s8 run-to-run noise at
