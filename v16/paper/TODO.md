@@ -110,3 +110,7 @@ Each item says where it goes. **Written into main.tex and data/numbers.json on 1
   0.306 (s8 @8k / s8 D / t40 16k): a joint code, not two modules; drop the "two key geometries: rules vs episodes" sentence in reading (3).
 - [ ] **Replication count:** within-box trios 4090-s43, 4090-s44, 6000-s45 (5c1b374f); report each claim as k of 3.
 - [ ] **Natural-text recall probe** (13c78ac3) beside t40 before the recall claim is stated without the word "template".
+- [ ] **(added 08:17 IST 11-19) Seed noise on s8:** pam seed 44 vs 43, same box: s8 @8k 0.620 vs 0.343, s8 D 0.817 vs 0.537, t40 16k 0.786 vs
+  0.803. Rewrite sec:wio: the claim vs Gated DeltaNet is UNDETERMINED, not "not met" (the pre-registered verdict stays quoted, with the
+  note that the test was underpowered); remove readings that rest on single-seed s8 gaps within the delta-rule family; keep T++'s
+  collapse, the recall edge (two seeds, two mixes) and val. Natural-text recall unreadable at 100M (bc14df7a): say "literal-cue copying".
