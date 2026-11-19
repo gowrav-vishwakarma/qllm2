@@ -6743,6 +6743,21 @@ Needles past the length are ours (t40 16k 0.853 vs 0.247 on the same box). CLOCK
 pam_s44 decay). **split seed-44 PRE-REGISTRATION (recorded before it starts):** REPLICATED if s8 @8k 3-save >= 0.40 AND t40 16k
 >= 0.60, AND s8 @8k >= nochrono_s44 s8 - 0.02 AND t40 16k >= pam_s44 t40 16k - 0.20. A CHRONO_HEADS 2 / 4 rung is worth one night
 only if split_s44 replicates (then: is the trade a dial?); nothing extra runs before.
+**(b) split KNOCKOUT diagnostic (pre-registered; 6000, 07:0x-07:33 IST 11-19; split decay end save, sha d12a891c; eval-time
+V13_CHRONO_KNOCKOUT zeroes that head half's notebook read in the writer and its M2 readers; logs/wio/v13_sempty_split_ko_*):**
+
+| condition | s8 @8k | shift 0 / 2k / 4k / 8k | affine 0 / 2k / 4k / 8k | s8 D | t40 16k |
+|---|---|---|---|---|---|
+| none (same-box control) | 0.480 | .930 / .833 / .670 / .380 | .745 / .715 / .690 / .580 | 0.727 | 0.692 |
+| clocked half OFF (RoPE heads 3-5 only) | **0.026** | .007 / .003 / .003 / .007 | .152 / .138 / .125 / .045 | 0.067 | 0.444 |
+| RoPE half OFF (clocked heads 0-2 only) | 0.177 | .845 / .472 / .335 / .203 | .650 / .410 / .260 / .152 | 0.369 | **0.306** |
+
+(The control reproduces the 4090 end-save cells on the 6000: s8 @8k 0.480, t40 16k 0.692.) **Reading: the hypothesis "rules in the
+phase-free half, needles in the clocked half" is REFUTED in both directions.** Without the clocked heads the rules collapse even with
+the examples adjacent (shift @0 0.93 -> 0.007): the rule circuit runs THROUGH the clocked heads. Without the RoPE heads rules survive
+adjacent and fade with distance (s8 D 0.37), and needles fall MORE (0.692 -> 0.306) than without the clocked heads (-> 0.444). The two
+halves are not modules; the split works as a joint code (clocked heads index / apply, phase-free heads hold content that survives
+distance?). One seed, eval-time zeroing of a jointly trained model: diagnostic, no claim.
 **Run-to-run noise estimate (one pair; Lead 11-19):** the same gdn_nofar (body, data shas, seed 43, recipe) on the 4090 vs the 6000:
 s8 D (2k / 4k, 3-save) 0.474 vs 0.570 (|d| 0.096), s8 @8k 0.174 vs 0.242 (0.068), t40 16k 0.283 vs 0.247 (0.036), val 3.387 vs
 3.3864 (0.001). Caveat: ONE pair (arch + kernel + interleaving differences, not only the seed); read as "s8 single-seed noise ~0.1
