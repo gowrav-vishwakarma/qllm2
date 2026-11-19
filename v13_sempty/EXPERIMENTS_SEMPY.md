@@ -6789,6 +6789,13 @@ f08_lr12 = EXCURSION at 0.4B (P_fu 0.53); f16_lr12 = no excursion by the letter 
 0.15) and rebound at 0.4B: a constant-LR swing is reproduced at 100M, and it is not larger with the doubled share ("share-driven" not
 supported at LR 1.2e-3). The lr06 arms decide "LR-driven" (pending Lead's call on the 6000 window; 4090 rebooted 10:31 IST, local jobs
 restarted 16:23).
+**lr06 READING (Lead 16:3x IST 11-19, recorded BEFORE any lr06 read exists):** f08_lr06 and f16_lr06 run together after the s45 mains,
+same parent, same +0.1B reads (incl. +0.4B end) on the same docs as lr12. **LR-DRIVEN** = neither lr06 arm reaches the swing bar
+(P_fu >= 0.32 or scope_fu >= 0.94) at any read, while the lr12 arms did (f08_lr12 at 0.4B; f16_lr12 0.29, just under), AND the lr06
+arms' max P_fu <= 0.15. **NOT LR-driven** = either lr06 arm swings. In between = UNCLEAR. Each arm is one continuation from one parent
+(within-run dynamics, not a seed comparison). The lr12 pair already disagrees with "share-driven" (the 0.8 % arm swung more). An
+LR-DRIVEN reading does NOT change the main run's LR by itself: it leads to a proposal (e.g. a step to 4e-4 judged on the four-cell tuple
+over a settled window, with the decay finding in mind). 3r resumes from seg3r_pause.pt as soon as the lr06 reads are done.
 **DATED NOTE (Lead decisions, 08:2x IST 2026-11-19; applies to the wio and twins sections):** (1) Every s8-based single-seed verdict
 among the delta-rule bodies is re-labelled **UNDETERMINED (underpowered: seed noise >= 0.28 on one same-box pair)**: the wio claim vs
 GDN (read "not met"; pam_s44 alone would clear its 0.508 bar; neither reading is evidence), "the clock costs rules with far docs",
