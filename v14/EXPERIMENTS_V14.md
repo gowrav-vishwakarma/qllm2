@@ -5691,7 +5691,7 @@ Closest prior work: replay / rehearsal against forgetting during fine-tuning (e.
 learning); data mixing in the LR-decay ("annealing") phase of LLM pre-training (e.g. MiniCPM / OLMo annealing-phase data).
 Difference: the target is a far-rule carry margin in an O(1) state, measured by a held-vs-noprot contrast, with a scope guard.
 
-### NATURAL RECALL probe (PRE-REGISTERED 2026-11-19 07:25 IST, before any number; Lead 07:1x IST; code v14/natural_recall.py)
+### NATURAL RECALL probe (PRE-REGISTERED 2026-11-19 07:05 IST, before any number; Lead 07:1x IST; code v14/natural_recall.py)
 Why: after the night, the claim that survives is the clock's exact recall past the trained length. Set A without far docs:
 t40 16k pam_nofar 0.853 vs gdn_nofar 0.247. wio: pam 0.80 vs nochrono 0.35. Split t40 16k 0.692. That rests on t40, a 20-way
 "Key: value" template. The user's realistic-tests rule asks for a natural variant before the paper leans on it.
