@@ -164,6 +164,11 @@ def test_imb_generators():
             assert len(d_ev.ids) == L + 1 and len(d_ev.answers) >= 1
             for idx, gold, cands in d_ev.answers:
                 assert d_ev.ids[idx] == gold and gold in cands and len(set(cands)) == 8
+    from v14.rules_ood import B2_NEW_TASKS
+    for t in B2_NEW_TASKS:
+        for sp in (False, True):
+            d_sp = gen_b2_rules(P, rng, 2048 if sp else 512, True, task=t, spread=sp)
+            assert len(d_sp.ids) == (2049 if sp else 513) and len(d_sp.answers) == 1
     batch = make_train_batch(P, 42, 8, 512)
     x, y, m = collate_docs(batch, torch.device("cpu"))
     assert x.shape == (8, 512) and y.shape == (8, 512) and (m > 0).all()

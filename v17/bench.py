@@ -48,6 +48,7 @@ for _p in (str(ROOT), str(ROOT / "scripts")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+from memory_probes.spread import split_units  # noqa: E402
 from sempyt import NamedTensor  # noqa: E402
 from transformers import AutoTokenizer  # noqa: E402
 from v13_sempty.fused_ce import fused_linear_cross_entropy  # noqa: E402
@@ -426,12 +427,11 @@ def gen_b2_rules(P: IMBPools, rng: random.Random, L: int, eval_split: bool,
         cands = list(ex.candidate_token_ids)
         return _pack_to_len(P, rng, [], [(q_ids, ex.target_token_id, cands)], L, eval_split, pos_frac=1.0)
 
-    # Spread each demonstration line across real web prose filler!
-    text = P.ftok.tok.decode(ex.prompt_ids)
-    lines = text.split("\n")
-    header, demos, query_line = lines[0], lines[1:-1], lines[-1]
-    demo_chunks = [enc("\n" + header + "\n" + demos[0] + "\n")] + [enc("\n" + d + "\n") for d in demos[1:]]
-    q_ids = enc("\n" + query_line)
+    # Spread each demonstration unit across real web prose filler via split_units!
+    header, units = split_units(ex)
+    demos, query_unit = units[:-1], units[-1]
+    demo_chunks = [enc("\n" + header + demos[0])] + [enc("\n" + d) for d in demos[1:]]
+    q_ids = enc("\n" + query_unit)
     total_demo_toks = sum(len(c) for c in demo_chunks)
     rem = max(0, (L + 1) - total_demo_toks - len(q_ids) - 1)
     gap = rem // max(1, len(demo_chunks))
@@ -780,6 +780,7 @@ def main():
     args = ap.parse_args()
 
     torch.set_float32_matmul_precision("high")
+    torch._dynamo.config.cache_size_limit = 64
     dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     git_hash = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
                               capture_output=True, text=True, cwd=ROOT).stdout.strip() or "uncommitted"
