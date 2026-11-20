@@ -173,6 +173,24 @@ Opposite moves in 2 of 3 intervals (M6->M7 within one mix: told 0.81 -> 0.49, in
 
 ## Decisions (organiser)
 
+**2026-11-20 11:22 IST - 6000 STOPPED AND FREED on the user's word ("we are not reaching anywhere ... stop whatever is running on 6000,
+commit and push, take the backup that is needed here, make the system free"). HANDOVER STATE.**
+- Main run (SCI-1 386M, segment 3r = the 3c mix) stopped at its save: step 749,500, 49.119B tokens. Nothing runs on the 6000 (GPU 0 MiB,
+  no tmux). Nothing was deleted there.
+- On the 4090 box, d_drive `from_6000/checkpoints_v13_sempty/sci1_long3r_91a87ed/`: `final_step_749500.pt` (FULL, resumable; sha256
+  b403ad63...), `step_732432_weights.pt` (48B, b821d45e...), `step_747691_weights.pt` (49B, 763555ba...), plus 46B / 47B weights from
+  before. All three new files sha-matched against the 6000. To resume: copy the full save back as latest.pt in the 3r run dir and run
+  the cont chain with sci1_long3r_env.sh (resume=auto restores step, cursors, optimizer).
+- Logs: the 254 uncommitted result / run logs of the 6000's worktrees are in git (43ce25d1 on the rebased history): Set A no-far arms,
+  seed-45 trio, Set B (far share x LR) with scope tuples, segment 3c-3r logs. Local-only commit caa4da93 saved as branch
+  save/qllm_ctl_caa4da93; the qllm_sci1check worktree's local diff saved as v16/tmp/sci1check_worktree_local_20261120.patch.
+- NOT backed up (6000 only; scores and logs are in git, weights are not): the 100M arm checkpoints in qllm_twins/checkpoints_v13_sempty
+  (nt_*_nofar, nt_*_s45, setb_*; ~11 GB for the decay finals). d_drive has 9.2 GB free; the user decides.
+- Unread / unrecorded by a session: the seed-45 trio and Set B lr06 results sit in those logs (logs/wio/*s45*, logs/v14_scope_c_f*_lr06*);
+  Mind and Library sessions were not alive at the stop, so their notebooks may lack the final tables. The 4090 seeds chain
+  (split_s44 / nochrono_s44 / gdn_s44) state is whatever the Nov 19 restart left; local tmux is empty.
+- Where the science stands is in the entries below (seed noise 0.28 on s8; the recall edge on t40; Selective RoPE as close prior work).
+
 **2026-11-19 08:17 IST - SEED NOISE re-reads the week (setback; step back).** pam seed 44 vs 43 on the same box: s8 @8k 0.620 vs 0.343, s8 D
 0.817 vs 0.537; t40 16k 0.786 vs 0.803; val 3.440 vs 3.425. Every single-seed s8 verdict among the delta-rule bodies is UNDETERMINED
 (wio claim vs GDN, "the clock costs rules", split's rule lead, Set A CLOCK / OURS); none is flipped in our favour. What stands: T++'s
