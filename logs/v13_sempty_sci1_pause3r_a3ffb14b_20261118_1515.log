@@ -1,0 +1,3 @@
+=== pause: waiting for the next save of checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt (now 2026-11-18T15:15:29Z)
+=== pause: sci1s3r stopped 2026-11-18T15:18:49Z
+=== PAUSED at step 721000 tokens 47251456000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/seg3r_pause.pt

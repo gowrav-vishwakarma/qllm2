@@ -1,0 +1,32 @@
+=== reaper scope f08_lr12_013734: 0 tracebacks | L 2048: 4-tuple B -5.06 C +1.764 scope_fu 0.71 prec_u1 0.23 | P_fu 0.07 twin unit_acc 0.93 | S_fu_held 0.14 S_bound_fu 0.30 | R_u2 0.77 2026-11-18T22:42:46Z
+=== reaper rm checkpoints_v13_sempty/setb_f08_lr12_d75a27c/step_013734.pt
+=== reaper scope f08_lr12_015260: 0 tracebacks | L 2048: 4-tuple B -5.01 C +1.603 scope_fu 0.54 prec_u1 0.15 | P_fu 0.05 twin unit_acc 0.92 | S_fu_held 0.06 S_bound_fu 0.13 | R_u2 0.85 2026-11-18T23:31:33Z
+=== reaper rm checkpoints_v13_sempty/setb_f08_lr12_d75a27c/step_015260.pt
+=== reaper scope f08_lr12_016786: 0 tracebacks | L 2048: 4-tuple B -4.48 C +1.327 scope_fu 0.48 prec_u1 0.07 | P_fu 0.01 twin unit_acc 0.96 | S_fu_held 0.04 S_bound_fu 0.06 | R_u2 0.93 2026-11-19T00:08:02Z
+=== reaper rm checkpoints_v13_sempty/setb_f08_lr12_d75a27c/step_016786.pt
+=== reaper scope f16_lr12_013734: 0 tracebacks | L 2048: 4-tuple B -5.03 C +1.714 scope_fu 0.68 prec_u1 0.23 | P_fu 0.07 twin unit_acc 0.93 | S_fu_held 0.14 S_bound_fu 0.30 | R_u2 0.77 2026-11-19T00:14:55Z
+=== reaper rm checkpoints_v13_sempty/setb_f16_lr12_d75a27c/step_013734.pt
+=== reaper scope f08_lr12_018312: 0 tracebacks | L 2048: 4-tuple B -6.74 C +1.258 scope_fu 0.24 prec_u1 0.17 | P_fu 0.00 twin unit_acc 0.90 | S_fu_held 0.01 S_bound_fu 0.03 | R_u2 0.83 2026-11-19T00:57:42Z
+=== reaper rm checkpoints_v13_sempty/setb_f08_lr12_d75a27c/step_018312.pt
+=== reaper scope f16_lr12_015260: 0 tracebacks | L 2048: 4-tuple B -4.72 C +1.918 scope_fu 0.67 prec_u1 0.31 | P_fu 0.23 twin unit_acc 0.94 | S_fu_held 0.21 S_bound_fu 0.21 | R_u2 0.69 2026-11-19T01:08:30Z
+=== reaper rm checkpoints_v13_sempty/setb_f16_lr12_d75a27c/step_015260.pt
+=== reaper scope f16_lr12_016786: 0 tracebacks | L 2048: 4-tuple B -4.56 C +1.758 scope_fu 0.62 prec_u1 0.20 | P_fu 0.13 twin unit_acc 0.93 | S_fu_held 0.12 S_bound_fu 0.23 | R_u2 0.80 2026-11-19T01:57:27Z
+=== reaper rm checkpoints_v13_sempty/setb_f16_lr12_d75a27c/step_016786.pt
+=== reaper scope f16_lr12_018312: 0 tracebacks | L 2048: 4-tuple B -6.82 C +0.999 scope_fu 0.15 prec_u1 0.01 | P_fu 0.00 twin unit_acc 0.82 | S_fu_held 0.01 S_bound_fu 0.00 | R_u2 0.99 2026-11-19T02:56:15Z
+=== reaper rm checkpoints_v13_sempty/setb_f16_lr12_d75a27c/step_018312.pt
+=== reaper scope f16_lr06_013734: 0 tracebacks | L 2048: 4-tuple B -5.03 C +1.714 scope_fu 0.68 prec_u1 0.23 | P_fu 0.07 twin unit_acc 0.93 | S_fu_held 0.14 S_bound_fu 0.30 | R_u2 0.77 2026-11-19T11:41:14Z
+=== reaper rm checkpoints_v13_sempty/setb_f16_lr06_d75a27c/step_013734.pt
+=== reaper scope f08_lr06_013734: 0 tracebacks | L 2048: 4-tuple B -5.06 C +1.764 scope_fu 0.71 prec_u1 0.23 | P_fu 0.07 twin unit_acc 0.93 | S_fu_held 0.14 S_bound_fu 0.30 | R_u2 0.77 2026-11-19T11:46:12Z
+=== reaper rm checkpoints_v13_sempty/setb_f08_lr06_d75a27c/step_013734.pt
+=== reaper scope f16_lr06_015260: 0 tracebacks | L 2048: 4-tuple B -4.08 C +1.282 scope_fu 0.54 prec_u1 0.08 | P_fu 0.03 twin unit_acc 0.94 | S_fu_held 0.07 S_bound_fu 0.17 | R_u2 0.92 2026-11-19T12:50:00Z
+=== reaper rm checkpoints_v13_sempty/setb_f16_lr06_d75a27c/step_015260.pt
+=== reaper scope f08_lr06_015260: 0 tracebacks | L 2048: 4-tuple B -4.54 C +1.205 scope_fu 0.47 prec_u1 0.04 | P_fu 0.06 twin unit_acc 0.89 | S_fu_held 0.05 S_bound_fu 0.16 | R_u2 0.96 2026-11-19T12:54:48Z
+=== reaper rm checkpoints_v13_sempty/setb_f08_lr06_d75a27c/step_015260.pt
+=== reaper scope f16_lr06_016786: 0 tracebacks | L 2048: 4-tuple B -5.36 C +1.321 scope_fu 0.34 prec_u1 0.15 | P_fu 0.00 twin unit_acc 0.93 | S_fu_held 0.01 S_bound_fu 0.05 | R_u2 0.85 2026-11-19T13:31:34Z
+=== reaper rm checkpoints_v13_sempty/setb_f16_lr06_d75a27c/step_016786.pt
+=== reaper scope f08_lr06_016786: 0 tracebacks | L 2048: 4-tuple B -4.37 C +1.497 scope_fu 0.54 prec_u1 0.14 | P_fu 0.06 twin unit_acc 0.95 | S_fu_held 0.14 S_bound_fu 0.17 | R_u2 0.86 2026-11-19T13:46:29Z
+=== reaper rm checkpoints_v13_sempty/setb_f08_lr06_d75a27c/step_016786.pt
+=== reaper scope f16_lr06_018312: 0 tracebacks | L 2048: 4-tuple B -3.45 C +1.715 scope_fu 0.77 prec_u1 0.18 | P_fu 0.18 twin unit_acc 0.96 | S_fu_held 0.26 S_bound_fu 0.34 | R_u2 0.82 2026-11-19T14:17:05Z
+=== reaper rm checkpoints_v13_sempty/setb_f16_lr06_d75a27c/step_018312.pt
+=== reaper scope f08_lr06_018312: 0 tracebacks | L 2048: 4-tuple B -6.05 C +0.894 scope_fu 0.10 prec_u1 0.03 | P_fu 0.00 twin unit_acc 0.87 | S_fu_held 0.01 S_bound_fu 0.01 | R_u2 0.97 2026-11-19T14:27:42Z
+=== reaper rm checkpoints_v13_sempty/setb_f08_lr06_d75a27c/step_018312.pt

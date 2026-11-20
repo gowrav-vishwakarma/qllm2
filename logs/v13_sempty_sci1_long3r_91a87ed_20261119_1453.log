@@ -1,0 +1,1144 @@
+=== sci1_long3r start 2026-11-19T14:53:11Z commit=91a87ed log=logs/v13_sempty_sci1_long3r_91a87ed_20261119_1453.log ckpt=checkpoints_v13_sempty/sci1_long3r_91a87ed ===
+[cycle] sources re-open from the start when dry, up to N passes in total: {'smoltalk2_mid': 4, 'chatmt2': 3, 'chatsr': 4, 'tuluif': 4}
+[decontam] index .cache/decontam/v2.npy sha256 a4b66d1b878bbf1aea9e3425f9fd5aba3245a6d22bb1d8e8f882d2805e98be96 (4,384,904 13-grams)
+Streaming pretrain blend: sources=['dclm', 'fineweb100', 'arxiv', 'pubmed', 'pes2o', 'cosmo', 'finemath', 'smoltalk2_mid', 'chatmt2', 'tools', 'pysci', 'b2s', 'recall4k', 'proto4k', 'b2s_far', 'proto_far', 'chatsr', 'tuluif'] weights=[0.14997, 0.15615, 0.05043, 0.07254, 0.10145, 0.11762, 0.02232, 0.12, 0.06, 0.03501, 0.04631, 0.01696, 0.00377, 0.00846, 0.012, 0.008, 0.015, 0.004] edu>=3 budget=98623684608 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=43 warmup=0 answer_weight=100.0 skips={'dclm': 6466691, 'fineweb100': 2514638, 'arxiv': 159209, 'pubmed': 443730, 'pes2o': 678338, 'cosmo': 6155346, 'finemath': 902346, 'smoltalk2_mid': 6753397, 'chatmt2': 622999, 'tools': 3030979, 'pysci': 1427127, 'b2s': 621044, 'recall4k': 347258, 'proto4k': 326839, 'b2s_far': 157691, 'proto_far': 94288, 'chatsr': 339227, 'tuluif': 82933}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[resume] stream re-opened at docs={'dclm': 6466691, 'fineweb': 4467225, 'arxiv': 159209, 'pubmed': 443730, 'pes2o': 678338, 'cosmo': 6155346, 'finemath': 902346, 'smoltalk2_mid': 6753397, 'chatmt': 391187, 'pysci': 1427127, 'dclm@f': 27, 'dclm@r': 564430, 'fineweb@f': 14, 'fineweb@r': 725000, 'cosmo@f': 17, 'cosmo@r': 85608, 'pes2o@f': 11, 'pes2o@r': 2729, 'pubmed@f': 1, 'pubmed@r': 200746, 'arxiv@f': 4, 'arxiv@r': 2475, 'pysci@f': 9, 'pysci@r': 169175, 'chatmt@f': 6, 'chatmt@r': 68256, 'finemath@f': 9, 'finemath@r': 10493, 'fineweb#decon': 3938, 'cosmo#decon': 1124, 'dclm#decon': 4564, 'finemath#decon': 642, 'chatmt#decon': 216, 'arxiv#decon': 140, 'smoltalk2_mid#decon': 873, 'pubmed#decon': 28, 'tools': 3030979, 'think': 614026, 'b2s': 621044, 'recall4k': 347258, 'proto4k': 326839, 'think#decon': 2200, 'tools#decon': 360, 'pes2o#decon': 80, 'pysci#decon': 19, 'protoc': 39645, 'b2s_far': 157691, 'proto_far': 94288, 'b2s_far#decon': 201, 'fineweb100': 2514638, 'chatmt2': 622999, 'chatsr': 339227, 'tuluif': 82933, 'fineweb100@f': 8, 'fineweb100@r': 371852, 'fineweb100#decon': 2287, 'chatmt2#decon': 340, 'tuluif#decon': 24, 'chatsr#decon': 12, 'smoltalk2_mid@pass': 2, 'smoltalk2_mid@f': 67, 'smoltalk2_mid@r': 4114, 'chatmt2@pass': 2, 'chatmt2@f': 4, 'chatmt2@r': 37094, 'chatsr@pass': 3, 'tuluif@pass': 3, 'tuluif@f': 0, 'tuluif@r': 27489, 'proto4k2': 12006, 'proto_far3': 8463, 'chatsr@f': 1, 'chatsr@r': 4405} tokens_consumed=1,376,256,000 remaining_budget=98,623,684,608
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl4096.pt (248,461 tokens)
+Val chunks: 60
+[val_src] dclm: 262,144 holdout tokens
+[val_src] fineweb: 262,144 holdout tokens
+[val_src] arxiv: 262,144 holdout tokens
+[val_src] pubmed: 262,144 holdout tokens
+[val_src] pes2o: 262,144 holdout tokens
+[val_src] cosmo: 262,144 holdout tokens
+[val_src] tools: 262,144 holdout tokens
+[val_src] pysci: 262,144 holdout tokens
+[val_src] chatmt: 262,144 holdout tokens
+streaming pretrain: sources=('dclm', 'fineweb100', 'arxiv', 'pubmed', 'pes2o', 'cosmo', 'finemath', 'smoltalk2_mid', 'chatmt2', 'tools', 'pysci', 'b2s', 'recall4k', 'proto4k', 'b2s_far', 'proto_far', 'chatsr', 'tuluif') weights=(0.14997, 0.15615, 0.05043, 0.07254, 0.10145, 0.11762, 0.02232, 0.12, 0.06, 0.03501, 0.04631, 0.01696, 0.00377, 0.00846, 0.012, 0.008, 0.015, 0.004) target_tokens=99999940608 steps=1525878 cached=False chat_vocab=True wiki_val=True
+========================================================================
+  v13_sempty trainer  (real-arm PAM, O(1) memory)
+  wall clock start : 2026-11-19 14:53:21
+  commit           : 91a87ed
+  preset / dataset : baseline_real_pm / mix
+  arch             : pam
+========================================================================
+[env]
+  device=cuda gpu=NVIDIA RTX PRO 6000 Blackwell Server Edition torch=2.8.0+cu128
+  fused_pam=True fused_ce=True ce_gemm_dtype=auto amp=bf16 grad_ckpt=False
+[geometry]
+  batch_size=16 seq_len=4096 tokens/step=65,536
+  steps=1,525,878 steps/epoch=None epochs_implied=n/a
+  planned_tokens=99,999,940,608  lr=0.0008 warmup=0 wd=0.01 grad_clip=1.0
+  checkpoints: dir=checkpoints_v13_sempty/sci1_long3r_91a87ed latest_every=500 keep_every=15259 keep_last=2 best=on val_every=2000 resume=auto
+[data]
+  train_chunks=None val_chunks=122 recall_frac=0.0 vocab=50261 tokenizer=gpt2
+[params]
+  total=385,817,038 (385.82M dense)
+[ladder] pam_layers=(3, 7, 11, 15, 19, 23) mlp_hidden=3704
+[config] {'vocab_size': 50261, 'dim': 1024, 'n_heads': 8, 'head_dim': 128, 'n_layers': 24, 'expand': 3, 'dropout': 0.0, 'max_seq_len': 4096, 'use_rope': True, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'base_dt_bias': -4.0, 'is_complex': False, 'n_states': 1, 'state_dt_spread': 2.0, 'vault': False, 'delta': True, 'reset_at_eos': True, 'reset_token_id': 50256, 'cond_mem': False, 'cond_mem_slots': 262144, 'cond_mem_dim': 64, 'cond_mem_layers': (0, 1), 'chrono': True, 'out_gate': True, 'short_conv': False, 'short_conv_k': 4, 'echo': True, 'echo_dt_bias': -6.0, 'pam_layers': (3, 7, 11, 15, 19, 23), 'mlp_hidden': 3704, 'swa_layers': (), 'swa_window': 128, 'share_reads': True}
+[args] {'preset': 'baseline_real_pm', 'dataset': 'mix', 'device': 'cuda', 'steps': 1525878, 'epochs': 1, 'batch_size': 16, 'seq_len': 4096, 'lr': 0.0008, 'weight_decay': 0.01, 'dropout': 0.0, 'warmup_steps': 0, 'lr_schedule': 'wsd_stable', 'continue_from': 'checkpoints_v13_sempty/sci1_long3r_91a87ed/seg3r_pause.pt', 'gradient_clip': 1.0, 'amp_dtype': 'bf16', 'fused_ce': True, 'no_fused_ce': False, 'fused_ce_chunk': 4096, 'ce_gemm_dtype': 'auto', 'fused_pam': True, 'max_samples': 64, 'seed': 43, 'target_tokens': 99999940608, 'pretrain_sources': 'dclm,fineweb100,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt2,tools,pysci,b2s,recall4k,proto4k,b2s_far,proto_far,chatsr,tuluif', 'pretrain_weights': '0.14997,0.15615,0.05043,0.07254,0.10145,0.11762,0.02232,0.12000,0.06000,0.03501,0.04631,0.01696,0.00377,0.00846,0.01200,0.00800,0.01500,0.00400', 'edu_score_min': 3, 'fineweb_name': 'sample-10BT', 'holdout_pct': 5, 'blend_warmup_tokens': 0, 'ramp_weights': '', 'ramp_from_tokens': 0, 'ramp_tokens': 0, 'answer_weight': 100.0, 'num_workers': 2, 'no_wiki_val': False, 'val_sources': 'dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,chatmt', 'val_source_tokens': 262144, 'resume': 'auto', 'keep_every_steps': 15259, 'keep_last': 2, 'no_chat_vocab': False, 'checkpoint_dir': 'checkpoints_v13_sempty/sci1_long3r_91a87ed', 'gradient_checkpointing': False, 'log_interval': 50, 'val_every': 2000, 'gen_every': 0, 'gen_prompt': 'In 1923, the University of', 'gen_max_tokens': 80, 'save_every_steps': 500, 'diag_every': 2000, 'max_val_batches': 0, 'recall_frac': 0.0, 'n_states': None, 'vault': False, 'delta': True, 'cond_mem': False, 'reset_at_eos': True, 'grad_accum': 2, 'chrono': True, 'out_gate': True, 'short_conv': False, 'swa_layers': '', 'swa_window': 128, 'pam_layers': '3,7,11,15,19,23', 'mlp_hidden': 3704, 'share_reads': True, 'echo': True, 'ngram_orders': '', 'echo_surprise_tau': 0.0, 'dim': 1024, 'n_heads': 8, 'head_dim': 128, 'n_layers': 24, 'base_dt_bias': None, 'stream_worker': 1, 'prefetch': 64, 'arch': 'pam', 'mamba_d_model': 768, 'tpp_geom': '', 'grove_spec': '', 'mamba_n_layer': 17, 'init_from': ''}
+========================================================================
+[accum] 2 micro-batches of 8 per step
+[resume] checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt: step=721,000 tokens=47,251,456,000 lr=8.000e-04 best_val_ppl=19.48 cursor={'doc_counters': {'dclm': 6466691, 'fineweb': 4467225, 'arxiv': 159209, 'pubmed': 443730, 'pes2o': 678338, 'cosmo': 6155346, 'finemath': 902346, 'smoltalk2_mid': 6753397, 'chatmt': 391187, 'pysci': 1427127, 'dclm@f': 27, 'dclm@r': 564430, 'fineweb@f': 14, 'fineweb@r': 725000, 'cosmo@f': 17, 'cosmo@r': 85608, 'pes2o@f': 11, 'pes2o@r': 2729, 'pubmed@f': 1, 'pubmed@r': 200746, 'arxiv@f': 4, 'arxiv@r': 2475, 'pysci@f': 9, 'pysci@r': 169175, 'chatmt@f': 6, 'chatmt@r': 68256, 'finemath@f': 9, 'finemath@r': 10493, 'fineweb#decon': 3938, 'cosmo#decon': 1124, 'dclm#decon': 4564, 'finemath#decon': 642, 'chatmt#decon': 216, 'arxiv#decon': 140, 'smoltalk2_mid#decon': 873, 'pubmed#decon': 28, 'tools': 3030979, 'think': 614026, 'b2s': 621044, 'recall4k': 347258, 'proto4k': 326839, 'think#decon': 2200, 'tools#decon': 360, 'pes2o#decon': 80, 'pysci#decon': 19, 'protoc': 39645, 'b2s_far': 157691, 'proto_far': 94288, 'b2s_far#decon': 201, 'fineweb100': 2514638, 'chatmt2': 622999, 'chatsr': 339227, 'tuluif': 82933, 'fineweb100@f': 8, 'fineweb100@r': 371852, 'fineweb100#decon': 2287, 'chatmt2#decon': 340, 'tuluif#decon': 24, 'chatsr#decon': 12, 'smoltalk2_mid@pass': 2, 'smoltalk2_mid@f': 67, 'smoltalk2_mid@r': 4114, 'chatmt2@pass': 2, 'chatmt2@f': 4, 'chatmt2@r': 37094, 'chatsr@pass': 3, 'tuluif@pass': 3, 'tuluif@f': 0, 'tuluif@r': 27489, 'proto4k2': 12006, 'proto_far3': 8463, 'chatsr@f': 1, 'chatsr@r': 4405}, 'token_counters': {'pysci': 4269252699, 'dclm': 8684931534, 'chatmt': 609653848, 'cosmo': 4456240879, 'fineweb': 4629362737, 'finemath': 1355571113, 'pubmed': 4396175853, 'smoltalk2_mid': 3377853852, 'arxiv': 3510231026, 'pes2o': 4344474322, 'b2s': 685097977, 'think': 89996615, 'tools': 1935239087, 'recall4k': 145396614, 'proto4k': 305274725, 'protoc': 4364770, 'proto_far': 242051032, 'b2s_far': 390920869, 'fineweb100': 2642188976, 'chatmt2': 976865388, 'chatsr': 144154967, 'tuluif': 34637127, 'proto_far3': 21391886, 'proto4k2': 11664104}}
+[data] ANSWER_IN_WINDOW=1: answer weights only for docs that start in the window
+  [stream] dclm_e3_h5_ex: 1769 files; exact cursor file 27 row 564430
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+Token indices sequence length is longer than the specified maximum sequence length for this model (1783 > 1024). Running this sequence through the model will result in indexing errors
+  [stream] fineweb_sample-100BT_e3_h5_ex_m0: 140 files; exact cursor file 8 row 371852
+/home/ubuntu/Development/qllm_sci1e/.venv/lib/python3.11/site-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.5.0) or chardet (7.7.0)/charset_normalizer (3.4.3) doesn't match a supported version!
+  warnings.warn(
+  [stream] smoltalk2_Mid: 237 files; exact cursor file 67 row 4114
+  [stream] cosmo_v2: 104 files; exact cursor file 17 row 85608
+  [stream] pes2o: 91 files; exact cursor file 11 line 2729
+  [stream] pubmed: 17 files; exact cursor file 1 line 200746
+  [stream] chatmt: 7 files; exact cursor file 4 row 37094
+  [stream] arxiv: 8 files; exact cursor file 4 line 2475
+  [stream] pysci: 12 files; exact cursor file 9 line 169175
+  [stream] tools: 139,792 docs in memory; skip 3,030,979
+  [stream] finemath_v2: 64 files; exact cursor file 9 row 10493
+  [stream] chatsr: 2 files; exact cursor file 1 row 4405
+  [stream] tuluif: 1 files; exact cursor file 0 row 27489
+step 721050 [721050/2225878  32%]  loss=1.3506 ppl=3.9 lr=8.00e-04 | 1567 tok/s (avg 1567) ETA 1049012m32s | gtok=47,254,732,800 | GPU 6.7/77.3GB
+step 721100 [721100/2225878  32%]  loss=2.0347 ppl=7.7 lr=8.00e-04 | 37716 tok/s (avg 3009) ETA 546278m14s | gtok=47,258,009,600 | GPU 6.7/77.3GB
+step 721150 [721150/2225878  32%]  loss=2.0846 ppl=8.0 lr=8.00e-04 | 37706 tok/s (avg 4340) ETA 378703m15s | gtok=47,261,286,400 | GPU 6.7/77.3GB
+step 721200 [721200/2225878  32%]  loss=2.0421 ppl=7.7 lr=8.00e-04 | 37649 tok/s (avg 5573) ETA 294931m32s | gtok=47,264,563,200 | GPU 6.7/77.3GB
+step 721250 [721250/2225878  32%]  loss=2.0097 ppl=7.5 lr=8.00e-04 | 37699 tok/s (avg 6717) ETA 244656m10s | gtok=47,267,840,000 | GPU 6.7/77.3GB
+step 721300 [721300/2225878  32%]  loss=1.6299 ppl=5.1 lr=8.00e-04 | 37698 tok/s (avg 7784) ETA 211138m56s | gtok=47,271,116,800 | GPU 6.7/77.3GB
+step 721350 [721350/2225878  32%]  loss=1.8159 ppl=6.1 lr=8.00e-04 | 37699 tok/s (avg 8779) ETA 187197m36s | gtok=47,274,393,600 | GPU 6.7/77.3GB
+step 721400 [721400/2225878  32%]  loss=1.8238 ppl=6.2 lr=8.00e-04 | 37649 tok/s (avg 9709) ETA 169248m22s | gtok=47,277,670,400 | GPU 6.7/77.3GB
+step 721450 [721450/2225878  32%]  loss=1.7076 ppl=5.5 lr=8.00e-04 | 37703 tok/s (avg 10582) ETA 155280m36s | gtok=47,280,947,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 721500 [721500/2225878  32%]  loss=1.7451 ppl=5.7 lr=8.00e-04 | 37708 tok/s (avg 11403) ETA 144105m31s | gtok=47,284,224,000 | GPU 6.7/77.3GB
+  [checkpoint] step 721500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 721550 [721550/2225878  32%]  loss=1.8854 ppl=6.6 lr=8.00e-04 | 34988 tok/s (avg 12147) ETA 135269m58s | gtok=47,287,500,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 721600 [721600/2225878  32%]  loss=1.6167 ppl=5.0 lr=8.00e-04 | 37663 tok/s (avg 12874) ETA 127628m53s | gtok=47,290,777,600 | GPU 6.7/77.3GB
+step 721650 [721650/2225878  32%]  loss=1.7739 ppl=5.9 lr=8.00e-04 | 37704 tok/s (avg 13561) ETA 121159m23s | gtok=47,294,054,400 | GPU 6.7/77.3GB
+step 721700 [721700/2225878  32%]  loss=1.8955 ppl=6.7 lr=8.00e-04 | 37709 tok/s (avg 14211) ETA 115613m32s | gtok=47,297,331,200 | GPU 6.7/77.3GB
+step 721750 [721750/2225878  32%]  loss=1.9540 ppl=7.1 lr=8.00e-04 | 37709 tok/s (avg 14827) ETA 110806m54s | gtok=47,300,608,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 721800 [721800/2225878  32%]  loss=1.8772 ppl=6.5 lr=8.00e-04 | 37651 tok/s (avg 15411) ETA 106605m09s | gtok=47,303,884,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 2s [Retry 2/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 721850 [721850/2225878  32%]  loss=1.8413 ppl=6.3 lr=8.00e-04 | 37696 tok/s (avg 15966) ETA 102894m28s | gtok=47,307,161,600 | GPU 6.7/77.3GB
+step 721900 [721900/2225878  32%]  loss=1.4933 ppl=4.5 lr=8.00e-04 | 37708 tok/s (avg 16494) ETA 99595m11s | gtok=47,310,438,400 | GPU 6.7/77.3GB
+step 721950 [721950/2225878  32%]  loss=1.8285 ppl=6.2 lr=8.00e-04 | 37701 tok/s (avg 16997) ETA 96643m25s | gtok=47,313,715,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 722000 [722000/2225878  32%]  loss=1.9675 ppl=7.2 lr=8.00e-04 | 37648 tok/s (avg 17477) ETA 93989m46s | gtok=47,316,992,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 1s [Retry 1/5].
+  [val @ step 722000] val_loss=3.0042 val_ppl=20.17 (best 19.48)
+  [wiki_val @ step 722000] val_loss=3.5164 val_ppl=33.66
+  [val_src @ step 722000] dclm=3.0207 fineweb=3.0388 arxiv=1.4731 pubmed=1.8273 pes2o=2.6972 cosmo=1.9529 tools=0.5024 pysci=0.8497 chatmt=1.3052
+  [checkpoint] step 722000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 722000 cgu=+0.03 +0.03 +0.08 +0.04 +0.05 +0.05 +0.05 +0.04 +0.13 +0.15 +0.18 +0.18 +0.35 +0.49 +0.61 +0.60 +1.27 +2.62 +2.63 +2.27 +9.78 +12.11 +17.58 +10.47  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.22 +nan +nan +nan +0.74 +nan +nan +nan +1.45 +nan +nan +nan +2.88 +nan +nan +nan +1.79
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.83 nan nan nan 0.89 nan nan nan 0.88 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.79 -4.14 -4.02 -4.80 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=6.8e-02 1.0e-02 7.0e-03 2.5e-02 5.5e-03 1.7e-02 1.6e-02 4.0e-02 8.3e-03 8.3e-03 1.1e-02 4.1e-02 1.2e-02 9.5e-03 1.0e-02 2.8e-02 1.6e-02 1.5e-02 1.8e-02 5.2e-02 5.6e-02 2.9e-02 6.0e-02 2.6e-02  wnorm=499.9 495.6 648.9 745.4 747.8 747.6 749.5 751.1 724.7 727.9 733.6 804.3 718.8 717.4 720.1 779.3 718.9 718.8 721.5 779.3 723.1 723.5 722.9 783.8
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/smoltalk2/resolve/fc6cc2103c066455aade5d7fbb346039ae36ca5e/Mid/Llama_Nemotron_Post_Training_Dataset_reasoning_r1-00068-of-00124.parquet
+Retrying in 1s [Retry 1/5].
+step 722050 [722050/2225878  32%]  loss=2.0074 ppl=7.4 lr=8.00e-04 | 21069 tok/s (avg 17620) ETA 93223m36s | gtok=47,320,268,800 | GPU 6.7/77.3GB
+step 722100 [722100/2225878  32%]  loss=1.7292 ppl=5.6 lr=8.00e-04 | 37633 tok/s (avg 18056) ETA 90967m07s | gtok=47,323,545,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 722150 [722150/2225878  32%]  loss=1.5688 ppl=4.8 lr=8.00e-04 | 37705 tok/s (avg 18475) ETA 88903m07s | gtok=47,326,822,400 | GPU 6.7/77.3GB
+step 722200 [722200/2225878  32%]  loss=1.7852 ppl=6.0 lr=8.00e-04 | 37705 tok/s (avg 18876) ETA 87010m59s | gtok=47,330,099,200 | GPU 6.7/77.3GB
+step 722250 [722250/2225878  32%]  loss=2.0956 ppl=8.1 lr=8.00e-04 | 37695 tok/s (avg 19261) ETA 85270m34s | gtok=47,333,376,000 | GPU 6.7/77.3GB
+step 722300 [722300/2225878  32%]  loss=1.9815 ppl=7.3 lr=8.00e-04 | 37662 tok/s (avg 19629) ETA 83665m23s | gtok=47,336,652,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 722350 [722350/2225878  32%]  loss=1.4595 ppl=4.3 lr=8.00e-04 | 37695 tok/s (avg 19984) ETA 82177m34s | gtok=47,339,929,600 | GPU 6.7/77.3GB
+step 722400 [722400/2225878  32%]  loss=1.6962 ppl=5.5 lr=8.00e-04 | 37705 tok/s (avg 20325) ETA 80795m31s | gtok=47,343,206,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/smoltalk2/resolve/fc6cc2103c066455aade5d7fbb346039ae36ca5e/Mid/Llama_Nemotron_Post_Training_Dataset_reasoning_r1-00068-of-00124.parquet
+Retrying in 1s [Retry 1/5].
+step 722450 [722450/2225878  32%]  loss=1.6196 ppl=5.1 lr=8.00e-04 | 37694 tok/s (avg 20654) ETA 79509m07s | gtok=47,346,483,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 722500 [722500/2225878  32%]  loss=2.0306 ppl=7.6 lr=8.00e-04 | 37660 tok/s (avg 20969) ETA 78309m41s | gtok=47,349,760,000 | GPU 6.7/77.3GB
+  [checkpoint] step 722500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 722550 [722550/2225878  32%]  loss=1.7203 ppl=5.6 lr=8.00e-04 | 34928 tok/s (avg 21243) ETA 77297m33s | gtok=47,353,036,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu/resolve/87f09149ef4734204d70ed1d046ddc9ca3f2b8f9/sample/100BT/000_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 722600 [722600/2225878  32%]  loss=2.1489 ppl=8.6 lr=8.00e-04 | 37713 tok/s (avg 21537) ETA 76240m07s | gtok=47,356,313,600 | GPU 6.7/77.3GB
+step 722650 [722650/2225878  32%]  loss=1.7641 ppl=5.8 lr=8.00e-04 | 37704 tok/s (avg 21820) ETA 75246m59s | gtok=47,359,590,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 722700 [722700/2225878  32%]  loss=1.8625 ppl=6.4 lr=8.00e-04 | 37669 tok/s (avg 22094) ETA 74313m22s | gtok=47,362,867,200 | GPU 6.7/77.3GB
+step 722750 [722750/2225878  32%]  loss=1.7355 ppl=5.7 lr=8.00e-04 | 37699 tok/s (avg 22358) ETA 73432m02s | gtok=47,366,144,000 | GPU 6.7/77.3GB
+step 722800 [722800/2225878  32%]  loss=1.8929 ppl=6.6 lr=8.00e-04 | 37712 tok/s (avg 22614) ETA 72599m10s | gtok=47,369,420,800 | GPU 6.7/77.3GB
+step 722850 [722850/2225878  32%]  loss=1.7102 ppl=5.5 lr=8.00e-04 | 37701 tok/s (avg 22861) ETA 71811m35s | gtok=47,372,697,600 | GPU 6.7/77.3GB
+step 722900 [722900/2225878  32%]  loss=1.7384 ppl=5.7 lr=8.00e-04 | 37661 tok/s (avg 23100) ETA 71066m35s | gtok=47,375,974,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 722950 [722950/2225878  32%]  loss=1.8181 ppl=6.2 lr=8.00e-04 | 37709 tok/s (avg 23332) ETA 70358m18s | gtok=47,379,251,200 | GPU 6.7/77.3GB
+step 723000 [723000/2225878  32%]  loss=1.9040 ppl=6.7 lr=8.00e-04 | 37707 tok/s (avg 23556) ETA 69685m24s | gtok=47,382,528,000 | GPU 6.7/77.3GB
+  [checkpoint] step 723000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 2s [Retry 2/5].
+step 723050 [723050/2225878  32%]  loss=1.9875 ppl=7.3 lr=8.00e-04 | 34945 tok/s (avg 23745) ETA 69129m12s | gtok=47,385,804,800 | GPU 6.7/77.3GB
+step 723100 [723100/2225878  32%]  loss=2.0388 ppl=7.7 lr=8.00e-04 | 37701 tok/s (avg 23956) ETA 68517m39s | gtok=47,389,081,600 | GPU 6.7/77.3GB
+step 723150 [723150/2225878  32%]  loss=1.7987 ppl=6.0 lr=8.00e-04 | 37649 tok/s (avg 24161) ETA 67935m53s | gtok=47,392,358,400 | GPU 6.7/77.3GB
+step 723200 [723200/2225878  32%]  loss=2.2637 ppl=9.6 lr=8.00e-04 | 37708 tok/s (avg 24360) ETA 67378m56s | gtok=47,395,635,200 | GPU 6.7/77.3GB
+step 723250 [723250/2225878  32%]  loss=1.7750 ppl=5.9 lr=8.00e-04 | 37697 tok/s (avg 24553) ETA 66846m57s | gtok=47,398,912,000 | GPU 6.7/77.3GB
+step 723300 [723300/2225878  32%]  loss=1.9006 ppl=6.7 lr=8.00e-04 | 37697 tok/s (avg 24740) ETA 66338m03s | gtok=47,402,188,800 | GPU 6.7/77.3GB
+step 723350 [723350/2225878  32%]  loss=1.8650 ppl=6.5 lr=8.00e-04 | 37693 tok/s (avg 24922) ETA 65850m50s | gtok=47,405,465,600 | GPU 6.7/77.3GB
+step 723400 [723400/2225878  32%]  loss=1.9490 ppl=7.0 lr=8.00e-04 | 37634 tok/s (avg 25099) ETA 65385m16s | gtok=47,408,742,400 | GPU 6.7/77.3GB
+step 723450 [723450/2225878  33%]  loss=1.6840 ppl=5.4 lr=8.00e-04 | 37696 tok/s (avg 25271) ETA 64937m11s | gtok=47,412,019,200 | GPU 6.7/77.3GB
+step 723500 [723500/2225878  33%]  loss=1.8631 ppl=6.4 lr=8.00e-04 | 37711 tok/s (avg 25439) ETA 64506m38s | gtok=47,415,296,000 | GPU 6.7/77.3GB
+  [checkpoint] step 723500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 723550 [723550/2225878  33%]  loss=1.6899 ppl=5.4 lr=8.00e-04 | 34950 tok/s (avg 25576) ETA 64160m17s | gtok=47,418,572,800 | GPU 6.7/77.3GB
+step 723600 [723600/2225878  33%]  loss=1.7835 ppl=6.0 lr=8.00e-04 | 37696 tok/s (avg 25735) ETA 63761m28s | gtok=47,421,849,600 | GPU 6.7/77.3GB
+step 723650 [723650/2225878  33%]  loss=1.6861 ppl=5.4 lr=8.00e-04 | 37650 tok/s (avg 25889) ETA 63378m37s | gtok=47,425,126,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 723700 [723700/2225878  33%]  loss=1.8788 ppl=6.5 lr=8.00e-04 | 37700 tok/s (avg 26040) ETA 63008m50s | gtok=47,428,403,200 | GPU 6.7/77.3GB
+step 723750 [723750/2225878  33%]  loss=1.8775 ppl=6.5 lr=8.00e-04 | 37703 tok/s (avg 26188) ETA 62652m24s | gtok=47,431,680,000 | GPU 6.7/77.3GB
+step 723800 [723800/2225878  33%]  loss=2.0381 ppl=7.7 lr=8.00e-04 | 37701 tok/s (avg 26331) ETA 62308m40s | gtok=47,434,956,800 | GPU 6.7/77.3GB
+step 723850 [723850/2225878  33%]  loss=2.0142 ppl=7.5 lr=8.00e-04 | 37648 tok/s (avg 26471) ETA 61978m02s | gtok=47,438,233,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 723900 [723900/2225878  33%]  loss=1.8489 ppl=6.4 lr=8.00e-04 | 37709 tok/s (avg 26608) ETA 61657m31s | gtok=47,441,510,400 | GPU 6.7/77.3GB
+step 723950 [723950/2225878  33%]  loss=1.9642 ppl=7.1 lr=8.00e-04 | 37698 tok/s (avg 26741) ETA 61348m03s | gtok=47,444,787,200 | GPU 6.7/77.3GB
+step 724000 [724000/2225878  33%]  loss=1.7368 ppl=5.7 lr=8.00e-04 | 37703 tok/s (avg 26871) ETA 61048m44s | gtok=47,448,064,000 | GPU 6.7/77.3GB
+  [val @ step 724000] val_loss=3.0041 val_ppl=20.17 (best 19.48)
+  [wiki_val @ step 724000] val_loss=3.5404 val_ppl=34.48
+  [val_src @ step 724000] dclm=3.0179 fineweb=3.0432 arxiv=1.4721 pubmed=1.8244 pes2o=2.6903 cosmo=1.9498 tools=0.5024 pysci=0.8431 chatmt=1.3024
+  [mix @ step 724000] window: smoltalk2_mid=15.28% dclm=13.14% fineweb100=13.03% cosmo=8.91% pubmed=8.58% pysci=8.49% pes2o=8.48% arxiv=6.71% chatmt2=5.30% tools=3.90% finemath=2.62% b2s=1.35% chatsr=1.20% b2s_far=1.02% proto4k=0.67% proto_far=0.66% tuluif=0.36% recall4k=0.30%
+  [mix_run @ step 724000] since start: smoltalk2_mid=15.28% dclm=13.14% fineweb100=13.03% cosmo=8.91% pubmed=8.58% pysci=8.49% pes2o=8.48% arxiv=6.71% chatmt2=5.30% tools=3.90% finemath=2.62% b2s=1.35% chatsr=1.20% b2s_far=1.02% proto4k=0.67% proto_far=0.66% tuluif=0.36% recall4k=0.30%
+  [checkpoint] step 724000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 724000 cgu=+0.03 +0.03 +0.08 +0.04 +0.05 +0.05 +0.05 +0.04 +0.13 +0.15 +0.17 +0.18 +0.35 +0.50 +0.61 +0.60 +1.27 +2.63 +2.63 +2.28 +9.80 +12.13 +17.61 +10.49  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.22 +nan +nan +nan +0.74 +nan +nan +nan +1.46 +nan +nan +nan +2.88 +nan +nan +nan +1.80
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.83 nan nan nan 0.89 nan nan nan 0.88 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.80 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=6.8e-02 7.8e-03 6.5e-03 5.5e-02 2.8e-02 2.3e-02 2.7e-02 4.4e-02 8.7e-03 8.7e-03 1.8e-02 5.6e-02 8.1e-03 1.4e-02 1.0e-02 3.0e-02 1.1e-02 1.2e-02 1.6e-02 4.7e-02 2.6e-02 2.8e-02 2.3e-02 3.5e-02  wnorm=500.1 495.7 649.0 745.4 747.9 747.9 749.8 751.6 724.6 727.9 733.7 804.3 718.7 717.4 720.0 779.3 718.9 718.8 721.6 779.4 723.1 723.5 723.0 783.9
+step 724050 [724050/2225878  33%]  loss=1.8765 ppl=6.5 lr=8.00e-04 | 21167 tok/s (avg 26753) ETA 61316m23s | gtok=47,451,340,800 | GPU 6.7/77.3GB
+step 724100 [724100/2225878  33%]  loss=1.7546 ppl=5.8 lr=8.00e-04 | 37647 tok/s (avg 26878) ETA 61028m10s | gtok=47,454,617,600 | GPU 6.7/77.3GB
+step 724150 [724150/2225878  33%]  loss=1.7619 ppl=5.8 lr=8.00e-04 | 37705 tok/s (avg 27002) ETA 60747m59s | gtok=47,457,894,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 724200 [724200/2225878  33%]  loss=1.9357 ppl=6.9 lr=8.00e-04 | 37708 tok/s (avg 27122) ETA 60476m28s | gtok=47,461,171,200 | GPU 6.7/77.3GB
+step 724250 [724250/2225878  33%]  loss=1.8044 ppl=6.1 lr=8.00e-04 | 37707 tok/s (avg 27239) ETA 60213m16s | gtok=47,464,448,000 | GPU 6.7/77.3GB
+step 724300 [724300/2225878  33%]  loss=2.0551 ppl=7.8 lr=8.00e-04 | 37707 tok/s (avg 27355) ETA 59958m01s | gtok=47,467,724,800 | GPU 6.7/77.3GB
+step 724350 [724350/2225878  33%]  loss=1.8888 ppl=6.6 lr=8.00e-04 | 37652 tok/s (avg 27467) ETA 59711m17s | gtok=47,471,001,600 | GPU 6.7/77.3GB
+step 724400 [724400/2225878  33%]  loss=2.0108 ppl=7.5 lr=8.00e-04 | 37702 tok/s (avg 27577) ETA 59470m56s | gtok=47,474,278,400 | GPU 6.7/77.3GB
+step 724450 [724450/2225878  33%]  loss=1.8769 ppl=6.5 lr=8.00e-04 | 37709 tok/s (avg 27685) ETA 59237m22s | gtok=47,477,555,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 724500 [724500/2225878  33%]  loss=1.7858 ppl=6.0 lr=8.00e-04 | 37702 tok/s (avg 27790) ETA 59010m33s | gtok=47,480,832,000 | GPU 6.7/77.3GB
+  [checkpoint] step 724500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 724550 [724550/2225878  33%]  loss=1.8441 ppl=6.3 lr=8.00e-04 | 34957 tok/s (avg 27871) ETA 58838m11s | gtok=47,484,108,800 | GPU 6.7/77.3GB
+step 724600 [724600/2225878  33%]  loss=1.7898 ppl=6.0 lr=8.00e-04 | 37650 tok/s (avg 27971) ETA 58623m58s | gtok=47,487,385,600 | GPU 6.7/77.3GB
+step 724650 [724650/2225878  33%]  loss=1.8016 ppl=6.1 lr=8.00e-04 | 37708 tok/s (avg 28071) ETA 58414m40s | gtok=47,490,662,400 | GPU 6.7/77.3GB
+step 724700 [724700/2225878  33%]  loss=1.9427 ppl=7.0 lr=8.00e-04 | 37708 tok/s (avg 28168) ETA 58210m59s | gtok=47,493,939,200 | GPU 6.7/77.3GB
+step 724750 [724750/2225878  33%]  loss=1.7029 ppl=5.5 lr=8.00e-04 | 37701 tok/s (avg 28263) ETA 58012m48s | gtok=47,497,216,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 724800 [724800/2225878  33%]  loss=1.7558 ppl=5.8 lr=8.00e-04 | 37644 tok/s (avg 28356) ETA 57820m39s | gtok=47,500,492,800 | GPU 6.7/77.3GB
+step 724850 [724850/2225878  33%]  loss=1.7295 ppl=5.6 lr=8.00e-04 | 37702 tok/s (avg 28448) ETA 57632m36s | gtok=47,503,769,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 1s [Retry 1/5].
+step 724900 [724900/2225878  33%]  loss=1.6572 ppl=5.2 lr=8.00e-04 | 37695 tok/s (avg 28538) ETA 57449m26s | gtok=47,507,046,400 | GPU 6.7/77.3GB
+[cycle] 'tuluif' ran dry after pass 3: re-opening from the start as pass 4 of 4 (docs so far 85,299)
+  [stream] tuluif: 1 files; 0 docs -> file 0, 0 docs to skip by reading
+step 724950 [724950/2225878  33%]  loss=1.9415 ppl=7.0 lr=8.00e-04 | 37706 tok/s (avg 28626) ETA 57270m42s | gtok=47,510,323,200 | GPU 6.7/77.3GB
+step 725000 [725000/2225878  33%]  loss=1.8433 ppl=6.3 lr=8.00e-04 | 37701 tok/s (avg 28712) ETA 57096m28s | gtok=47,513,600,000 | GPU 6.7/77.3GB
+  [checkpoint] step 725000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 725050 [725050/2225878  33%]  loss=1.7579 ppl=5.8 lr=8.00e-04 | 34894 tok/s (avg 28775) ETA 56969m42s | gtok=47,516,876,800 | GPU 6.7/77.3GB
+step 725100 [725100/2225878  33%]  loss=2.1348 ppl=8.5 lr=8.00e-04 | 37706 tok/s (avg 28858) ETA 56803m15s | gtok=47,520,153,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 725150 [725150/2225878  33%]  loss=1.7841 ppl=6.0 lr=8.00e-04 | 37704 tok/s (avg 28940) ETA 56640m48s | gtok=47,523,430,400 | GPU 6.7/77.3GB
+step 725200 [725200/2225878  33%]  loss=1.9651 ppl=7.1 lr=8.00e-04 | 37706 tok/s (avg 29020) ETA 56482m10s | gtok=47,526,707,200 | GPU 6.7/77.3GB
+step 725250 [725250/2225878  33%]  loss=1.7947 ppl=6.0 lr=8.00e-04 | 37637 tok/s (avg 29099) ETA 56328m09s | gtok=47,529,984,000 | GPU 6.7/77.3GB
+step 725300 [725300/2225878  33%]  loss=1.7515 ppl=5.8 lr=8.00e-04 | 37707 tok/s (avg 29176) ETA 56176m45s | gtok=47,533,260,800 | GPU 6.7/77.3GB
+step 725350 [725350/2225878  33%]  loss=1.5240 ppl=4.6 lr=8.00e-04 | 37717 tok/s (avg 29252) ETA 56028m40s | gtok=47,536,537,600 | GPU 6.7/77.3GB
+step 725400 [725400/2225878  33%]  loss=1.7222 ppl=5.6 lr=8.00e-04 | 37710 tok/s (avg 29327) ETA 55884m01s | gtok=47,539,814,400 | GPU 6.7/77.3GB
+step 725450 [725450/2225878  33%]  loss=2.0664 ppl=7.9 lr=8.00e-04 | 37655 tok/s (avg 29400) ETA 55743m17s | gtok=47,543,091,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 725500 [725500/2225878  33%]  loss=2.0906 ppl=8.1 lr=8.00e-04 | 37707 tok/s (avg 29472) ETA 55604m59s | gtok=47,546,368,000 | GPU 6.7/77.3GB
+  [checkpoint] step 725500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 725550 [725550/2225878  33%]  loss=1.7601 ppl=5.8 lr=8.00e-04 | 34926 tok/s (avg 29523) ETA 55507m43s | gtok=47,549,644,800 | GPU 6.7/77.3GB
+step 725600 [725600/2225878  33%]  loss=1.5322 ppl=4.6 lr=8.00e-04 | 37714 tok/s (avg 29593) ETA 55374m51s | gtok=47,552,921,600 | GPU 6.7/77.3GB
+step 725650 [725650/2225878  33%]  loss=1.7199 ppl=5.6 lr=8.00e-04 | 37660 tok/s (avg 29661) ETA 55245m28s | gtok=47,556,198,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 725700 [725700/2225878  33%]  loss=1.7663 ppl=5.8 lr=8.00e-04 | 37715 tok/s (avg 29729) ETA 55118m07s | gtok=47,559,475,200 | GPU 6.7/77.3GB
+step 725750 [725750/2225878  33%]  loss=1.6035 ppl=5.0 lr=8.00e-04 | 37713 tok/s (avg 29795) ETA 54993m28s | gtok=47,562,752,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 2s [Retry 2/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 4s [Retry 3/5].
+step 725800 [725800/2225878  33%]  loss=1.6986 ppl=5.5 lr=8.00e-04 | 37707 tok/s (avg 29860) ETA 54871m26s | gtok=47,566,028,800 | GPU 6.7/77.3GB
+step 725850 [725850/2225878  33%]  loss=2.0756 ppl=8.0 lr=8.00e-04 | 37653 tok/s (avg 29924) ETA 54752m33s | gtok=47,569,305,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 725900 [725900/2225878  33%]  loss=1.8343 ppl=6.3 lr=8.00e-04 | 37705 tok/s (avg 29987) ETA 54635m26s | gtok=47,572,582,400 | GPU 6.7/77.3GB
+step 725950 [725950/2225878  33%]  loss=2.0315 ppl=7.6 lr=8.00e-04 | 37714 tok/s (avg 30050) ETA 54520m33s | gtok=47,575,859,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 726000 [726000/2225878  33%]  loss=1.6792 ppl=5.4 lr=8.00e-04 | 37711 tok/s (avg 30111) ETA 54407m59s | gtok=47,579,136,000 | GPU 6.7/77.3GB
+  [val @ step 726000] val_loss=3.0049 val_ppl=20.18 (best 19.48)
+  [wiki_val @ step 726000] val_loss=3.5371 val_ppl=34.37
+  [val_src @ step 726000] dclm=3.0197 fineweb=3.0433 arxiv=1.4737 pubmed=1.8161 pes2o=2.6901 cosmo=1.9475 tools=0.5021 pysci=0.8448 chatmt=1.3022
+  [mix @ step 726000] window: smoltalk2_mid=15.31% dclm=13.18% fineweb100=13.06% cosmo=8.88% pes2o=8.63% pubmed=8.56% pysci=8.34% arxiv=6.71% chatmt2=5.22% tools=3.95% finemath=2.67% b2s=1.35% chatsr=1.20% b2s_far=1.04% proto4k=0.68% proto_far=0.60% tuluif=0.33% recall4k=0.29%
+  [mix_run @ step 726000] since start: smoltalk2_mid=15.29% dclm=13.16% fineweb100=13.05% cosmo=8.90% pubmed=8.57% pes2o=8.56% pysci=8.42% arxiv=6.71% chatmt2=5.26% tools=3.93% finemath=2.65% b2s=1.35% chatsr=1.20% b2s_far=1.03% proto4k=0.67% proto_far=0.63% tuluif=0.34% recall4k=0.29%
+  [checkpoint] step 726000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 726000 cgu=+0.03 +0.03 +0.09 +0.03 +0.05 +0.05 +0.05 +0.04 +0.14 +0.14 +0.18 +0.18 +0.35 +0.50 +0.61 +0.60 +1.27 +2.63 +2.63 +2.29 +9.82 +12.14 +17.64 +10.52  pam=+nan +nan +nan +0.05 +nan +nan +nan +0.21 +nan +nan +nan +0.73 +nan +nan +nan +1.46 +nan +nan +nan +2.87 +nan +nan +nan +1.80
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.82 nan nan nan 0.88 nan nan nan 0.87 nan nan nan 0.94 nan nan nan 0.91 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.80 -3.21 -3.65 -3.92 -3.64
+  [diag] gnorm=9.5e-02 5.2e-02 8.3e-03 5.1e-02 2.9e-02 9.7e-02 2.6e-02 1.3e-01 1.4e-02 1.6e-02 1.5e-02 5.2e-02 2.1e-02 1.5e-02 1.8e-02 3.9e-02 1.5e-02 1.6e-02 2.0e-02 4.8e-02 4.4e-02 5.1e-02 4.0e-02 5.6e-02  wnorm=500.0 495.7 649.1 745.8 747.9 748.1 750.0 752.1 724.5 727.9 733.7 804.3 718.7 717.5 720.0 779.3 718.9 718.8 721.6 779.3 723.1 723.5 723.0 783.8
+step 726050 [726050/2225878  33%]  loss=1.9563 ppl=7.1 lr=8.00e-04 | 21147 tok/s (avg 29985) ETA 54634m31s | gtok=47,582,412,800 | GPU 6.7/77.3GB
+step 726100 [726100/2225878  33%]  loss=1.7422 ppl=5.7 lr=8.00e-04 | 37705 tok/s (avg 30045) ETA 54523m02s | gtok=47,585,689,600 | GPU 6.7/77.3GB
+step 726150 [726150/2225878  33%]  loss=1.7090 ppl=5.5 lr=8.00e-04 | 37707 tok/s (avg 30105) ETA 54413m39s | gtok=47,588,966,400 | GPU 6.7/77.3GB
+step 726200 [726200/2225878  33%]  loss=1.7628 ppl=5.8 lr=8.00e-04 | 37706 tok/s (avg 30163) ETA 54306m22s | gtok=47,592,243,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu/resolve/87f09149ef4734204d70ed1d046ddc9ca3f2b8f9/sample/100BT/000_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 726250 [726250/2225878  33%]  loss=2.2326 ppl=9.3 lr=8.00e-04 | 37701 tok/s (avg 30221) ETA 54201m09s | gtok=47,595,520,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 1s [Retry 1/5].
+step 726300 [726300/2225878  33%]  loss=1.9723 ppl=7.2 lr=8.00e-04 | 37657 tok/s (avg 30277) ETA 54098m23s | gtok=47,598,796,800 | GPU 6.7/77.3GB
+step 726350 [726350/2225878  33%]  loss=1.8295 ppl=6.2 lr=8.00e-04 | 37707 tok/s (avg 30333) ETA 53996m57s | gtok=47,602,073,600 | GPU 6.7/77.3GB
+step 726400 [726400/2225878  33%]  loss=1.7969 ppl=6.0 lr=8.00e-04 | 37710 tok/s (avg 30388) ETA 53897m21s | gtok=47,605,350,400 | GPU 6.7/77.3GB
+step 726450 [726450/2225878  33%]  loss=1.7033 ppl=5.5 lr=8.00e-04 | 37702 tok/s (avg 30442) ETA 53799m38s | gtok=47,608,627,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 726500 [726500/2225878  33%]  loss=1.8971 ppl=6.7 lr=8.00e-04 | 37707 tok/s (avg 30496) ETA 53703m37s | gtok=47,611,904,000 | GPU 6.7/77.3GB
+  [checkpoint] step 726500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 726550 [726550/2225878  33%]  loss=2.0026 ppl=7.4 lr=8.00e-04 | 34916 tok/s (avg 30530) ETA 53640m34s | gtok=47,615,180,800 | GPU 6.7/77.3GB
+step 726600 [726600/2225878  33%]  loss=2.1084 ppl=8.2 lr=8.00e-04 | 37706 tok/s (avg 30582) ETA 53547m39s | gtok=47,618,457,600 | GPU 6.7/77.3GB
+step 726650 [726650/2225878  33%]  loss=1.9171 ppl=6.8 lr=8.00e-04 | 37706 tok/s (avg 30634) ETA 53456m20s | gtok=47,621,734,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 726700 [726700/2225878  33%]  loss=1.9318 ppl=6.9 lr=8.00e-04 | 37699 tok/s (avg 30684) ETA 53366m40s | gtok=47,625,011,200 | GPU 6.7/77.3GB
+step 726750 [726750/2225878  33%]  loss=1.8116 ppl=6.1 lr=8.00e-04 | 37661 tok/s (avg 30733) ETA 53278m56s | gtok=47,628,288,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 2s [Retry 2/5].
+step 726800 [726800/2225878  33%]  loss=1.8361 ppl=6.3 lr=8.00e-04 | 37713 tok/s (avg 30783) ETA 53192m09s | gtok=47,631,564,800 | GPU 6.7/77.3GB
+step 726850 [726850/2225878  33%]  loss=1.6418 ppl=5.2 lr=8.00e-04 | 37702 tok/s (avg 30831) ETA 53106m56s | gtok=47,634,841,600 | GPU 6.7/77.3GB
+step 726900 [726900/2225878  33%]  loss=1.7442 ppl=5.7 lr=8.00e-04 | 37711 tok/s (avg 30879) ETA 53023m04s | gtok=47,638,118,400 | GPU 6.7/77.3GB
+  [stream] data/002_00007.parquet rg 0 at row 703488: peer closed connection without sending complete message body (received 56290 bytes, expected 8388608); retry 1/6 in 5s
+step 726950 [726950/2225878  33%]  loss=2.1263 ppl=8.4 lr=8.00e-04 | 37700 tok/s (avg 30926) ETA 52940m41s | gtok=47,641,395,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 727000 [727000/2225878  33%]  loss=1.7490 ppl=5.7 lr=8.00e-04 | 5841 tok/s (avg 29857) ETA 54833m22s | gtok=47,644,672,000 | GPU 6.7/77.3GB
+  [checkpoint] step 727000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 727050 [727050/2225878  33%]  loss=1.5054 ppl=4.5 lr=8.00e-04 | 34982 tok/s (avg 29893) ETA 54765m09s | gtok=47,647,948,800 | GPU 6.7/77.3GB
+step 727100 [727100/2225878  33%]  loss=1.3693 ppl=3.9 lr=8.00e-04 | 37712 tok/s (avg 29944) ETA 54670m16s | gtok=47,651,225,600 | GPU 6.7/77.3GB
+step 727150 [727150/2225878  33%]  loss=1.4173 ppl=4.1 lr=8.00e-04 | 37698 tok/s (avg 29994) ETA 54577m02s | gtok=47,654,502,400 | GPU 6.7/77.3GB
+step 727200 [727200/2225878  33%]  loss=2.0216 ppl=7.6 lr=8.00e-04 | 37701 tok/s (avg 30044) ETA 54485m15s | gtok=47,657,779,200 | GPU 6.7/77.3GB
+step 727250 [727250/2225878  33%]  loss=1.7428 ppl=5.7 lr=8.00e-04 | 37643 tok/s (avg 30093) ETA 54395m27s | gtok=47,661,056,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 727300 [727300/2225878  33%]  loss=1.7347 ppl=5.7 lr=8.00e-04 | 37703 tok/s (avg 30141) ETA 54306m30s | gtok=47,664,332,800 | GPU 6.7/77.3GB
+step 727350 [727350/2225878  33%]  loss=1.7681 ppl=5.9 lr=8.00e-04 | 37702 tok/s (avg 30189) ETA 54218m56s | gtok=47,667,609,600 | GPU 6.7/77.3GB
+step 727400 [727400/2225878  33%]  loss=1.8931 ppl=6.6 lr=8.00e-04 | 37699 tok/s (avg 30236) ETA 54132m44s | gtok=47,670,886,400 | GPU 6.7/77.3GB
+step 727450 [727450/2225878  33%]  loss=1.6533 ppl=5.2 lr=8.00e-04 | 37640 tok/s (avg 30282) ETA 54048m23s | gtok=47,674,163,200 | GPU 6.7/77.3GB
+step 727500 [727500/2225878  33%]  loss=1.5658 ppl=4.8 lr=8.00e-04 | 37705 tok/s (avg 30328) ETA 53964m44s | gtok=47,677,440,000 | GPU 6.7/77.3GB
+  [checkpoint] step 727500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 727550 [727550/2225878  33%]  loss=1.8185 ppl=6.2 lr=8.00e-04 | 34947 tok/s (avg 30358) ETA 53908m29s | gtok=47,680,716,800 | GPU 6.7/77.3GB
+step 727600 [727600/2225878  33%]  loss=1.8374 ppl=6.3 lr=8.00e-04 | 37701 tok/s (avg 30403) ETA 53827m09s | gtok=47,683,993,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 727650 [727650/2225878  33%]  loss=1.7375 ppl=5.7 lr=8.00e-04 | 37660 tok/s (avg 30447) ETA 53747m23s | gtok=47,687,270,400 | GPU 6.7/77.3GB
+step 727700 [727700/2225878  33%]  loss=1.8668 ppl=6.5 lr=8.00e-04 | 37700 tok/s (avg 30491) ETA 53668m25s | gtok=47,690,547,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 1s [Retry 1/5].
+step 727750 [727750/2225878  33%]  loss=1.5335 ppl=4.6 lr=8.00e-04 | 37708 tok/s (avg 30534) ETA 53590m33s | gtok=47,693,824,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 2s [Retry 2/5].
+step 727800 [727800/2225878  33%]  loss=1.8206 ppl=6.2 lr=8.00e-04 | 37703 tok/s (avg 30577) ETA 53513m51s | gtok=47,697,100,800 | GPU 6.7/77.3GB
+step 727850 [727850/2225878  33%]  loss=2.0184 ppl=7.5 lr=8.00e-04 | 37705 tok/s (avg 30619) ETA 53438m13s | gtok=47,700,377,600 | GPU 6.7/77.3GB
+step 727900 [727900/2225878  33%]  loss=1.6213 ppl=5.1 lr=8.00e-04 | 37634 tok/s (avg 30661) ETA 53364m16s | gtok=47,703,654,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 727950 [727950/2225878  33%]  loss=1.9550 ppl=7.1 lr=8.00e-04 | 37697 tok/s (avg 30702) ETA 53290m49s | gtok=47,706,931,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 2s [Retry 2/5].
+step 728000 [728000/2225878  33%]  loss=1.8168 ppl=6.2 lr=8.00e-04 | 37696 tok/s (avg 30743) ETA 53218m25s | gtok=47,710,208,000 | GPU 6.7/77.3GB
+  [val @ step 728000] val_loss=3.0040 val_ppl=20.17 (best 19.48)
+  [wiki_val @ step 728000] val_loss=3.5358 val_ppl=34.32
+  [val_src @ step 728000] dclm=3.0194 fineweb=3.0378 arxiv=1.4746 pubmed=1.8218 pes2o=2.6934 cosmo=1.9526 tools=0.5033 pysci=0.8415 chatmt=1.3036
+  [mix @ step 728000] window: smoltalk2_mid=15.25% dclm=13.23% fineweb100=13.13% cosmo=8.87% pubmed=8.64% pes2o=8.55% pysci=8.39% arxiv=6.73% chatmt2=5.30% tools=3.90% finemath=2.52% b2s=1.35% chatsr=1.18% b2s_far=1.05% proto4k=0.68% proto_far=0.60% tuluif=0.34% recall4k=0.30%
+  [mix_run @ step 728000] since start: smoltalk2_mid=15.28% dclm=13.18% fineweb100=13.07% cosmo=8.89% pubmed=8.59% pes2o=8.55% pysci=8.41% arxiv=6.72% chatmt2=5.28% tools=3.92% finemath=2.60% b2s=1.35% chatsr=1.19% b2s_far=1.04% proto4k=0.67% proto_far=0.62% tuluif=0.34% recall4k=0.30%
+  [checkpoint] step 728000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 728000 cgu=+0.03 +0.03 +0.09 +0.04 +0.05 +0.05 +0.05 +0.04 +0.13 +0.15 +0.17 +0.18 +0.35 +0.50 +0.61 +0.60 +1.28 +2.64 +2.63 +2.30 +9.85 +12.16 +17.68 +10.53  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.21 +nan +nan +nan +0.74 +nan +nan +nan +1.47 +nan +nan +nan +2.88 +nan +nan +nan +1.81
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.83 nan nan nan 0.90 nan nan nan 0.89 nan nan nan 0.95 nan nan nan 0.93 nan nan nan 0.84
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.80 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=4.5e-03 4.0e-02 1.7e-02 2.6e-02 1.0e-02 1.2e-02 4.6e-03 2.2e-02 6.2e-03 4.4e-03 4.7e-03 1.3e-02 4.3e-03 4.0e-03 4.9e-03 2.9e-02 5.2e-03 5.8e-03 6.9e-03 1.4e-02 2.7e-02 1.8e-02 1.2e-02 4.5e-02  wnorm=499.7 495.6 649.3 745.9 748.3 748.2 750.2 752.5 724.5 727.9 733.8 804.3 718.9 717.5 720.0 779.3 719.0 718.8 721.6 779.4 723.2 723.5 723.0 783.9
+step 728050 [728050/2225878  33%]  loss=1.7875 ppl=6.0 lr=8.00e-04 | 21152 tok/s (avg 30644) ETA 53387m47s | gtok=47,713,484,800 | GPU 6.7/77.3GB
+step 728100 [728100/2225878  33%]  loss=2.0246 ppl=7.6 lr=8.00e-04 | 37692 tok/s (avg 30685) ETA 53315m43s | gtok=47,716,761,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 728150 [728150/2225878  33%]  loss=1.5654 ppl=4.8 lr=8.00e-04 | 37696 tok/s (avg 30725) ETA 53244m35s | gtok=47,720,038,400 | GPU 6.7/77.3GB
+step 728200 [728200/2225878  33%]  loss=1.6614 ppl=5.3 lr=8.00e-04 | 37703 tok/s (avg 30764) ETA 53174m22s | gtok=47,723,315,200 | GPU 6.7/77.3GB
+step 728250 [728250/2225878  33%]  loss=1.9197 ppl=6.8 lr=8.00e-04 | 37695 tok/s (avg 30803) ETA 53105m10s | gtok=47,726,592,000 | GPU 6.7/77.3GB
+step 728300 [728300/2225878  33%]  loss=1.4785 ppl=4.4 lr=8.00e-04 | 37636 tok/s (avg 30842) ETA 53037m22s | gtok=47,729,868,800 | GPU 6.7/77.3GB
+step 728350 [728350/2225878  33%]  loss=1.9301 ppl=6.9 lr=8.00e-04 | 37702 tok/s (avg 30880) ETA 52969m57s | gtok=47,733,145,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 2s [Retry 2/5].
+step 728400 [728400/2225878  33%]  loss=1.7904 ppl=6.0 lr=8.00e-04 | 37699 tok/s (avg 30918) ETA 52903m27s | gtok=47,736,422,400 | GPU 6.7/77.3GB
+step 728450 [728450/2225878  33%]  loss=2.0130 ppl=7.5 lr=8.00e-04 | 37696 tok/s (avg 30955) ETA 52837m50s | gtok=47,739,699,200 | GPU 6.7/77.3GB
+step 728500 [728500/2225878  33%]  loss=1.9760 ppl=7.2 lr=8.00e-04 | 37634 tok/s (avg 30992) ETA 52773m33s | gtok=47,742,976,000 | GPU 6.7/77.3GB
+  [checkpoint] step 728500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 728550 [728550/2225878  33%]  loss=1.7228 ppl=5.6 lr=8.00e-04 | 34925 tok/s (avg 31015) ETA 52732m26s | gtok=47,746,252,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 728600 [728600/2225878  33%]  loss=1.9045 ppl=6.7 lr=8.00e-04 | 37698 tok/s (avg 31051) ETA 52669m11s | gtok=47,749,529,600 | GPU 6.7/77.3GB
+step 728650 [728650/2225878  33%]  loss=1.6740 ppl=5.3 lr=8.00e-04 | 37685 tok/s (avg 31087) ETA 52606m49s | gtok=47,752,806,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 728700 [728700/2225878  33%]  loss=2.0763 ppl=8.0 lr=8.00e-04 | 37699 tok/s (avg 31122) ETA 52545m09s | gtok=47,756,083,200 | GPU 6.7/77.3GB
+step 728750 [728750/2225878  33%]  loss=2.0924 ppl=8.1 lr=8.00e-04 | 37635 tok/s (avg 31157) ETA 52484m44s | gtok=47,759,360,000 | GPU 6.7/77.3GB
+step 728800 [728800/2225878  33%]  loss=1.8929 ppl=6.6 lr=8.00e-04 | 37696 tok/s (avg 31192) ETA 52424m37s | gtok=47,762,636,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 2s [Retry 2/5].
+step 728850 [728850/2225878  33%]  loss=1.7849 ppl=6.0 lr=8.00e-04 | 37697 tok/s (avg 31226) ETA 52365m14s | gtok=47,765,913,600 | GPU 6.7/77.3GB
+step 728900 [728900/2225878  33%]  loss=1.8337 ppl=6.3 lr=8.00e-04 | 37700 tok/s (avg 31260) ETA 52306m35s | gtok=47,769,190,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 728950 [728950/2225878  33%]  loss=1.9044 ppl=6.7 lr=8.00e-04 | 37646 tok/s (avg 31293) ETA 52249m02s | gtok=47,772,467,200 | GPU 6.7/77.3GB
+step 729000 [729000/2225878  33%]  loss=1.8017 ppl=6.1 lr=8.00e-04 | 37705 tok/s (avg 31327) ETA 52191m46s | gtok=47,775,744,000 | GPU 6.7/77.3GB
+  [checkpoint] step 729000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 729050 [729050/2225878  33%]  loss=1.8309 ppl=6.2 lr=8.00e-04 | 34945 tok/s (avg 31347) ETA 52156m27s | gtok=47,779,020,800 | GPU 6.7/77.3GB
+step 729100 [729100/2225878  33%]  loss=2.1633 ppl=8.7 lr=8.00e-04 | 37711 tok/s (avg 31379) ETA 52100m22s | gtok=47,782,297,600 | GPU 6.7/77.3GB
+step 729150 [729150/2225878  33%]  loss=1.6744 ppl=5.3 lr=8.00e-04 | 37659 tok/s (avg 31412) ETA 52045m20s | gtok=47,785,574,400 | GPU 6.7/77.3GB
+step 729200 [729200/2225878  33%]  loss=1.8480 ppl=6.3 lr=8.00e-04 | 37703 tok/s (avg 31444) ETA 51990m39s | gtok=47,788,851,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/smoltalk2/resolve/fc6cc2103c066455aade5d7fbb346039ae36ca5e/Mid/Llama_Nemotron_Post_Training_Dataset_reasoning_r1-00072-of-00124.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 1s [Retry 1/5].
+step 729250 [729250/2225878  33%]  loss=1.8233 ppl=6.2 lr=8.00e-04 | 37713 tok/s (avg 31475) ETA 51936m32s | gtok=47,792,128,000 | GPU 6.7/77.3GB
+step 729300 [729300/2225878  33%]  loss=1.9902 ppl=7.3 lr=8.00e-04 | 37708 tok/s (avg 31507) ETA 51883m05s | gtok=47,795,404,800 | GPU 6.7/77.3GB
+step 729350 [729350/2225878  33%]  loss=1.5255 ppl=4.6 lr=8.00e-04 | 37704 tok/s (avg 31538) ETA 51830m18s | gtok=47,798,681,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 729400 [729400/2225878  33%]  loss=2.1231 ppl=8.4 lr=8.00e-04 | 37644 tok/s (avg 31568) ETA 51778m31s | gtok=47,801,958,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/smoltalk2/resolve/fc6cc2103c066455aade5d7fbb346039ae36ca5e/Mid/Llama_Nemotron_Post_Training_Dataset_reasoning_r1-00072-of-00124.parquet
+Retrying in 1s [Retry 1/5].
+step 729450 [729450/2225878  33%]  loss=1.7731 ppl=5.9 lr=8.00e-04 | 37710 tok/s (avg 31599) ETA 51726m53s | gtok=47,805,235,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 729500 [729500/2225878  33%]  loss=1.7027 ppl=5.5 lr=8.00e-04 | 37707 tok/s (avg 31629) ETA 51675m52s | gtok=47,808,512,000 | GPU 6.7/77.3GB
+  [checkpoint] step 729500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 729550 [729550/2225878  33%]  loss=1.9163 ppl=6.8 lr=8.00e-04 | 34939 tok/s (avg 31646) ETA 51645m31s | gtok=47,811,788,800 | GPU 6.7/77.3GB
+step 729600 [729600/2225878  33%]  loss=1.4615 ppl=4.3 lr=8.00e-04 | 37620 tok/s (avg 31676) ETA 51596m07s | gtok=47,815,065,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 729650 [729650/2225878  33%]  loss=1.8948 ppl=6.7 lr=8.00e-04 | 37704 tok/s (avg 31705) ETA 51546m43s | gtok=47,818,342,400 | GPU 6.7/77.3GB
+step 729700 [729700/2225878  33%]  loss=1.7538 ppl=5.8 lr=8.00e-04 | 37639 tok/s (avg 31734) ETA 51498m17s | gtok=47,821,619,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 729750 [729750/2225878  33%]  loss=1.9048 ppl=6.7 lr=8.00e-04 | 37700 tok/s (avg 31762) ETA 51450m00s | gtok=47,824,896,000 | GPU 6.7/77.3GB
+step 729800 [729800/2225878  33%]  loss=1.6375 ppl=5.1 lr=8.00e-04 | 37666 tok/s (avg 31791) ETA 51402m27s | gtok=47,828,172,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 2s [Retry 2/5].
+step 729850 [729850/2225878  33%]  loss=1.9913 ppl=7.3 lr=8.00e-04 | 37706 tok/s (avg 31819) ETA 51355m11s | gtok=47,831,449,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 729900 [729900/2225878  33%]  loss=1.9965 ppl=7.4 lr=8.00e-04 | 37699 tok/s (avg 31847) ETA 51308m28s | gtok=47,834,726,400 | GPU 6.7/77.3GB
+step 729950 [729950/2225878  33%]  loss=1.7190 ppl=5.6 lr=8.00e-04 | 37707 tok/s (avg 31874) ETA 51262m12s | gtok=47,838,003,200 | GPU 6.7/77.3GB
+step 730000 [730000/2225878  33%]  loss=2.0750 ppl=8.0 lr=8.00e-04 | 37651 tok/s (avg 31902) ETA 51216m48s | gtok=47,841,280,000 | GPU 6.7/77.3GB
+  [val @ step 730000] val_loss=3.0015 val_ppl=20.12 (best 19.48)
+  [wiki_val @ step 730000] val_loss=3.5285 val_ppl=34.07
+  [val_src @ step 730000] dclm=3.0147 fineweb=3.0323 arxiv=1.4711 pubmed=1.8203 pes2o=2.6961 cosmo=1.9460 tools=0.5016 pysci=0.8453 chatmt=1.2995
+  [mix @ step 730000] window: smoltalk2_mid=15.24% fineweb100=13.11% dclm=13.02% cosmo=8.82% pubmed=8.80% pes2o=8.53% pysci=8.38% arxiv=6.67% chatmt2=5.29% tools=3.93% finemath=2.72% b2s=1.39% chatsr=1.19% b2s_far=0.99% proto4k=0.68% proto_far=0.61% tuluif=0.32% recall4k=0.30%
+  [mix_run @ step 730000] since start: smoltalk2_mid=15.27% dclm=13.14% fineweb100=13.08% cosmo=8.87% pubmed=8.65% pes2o=8.55% pysci=8.40% arxiv=6.70% chatmt2=5.28% tools=3.92% finemath=2.63% b2s=1.36% chatsr=1.19% b2s_far=1.02% proto4k=0.67% proto_far=0.62% tuluif=0.34% recall4k=0.30%
+  [checkpoint] step 730000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 730000 cgu=+0.03 +0.03 +0.09 +0.04 +0.05 +0.05 +0.05 +0.04 +0.13 +0.15 +0.18 +0.18 +0.35 +0.50 +0.61 +0.61 +1.29 +2.65 +2.64 +2.30 +9.86 +12.19 +17.71 +10.55  pam=+nan +nan +nan +0.05 +nan +nan +nan +0.22 +nan +nan +nan +0.75 +nan +nan +nan +1.47 +nan +nan +nan +2.88 +nan +nan +nan +1.81
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.89 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.82 nan nan nan 0.89 nan nan nan 0.88 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.81 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=3.4e-02 4.1e-02 8.2e-03 1.7e-02 4.7e-03 5.4e-03 7.1e-03 3.0e-02 1.4e-02 7.8e-03 1.5e-02 2.4e-02 8.1e-03 6.3e-03 6.0e-03 2.2e-02 1.1e-02 8.1e-03 9.1e-03 4.7e-02 1.7e-02 2.4e-02 1.7e-02 9.4e-02  wnorm=499.8 495.5 649.3 746.0 748.3 748.5 750.4 753.0 724.4 727.8 733.8 804.4 718.7 717.4 719.9 779.2 718.8 718.7 721.4 779.2 723.1 723.4 722.9 783.8
+step 730050 [730050/2225878  33%]  loss=1.6735 ppl=5.3 lr=8.00e-04 | 21168 tok/s (avg 31812) ETA 51358m34s | gtok=47,844,556,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 730100 [730100/2225878  33%]  loss=1.7257 ppl=5.6 lr=8.00e-04 | 37708 tok/s (avg 31840) ETA 51312m44s | gtok=47,847,833,600 | GPU 6.7/77.3GB
+step 730150 [730150/2225878  33%]  loss=1.8992 ppl=6.7 lr=8.00e-04 | 37710 tok/s (avg 31867) ETA 51267m22s | gtok=47,851,110,400 | GPU 6.7/77.3GB
+step 730200 [730200/2225878  33%]  loss=1.7817 ppl=5.9 lr=8.00e-04 | 37660 tok/s (avg 31894) ETA 51222m48s | gtok=47,854,387,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00007.parquet
+Retrying in 1s [Retry 1/5].
+step 730250 [730250/2225878  33%]  loss=1.4625 ppl=4.3 lr=8.00e-04 | 37708 tok/s (avg 31920) ETA 51178m24s | gtok=47,857,664,000 | GPU 6.7/77.3GB
+step 730300 [730300/2225878  33%]  loss=1.9158 ppl=6.8 lr=8.00e-04 | 37715 tok/s (avg 31947) ETA 51134m25s | gtok=47,860,940,800 | GPU 6.7/77.3GB
+step 730350 [730350/2225878  33%]  loss=1.6715 ppl=5.3 lr=8.00e-04 | 37717 tok/s (avg 31973) ETA 51090m52s | gtok=47,864,217,600 | GPU 6.7/77.3GB
+step 730400 [730400/2225878  33%]  loss=1.9985 ppl=7.4 lr=8.00e-04 | 37699 tok/s (avg 31999) ETA 51047m53s | gtok=47,867,494,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 730450 [730450/2225878  33%]  loss=1.5712 ppl=4.8 lr=8.00e-04 | 37647 tok/s (avg 32024) ETA 51005m39s | gtok=47,870,771,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 730500 [730500/2225878  33%]  loss=1.5944 ppl=4.9 lr=8.00e-04 | 37710 tok/s (avg 32049) ETA 50963m28s | gtok=47,874,048,000 | GPU 6.7/77.3GB
+  [checkpoint] step 730500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 730550 [730550/2225878  33%]  loss=1.8597 ppl=6.4 lr=8.00e-04 | 34942 tok/s (avg 32063) ETA 50939m41s | gtok=47,877,324,800 | GPU 6.7/77.3GB
+step 730600 [730600/2225878  33%]  loss=1.6455 ppl=5.2 lr=8.00e-04 | 37713 tok/s (avg 32088) ETA 50898m14s | gtok=47,880,601,600 | GPU 6.7/77.3GB
+step 730650 [730650/2225878  33%]  loss=1.7871 ppl=6.0 lr=8.00e-04 | 37708 tok/s (avg 32113) ETA 50857m14s | gtok=47,883,878,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 730700 [730700/2225878  33%]  loss=2.0034 ppl=7.4 lr=8.00e-04 | 37649 tok/s (avg 32138) ETA 50816m59s | gtok=47,887,155,200 | GPU 6.7/77.3GB
+step 730750 [730750/2225878  33%]  loss=1.7717 ppl=5.9 lr=8.00e-04 | 37708 tok/s (avg 32162) ETA 50776m48s | gtok=47,890,432,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 730800 [730800/2225878  33%]  loss=1.7710 ppl=5.9 lr=8.00e-04 | 37708 tok/s (avg 32186) ETA 50737m00s | gtok=47,893,708,800 | GPU 6.7/77.3GB
+step 730850 [730850/2225878  33%]  loss=1.7643 ppl=5.8 lr=8.00e-04 | 37707 tok/s (avg 32210) ETA 50697m35s | gtok=47,896,985,600 | GPU 6.7/77.3GB
+step 730900 [730900/2225878  33%]  loss=1.8413 ppl=6.3 lr=8.00e-04 | 37664 tok/s (avg 32234) ETA 50658m49s | gtok=47,900,262,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+step 730950 [730950/2225878  33%]  loss=1.7995 ppl=6.0 lr=8.00e-04 | 37699 tok/s (avg 32257) ETA 50620m13s | gtok=47,903,539,200 | GPU 6.7/77.3GB
+step 731000 [731000/2225878  33%]  loss=2.0012 ppl=7.4 lr=8.00e-04 | 37711 tok/s (avg 32280) ETA 50581m55s | gtok=47,906,816,000 | GPU 6.7/77.3GB
+  [checkpoint] step 731000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 731050 [731050/2225878  33%]  loss=1.8032 ppl=6.1 lr=8.00e-04 | 34939 tok/s (avg 32293) ETA 50561m05s | gtok=47,910,092,800 | GPU 6.7/77.3GB
+step 731100 [731100/2225878  33%]  loss=1.6931 ppl=5.4 lr=8.00e-04 | 37651 tok/s (avg 32315) ETA 50523m46s | gtok=47,913,369,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 731150 [731150/2225878  33%]  loss=1.8726 ppl=6.5 lr=8.00e-04 | 37705 tok/s (avg 32338) ETA 50486m30s | gtok=47,916,646,400 | GPU 6.7/77.3GB
+step 731200 [731200/2225878  33%]  loss=1.5258 ppl=4.6 lr=8.00e-04 | 37706 tok/s (avg 32361) ETA 50449m35s | gtok=47,919,923,200 | GPU 6.7/77.3GB
+step 731250 [731250/2225878  33%]  loss=1.7020 ppl=5.5 lr=8.00e-04 | 37705 tok/s (avg 32383) ETA 50413m01s | gtok=47,923,200,000 | GPU 6.7/77.3GB
+step 731300 [731300/2225878  33%]  loss=1.9329 ppl=6.9 lr=8.00e-04 | 37704 tok/s (avg 32405) ETA 50376m48s | gtok=47,926,476,800 | GPU 6.7/77.3GB
+step 731350 [731350/2225878  33%]  loss=1.6115 ppl=5.0 lr=8.00e-04 | 37642 tok/s (avg 32427) ETA 50341m15s | gtok=47,929,753,600 | GPU 6.7/77.3GB
+step 731400 [731400/2225878  33%]  loss=1.6099 ppl=5.0 lr=8.00e-04 | 37706 tok/s (avg 32449) ETA 50305m41s | gtok=47,933,030,400 | GPU 6.7/77.3GB
+step 731450 [731450/2225878  33%]  loss=1.7118 ppl=5.5 lr=8.00e-04 | 37701 tok/s (avg 32471) ETA 50270m28s | gtok=47,936,307,200 | GPU 6.7/77.3GB
+step 731500 [731500/2225878  33%]  loss=1.9452 ppl=7.0 lr=8.00e-04 | 37707 tok/s (avg 32492) ETA 50235m33s | gtok=47,939,584,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+  [checkpoint] step 731500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 731550 [731550/2225878  33%]  loss=1.8056 ppl=6.1 lr=8.00e-04 | 34909 tok/s (avg 32503) ETA 50217m24s | gtok=47,942,860,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 731600 [731600/2225878  33%]  loss=1.5064 ppl=4.5 lr=8.00e-04 | 37706 tok/s (avg 32524) ETA 50183m02s | gtok=47,946,137,600 | GPU 6.7/77.3GB
+step 731650 [731650/2225878  33%]  loss=1.7607 ppl=5.8 lr=8.00e-04 | 37709 tok/s (avg 32545) ETA 50148m57s | gtok=47,949,414,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 731700 [731700/2225878  33%]  loss=1.8490 ppl=6.4 lr=8.00e-04 | 37706 tok/s (avg 32566) ETA 50115m12s | gtok=47,952,691,200 | GPU 6.7/77.3GB
+step 731750 [731750/2225878  33%]  loss=1.9529 ppl=7.0 lr=8.00e-04 | 37653 tok/s (avg 32586) ETA 50082m02s | gtok=47,955,968,000 | GPU 6.7/77.3GB
+step 731800 [731800/2225878  33%]  loss=2.0318 ppl=7.6 lr=8.00e-04 | 37702 tok/s (avg 32607) ETA 50048m54s | gtok=47,959,244,800 | GPU 6.7/77.3GB
+step 731850 [731850/2225878  33%]  loss=1.4567 ppl=4.3 lr=8.00e-04 | 37705 tok/s (avg 32627) ETA 50016m02s | gtok=47,962,521,600 | GPU 6.7/77.3GB
+step 731900 [731900/2225878  33%]  loss=1.6822 ppl=5.4 lr=8.00e-04 | 37700 tok/s (avg 32647) ETA 49983m29s | gtok=47,965,798,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 731950 [731950/2225878  33%]  loss=1.8540 ppl=6.4 lr=8.00e-04 | 37647 tok/s (avg 32667) ETA 49951m31s | gtok=47,969,075,200 | GPU 6.7/77.3GB
+step 732000 [732000/2225878  33%]  loss=1.7696 ppl=5.9 lr=8.00e-04 | 37703 tok/s (avg 32687) ETA 49919m31s | gtok=47,972,352,000 | GPU 6.7/77.3GB
+  [val @ step 732000] val_loss=3.0042 val_ppl=20.17 (best 19.48)
+  [wiki_val @ step 732000] val_loss=3.5363 val_ppl=34.34
+  [val_src @ step 732000] dclm=3.0192 fineweb=3.0387 arxiv=1.4793 pubmed=1.8159 pes2o=2.6945 cosmo=1.9491 tools=0.5046 pysci=0.8473 chatmt=1.3058
+  [mix @ step 732000] window: smoltalk2_mid=15.29% fineweb100=13.17% dclm=13.11% cosmo=8.89% pubmed=8.67% pes2o=8.51% pysci=8.33% arxiv=6.55% chatmt2=5.30% tools=3.93% finemath=2.69% b2s=1.37% chatsr=1.22% b2s_far=1.08% proto4k=0.65% proto_far=0.63% tuluif=0.33% recall4k=0.27%
+  [mix_run @ step 732000] since start: smoltalk2_mid=15.27% dclm=13.13% fineweb100=13.10% cosmo=8.88% pubmed=8.65% pes2o=8.54% pysci=8.39% arxiv=6.67% chatmt2=5.28% tools=3.92% finemath=2.64% b2s=1.36% chatsr=1.20% b2s_far=1.04% proto4k=0.67% proto_far=0.62% tuluif=0.34% recall4k=0.29%
+  [checkpoint] step 732000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 732000 cgu=+0.03 +0.03 +0.08 +0.04 +0.05 +0.05 +0.05 +0.04 +0.13 +0.15 +0.18 +0.18 +0.35 +0.51 +0.61 +0.60 +1.29 +2.65 +2.65 +2.29 +9.88 +12.22 +17.74 +10.56  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.22 +nan +nan +nan +0.75 +nan +nan +nan +1.47 +nan +nan +nan +2.89 +nan +nan +nan +1.82
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.83 nan nan nan 0.89 nan nan nan 0.89 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.84
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.81 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=3.0e-02 2.4e-02 8.7e-03 1.5e-02 5.7e-03 2.8e-03 1.7e-03 2.6e-02 3.3e-03 2.4e-03 4.9e-03 1.1e-02 2.8e-03 2.3e-03 3.1e-03 9.0e-03 4.1e-03 3.8e-03 3.1e-03 1.3e-02 8.2e-03 5.7e-03 5.4e-03 4.8e-02  wnorm=499.5 495.6 649.6 746.2 748.6 748.6 750.7 753.4 724.4 727.9 733.8 804.4 718.8 717.4 719.9 779.1 718.7 718.7 721.4 779.3 723.1 723.4 723.0 783.8
+step 732050 [732050/2225878  33%]  loss=1.6186 ppl=5.0 lr=8.00e-04 | 21158 tok/s (avg 32606) ETA 50040m55s | gtok=47,975,628,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 2s [Retry 2/5].
+step 732100 [732100/2225878  33%]  loss=2.0225 ppl=7.6 lr=8.00e-04 | 37708 tok/s (avg 32626) ETA 50008m45s | gtok=47,978,905,600 | GPU 6.7/77.3GB
+step 732150 [732150/2225878  33%]  loss=1.8419 ppl=6.3 lr=8.00e-04 | 37658 tok/s (avg 32646) ETA 49977m07s | gtok=47,982,182,400 | GPU 6.7/77.3GB
+step 732200 [732200/2225878  33%]  loss=1.5721 ppl=4.8 lr=8.00e-04 | 37705 tok/s (avg 32665) ETA 49945m30s | gtok=47,985,459,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 732250 [732250/2225878  33%]  loss=2.0294 ppl=7.6 lr=8.00e-04 | 37710 tok/s (avg 32685) ETA 49914m08s | gtok=47,988,736,000 | GPU 6.7/77.3GB
+step 732300 [732300/2225878  33%]  loss=1.5539 ppl=4.7 lr=8.00e-04 | 37709 tok/s (avg 32704) ETA 49883m02s | gtok=47,992,012,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+step 732350 [732350/2225878  33%]  loss=1.7691 ppl=5.9 lr=8.00e-04 | 37650 tok/s (avg 32723) ETA 49852m30s | gtok=47,995,289,600 | GPU 6.7/77.3GB
+step 732400 [732400/2225878  33%]  loss=1.7063 ppl=5.5 lr=8.00e-04 | 37700 tok/s (avg 32742) ETA 49821m58s | gtok=47,998,566,400 | GPU 6.7/77.3GB
+  [checkpoint] step 732432 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/step_732432.pt
+step 732450 [732450/2225878  33%]  loss=1.6821 ppl=5.4 lr=8.00e-04 | 36901 tok/s (avg 32758) ETA 49795m47s | gtok=48,001,843,200 | GPU 6.7/77.3GB
+step 732500 [732500/2225878  33%]  loss=1.6635 ppl=5.3 lr=8.00e-04 | 37705 tok/s (avg 32777) ETA 49765m43s | gtok=48,005,120,000 | GPU 6.7/77.3GB
+  [checkpoint] step 732500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 732550 [732550/2225878  33%]  loss=1.6671 ppl=5.3 lr=8.00e-04 | 34892 tok/s (avg 32786) ETA 49751m00s | gtok=48,008,396,800 | GPU 6.7/77.3GB
+step 732600 [732600/2225878  33%]  loss=1.7498 ppl=5.8 lr=8.00e-04 | 37661 tok/s (avg 32804) ETA 49721m34s | gtok=48,011,673,600 | GPU 6.7/77.3GB
+step 732650 [732650/2225878  33%]  loss=1.7713 ppl=5.9 lr=8.00e-04 | 37707 tok/s (avg 32822) ETA 49692m10s | gtok=48,014,950,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu/resolve/87f09149ef4734204d70ed1d046ddc9ca3f2b8f9/sample/100BT/000_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 732700 [732700/2225878  33%]  loss=1.8211 ppl=6.2 lr=8.00e-04 | 37700 tok/s (avg 32840) ETA 49663m01s | gtok=48,018,227,200 | GPU 6.7/77.3GB
+step 732750 [732750/2225878  33%]  loss=1.6896 ppl=5.4 lr=8.00e-04 | 37706 tok/s (avg 32858) ETA 49634m05s | gtok=48,021,504,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 732800 [732800/2225878  33%]  loss=1.8059 ppl=6.1 lr=8.00e-04 | 37697 tok/s (avg 32876) ETA 49605m26s | gtok=48,024,780,800 | GPU 6.7/77.3GB
+step 732850 [732850/2225878  33%]  loss=1.1910 ppl=3.3 lr=8.00e-04 | 37643 tok/s (avg 32894) ETA 49577m16s | gtok=48,028,057,600 | GPU 6.7/77.3GB
+step 732900 [732900/2225878  33%]  loss=1.7901 ppl=6.0 lr=8.00e-04 | 37704 tok/s (avg 32911) ETA 49549m02s | gtok=48,031,334,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 732950 [732950/2225878  33%]  loss=1.5931 ppl=4.9 lr=8.00e-04 | 37705 tok/s (avg 32929) ETA 49521m01s | gtok=48,034,611,200 | GPU 6.7/77.3GB
+step 733000 [733000/2225878  33%]  loss=1.7710 ppl=5.9 lr=8.00e-04 | 37710 tok/s (avg 32946) ETA 49493m12s | gtok=48,037,888,000 | GPU 6.7/77.3GB
+  [checkpoint] step 733000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 733050 [733050/2225878  33%]  loss=1.8134 ppl=6.1 lr=8.00e-04 | 34863 tok/s (avg 32954) ETA 49480m15s | gtok=48,041,164,800 | GPU 6.7/77.3GB
+step 733100 [733100/2225878  33%]  loss=1.7830 ppl=5.9 lr=8.00e-04 | 37708 tok/s (avg 32971) ETA 49452m49s | gtok=48,044,441,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 4s [Retry 3/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 8s [Retry 4/5].
+step 733150 [733150/2225878  33%]  loss=1.9545 ppl=7.1 lr=8.00e-04 | 37706 tok/s (avg 32988) ETA 49425m37s | gtok=48,047,718,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 8s [Retry 5/5].
+step 733200 [733200/2225878  33%]  loss=1.8979 ppl=6.7 lr=8.00e-04 | 37701 tok/s (avg 33005) ETA 49398m38s | gtok=48,050,995,200 | GPU 6.7/77.3GB
+step 733250 [733250/2225878  33%]  loss=1.5338 ppl=4.6 lr=8.00e-04 | 37647 tok/s (avg 33022) ETA 49372m07s | gtok=48,054,272,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu/resolve/87f09149ef4734204d70ed1d046ddc9ca3f2b8f9/sample/100BT/000_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 733300 [733300/2225878  33%]  loss=1.7908 ppl=6.0 lr=8.00e-04 | 37699 tok/s (avg 33038) ETA 49345m34s | gtok=48,057,548,800 | GPU 6.7/77.3GB
+step 733350 [733350/2225878  33%]  loss=1.9191 ppl=6.8 lr=8.00e-04 | 37700 tok/s (avg 33055) ETA 49319m13s | gtok=48,060,825,600 | GPU 6.7/77.3GB
+step 733400 [733400/2225878  33%]  loss=1.7839 ppl=6.0 lr=8.00e-04 | 37702 tok/s (avg 33071) ETA 49293m03s | gtok=48,064,102,400 | GPU 6.7/77.3GB
+step 733450 [733450/2225878  33%]  loss=1.8864 ppl=6.6 lr=8.00e-04 | 37637 tok/s (avg 33087) ETA 49267m23s | gtok=48,067,379,200 | GPU 6.7/77.3GB
+step 733500 [733500/2225878  33%]  loss=1.8581 ppl=6.4 lr=8.00e-04 | 37705 tok/s (avg 33104) ETA 49241m36s | gtok=48,070,656,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+  [checkpoint] step 733500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 1s [Retry 1/5].
+step 733550 [733550/2225878  33%]  loss=1.6699 ppl=5.3 lr=8.00e-04 | 34895 tok/s (avg 33110) ETA 49229m53s | gtok=48,073,932,800 | GPU 6.7/77.3GB
+step 733600 [733600/2225878  33%]  loss=1.3471 ppl=3.8 lr=8.00e-04 | 37702 tok/s (avg 33126) ETA 49204m27s | gtok=48,077,209,600 | GPU 6.7/77.3GB
+step 733650 [733650/2225878  33%]  loss=1.5268 ppl=4.6 lr=8.00e-04 | 37707 tok/s (avg 33142) ETA 49179m10s | gtok=48,080,486,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 733700 [733700/2225878  33%]  loss=1.7883 ppl=6.0 lr=8.00e-04 | 37646 tok/s (avg 33158) ETA 49154m22s | gtok=48,083,763,200 | GPU 6.7/77.3GB
+step 733750 [733750/2225878  33%]  loss=1.8155 ppl=6.1 lr=8.00e-04 | 37705 tok/s (avg 33174) ETA 49129m28s | gtok=48,087,040,000 | GPU 6.7/77.3GB
+step 733800 [733800/2225878  33%]  loss=1.7355 ppl=5.7 lr=8.00e-04 | 37712 tok/s (avg 33189) ETA 49104m44s | gtok=48,090,316,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 4s [Retry 3/5].
+step 733850 [733850/2225878  33%]  loss=1.9016 ppl=6.7 lr=8.00e-04 | 37699 tok/s (avg 33205) ETA 49080m14s | gtok=48,093,593,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 8s [Retry 4/5].
+step 733900 [733900/2225878  33%]  loss=2.1082 ppl=8.2 lr=8.00e-04 | 37656 tok/s (avg 33220) ETA 49056m06s | gtok=48,096,870,400 | GPU 6.7/77.3GB
+step 733950 [733950/2225878  33%]  loss=2.1212 ppl=8.3 lr=8.00e-04 | 37701 tok/s (avg 33235) ETA 49031m56s | gtok=48,100,147,200 | GPU 6.7/77.3GB
+step 734000 [734000/2225878  33%]  loss=1.6520 ppl=5.2 lr=8.00e-04 | 37703 tok/s (avg 33250) ETA 49007m57s | gtok=48,103,424,000 | GPU 6.7/77.3GB
+  [val @ step 734000] val_loss=3.0008 val_ppl=20.10 (best 19.48)
+  [wiki_val @ step 734000] val_loss=3.5289 val_ppl=34.09
+  [val_src @ step 734000] dclm=3.0151 fineweb=3.0363 arxiv=1.4732 pubmed=1.8093 pes2o=2.6870 cosmo=1.9431 tools=0.5011 pysci=0.8377 chatmt=1.3006
+  [mix @ step 734000] window: smoltalk2_mid=15.25% dclm=13.18% fineweb100=13.03% cosmo=8.88% pes2o=8.70% pysci=8.47% pubmed=8.45% arxiv=6.71% chatmt2=5.34% tools=3.88% finemath=2.61% b2s=1.34% chatsr=1.21% b2s_far=1.05% proto4k=0.67% proto_far=0.62% tuluif=0.33% recall4k=0.31%
+  [mix_run @ step 734000] since start: smoltalk2_mid=15.27% dclm=13.14% fineweb100=13.09% cosmo=8.88% pubmed=8.62% pes2o=8.57% pysci=8.40% arxiv=6.68% chatmt2=5.29% tools=3.92% finemath=2.64% b2s=1.36% chatsr=1.20% b2s_far=1.04% proto4k=0.67% proto_far=0.62% tuluif=0.34% recall4k=0.30%
+  [checkpoint] step 734000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 734000 cgu=+0.03 +0.03 +0.09 +0.04 +0.05 +0.05 +0.05 +0.04 +0.14 +0.15 +0.18 +0.18 +0.35 +0.50 +0.61 +0.61 +1.29 +2.66 +2.66 +2.30 +9.91 +12.24 +17.78 +10.58  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.22 +nan +nan +nan +0.76 +nan +nan +nan +1.47 +nan +nan +nan +2.90 +nan +nan +nan +1.82
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.82 nan nan nan 0.89 nan nan nan 0.88 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.81 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=5.9e-02 1.2e-02 1.1e-02 2.4e-02 4.2e-03 1.8e-02 7.5e-03 2.2e-02 1.0e-02 8.9e-03 1.1e-02 1.9e-02 8.7e-03 7.7e-03 8.6e-03 2.7e-02 1.2e-02 1.1e-02 1.4e-02 2.6e-02 2.0e-02 1.5e-02 1.7e-02 6.4e-02  wnorm=499.4 495.4 649.7 746.5 748.8 748.8 751.0 753.7 724.5 727.9 733.8 804.4 718.8 717.4 719.9 779.1 718.7 718.7 721.4 779.2 723.1 723.4 723.0 783.8
+step 734050 [734050/2225878  33%]  loss=1.8778 ppl=6.5 lr=8.00e-04 | 21159 tok/s (avg 33178) ETA 49113m36s | gtok=48,106,700,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 734100 [734100/2225878  33%]  loss=1.8848 ppl=6.6 lr=8.00e-04 | 37659 tok/s (avg 33193) ETA 49089m39s | gtok=48,109,977,600 | GPU 6.7/77.3GB
+step 734150 [734150/2225878  33%]  loss=1.7174 ppl=5.6 lr=8.00e-04 | 37705 tok/s (avg 33208) ETA 49065m40s | gtok=48,113,254,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 734200 [734200/2225878  33%]  loss=1.8023 ppl=6.1 lr=8.00e-04 | 37716 tok/s (avg 33223) ETA 49041m49s | gtok=48,116,531,200 | GPU 6.7/77.3GB
+step 734250 [734250/2225878  33%]  loss=1.7647 ppl=5.8 lr=8.00e-04 | 37712 tok/s (avg 33238) ETA 49018m08s | gtok=48,119,808,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 734300 [734300/2225878  33%]  loss=1.7986 ppl=6.0 lr=8.00e-04 | 37705 tok/s (avg 33253) ETA 48994m40s | gtok=48,123,084,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 734350 [734350/2225878  33%]  loss=1.7466 ppl=5.7 lr=8.00e-04 | 37656 tok/s (avg 33267) ETA 48971m34s | gtok=48,126,361,600 | GPU 6.7/77.3GB
+step 734400 [734400/2225878  33%]  loss=1.8555 ppl=6.4 lr=8.00e-04 | 37716 tok/s (avg 33282) ETA 48948m22s | gtok=48,129,638,400 | GPU 6.7/77.3GB
+step 734450 [734450/2225878  33%]  loss=1.7955 ppl=6.0 lr=8.00e-04 | 37705 tok/s (avg 33296) ETA 48925m23s | gtok=48,132,915,200 | GPU 6.7/77.3GB
+step 734500 [734500/2225878  33%]  loss=2.1134 ppl=8.3 lr=8.00e-04 | 37711 tok/s (avg 33311) ETA 48902m32s | gtok=48,136,192,000 | GPU 6.7/77.3GB
+  [checkpoint] step 734500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 734550 [734550/2225878  33%]  loss=1.8384 ppl=6.3 lr=8.00e-04 | 34845 tok/s (avg 33316) ETA 48892m57s | gtok=48,139,468,800 | GPU 6.7/77.3GB
+step 734600 [734600/2225878  33%]  loss=1.8347 ppl=6.3 lr=8.00e-04 | 37709 tok/s (avg 33330) ETA 48870m23s | gtok=48,142,745,600 | GPU 6.7/77.3GB
+step 734650 [734650/2225878  33%]  loss=1.7563 ppl=5.8 lr=8.00e-04 | 37711 tok/s (avg 33345) ETA 48847m57s | gtok=48,146,022,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+step 734700 [734700/2225878  33%]  loss=2.1034 ppl=8.2 lr=8.00e-04 | 37709 tok/s (avg 33359) ETA 48825m41s | gtok=48,149,299,200 | GPU 6.7/77.3GB
+step 734750 [734750/2225878  33%]  loss=2.0080 ppl=7.4 lr=8.00e-04 | 37709 tok/s (avg 33373) ETA 48803m33s | gtok=48,152,576,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 734800 [734800/2225878  33%]  loss=1.6939 ppl=5.4 lr=8.00e-04 | 37661 tok/s (avg 33387) ETA 48781m47s | gtok=48,155,852,800 | GPU 6.7/77.3GB
+step 734850 [734850/2225878  33%]  loss=2.0919 ppl=8.1 lr=8.00e-04 | 37711 tok/s (avg 33400) ETA 48759m57s | gtok=48,159,129,600 | GPU 6.7/77.3GB
+step 734900 [734900/2225878  33%]  loss=1.8770 ppl=6.5 lr=8.00e-04 | 37706 tok/s (avg 33414) ETA 48738m18s | gtok=48,162,406,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 734950 [734950/2225878  33%]  loss=1.9920 ppl=7.3 lr=8.00e-04 | 37707 tok/s (avg 33428) ETA 48716m47s | gtok=48,165,683,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 735000 [735000/2225878  33%]  loss=1.6835 ppl=5.4 lr=8.00e-04 | 37639 tok/s (avg 33441) ETA 48695m41s | gtok=48,168,960,000 | GPU 6.7/77.3GB
+  [checkpoint] step 735000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 735050 [735050/2225878  33%]  loss=1.5844 ppl=4.9 lr=8.00e-04 | 34912 tok/s (avg 33446) ETA 48686m45s | gtok=48,172,236,800 | GPU 6.7/77.3GB
+step 735100 [735100/2225878  33%]  loss=1.9651 ppl=7.1 lr=8.00e-04 | 37699 tok/s (avg 33459) ETA 48665m38s | gtok=48,175,513,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 735150 [735150/2225878  33%]  loss=1.9135 ppl=6.8 lr=8.00e-04 | 37704 tok/s (avg 33473) ETA 48644m39s | gtok=48,178,790,400 | GPU 6.7/77.3GB
+step 735200 [735200/2225878  33%]  loss=1.7201 ppl=5.6 lr=8.00e-04 | 37651 tok/s (avg 33486) ETA 48624m00s | gtok=48,182,067,200 | GPU 6.7/77.3GB
+step 735250 [735250/2225878  33%]  loss=1.7740 ppl=5.9 lr=8.00e-04 | 37707 tok/s (avg 33499) ETA 48603m17s | gtok=48,185,344,000 | GPU 6.7/77.3GB
+step 735300 [735300/2225878  33%]  loss=2.1832 ppl=8.9 lr=8.00e-04 | 37705 tok/s (avg 33512) ETA 48582m42s | gtok=48,188,620,800 | GPU 6.7/77.3GB
+step 735350 [735350/2225878  33%]  loss=1.8189 ppl=6.2 lr=8.00e-04 | 37714 tok/s (avg 33525) ETA 48562m12s | gtok=48,191,897,600 | GPU 6.7/77.3GB
+step 735400 [735400/2225878  33%]  loss=1.6415 ppl=5.2 lr=8.00e-04 | 37700 tok/s (avg 33538) ETA 48541m54s | gtok=48,195,174,400 | GPU 6.7/77.3GB
+step 735450 [735450/2225878  33%]  loss=1.7601 ppl=5.8 lr=8.00e-04 | 37641 tok/s (avg 33551) ETA 48521m58s | gtok=48,198,451,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/smoltalk2/resolve/fc6cc2103c066455aade5d7fbb346039ae36ca5e/Mid/Llama_Nemotron_Post_Training_Dataset_reasoning_r1-00076-of-00124.parquet
+Retrying in 1s [Retry 1/5].
+step 735500 [735500/2225878  33%]  loss=1.5733 ppl=4.8 lr=8.00e-04 | 37702 tok/s (avg 33563) ETA 48501m55s | gtok=48,201,728,000 | GPU 6.7/77.3GB
+  [checkpoint] step 735500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 735550 [735550/2225878  33%]  loss=1.6032 ppl=5.0 lr=8.00e-04 | 34905 tok/s (avg 33568) ETA 48493m53s | gtok=48,205,004,800 | GPU 6.7/77.3GB
+step 735600 [735600/2225878  33%]  loss=2.0024 ppl=7.4 lr=8.00e-04 | 37719 tok/s (avg 33581) ETA 48473m59s | gtok=48,208,281,600 | GPU 6.7/77.3GB
+step 735650 [735650/2225878  33%]  loss=2.0296 ppl=7.6 lr=8.00e-04 | 37696 tok/s (avg 33593) ETA 48454m17s | gtok=48,211,558,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 735700 [735700/2225878  33%]  loss=1.7858 ppl=6.0 lr=8.00e-04 | 37643 tok/s (avg 33605) ETA 48434m56s | gtok=48,214,835,200 | GPU 6.7/77.3GB
+step 735750 [735750/2225878  33%]  loss=1.7786 ppl=5.9 lr=8.00e-04 | 37700 tok/s (avg 33618) ETA 48415m29s | gtok=48,218,112,000 | GPU 6.7/77.3GB
+step 735800 [735800/2225878  33%]  loss=1.6583 ppl=5.3 lr=8.00e-04 | 37702 tok/s (avg 33630) ETA 48396m08s | gtok=48,221,388,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 735850 [735850/2225878  33%]  loss=1.9082 ppl=6.7 lr=8.00e-04 | 37710 tok/s (avg 33642) ETA 48376m53s | gtok=48,224,665,600 | GPU 6.7/77.3GB
+step 735900 [735900/2225878  33%]  loss=1.8702 ppl=6.5 lr=8.00e-04 | 37701 tok/s (avg 33654) ETA 48357m47s | gtok=48,227,942,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 735950 [735950/2225878  33%]  loss=1.6467 ppl=5.2 lr=8.00e-04 | 37644 tok/s (avg 33666) ETA 48339m01s | gtok=48,231,219,200 | GPU 6.7/77.3GB
+step 736000 [736000/2225878  33%]  loss=2.0170 ppl=7.5 lr=8.00e-04 | 37694 tok/s (avg 33678) ETA 48320m11s | gtok=48,234,496,000 | GPU 6.7/77.3GB
+  [val @ step 736000] val_loss=3.0045 val_ppl=20.18 (best 19.48)
+  [wiki_val @ step 736000] val_loss=3.5366 val_ppl=34.35
+  [val_src @ step 736000] dclm=3.0208 fineweb=3.0435 arxiv=1.4764 pubmed=1.8144 pes2o=2.6914 cosmo=1.9447 tools=0.5016 pysci=0.8418 chatmt=1.3018
+  [mix @ step 736000] window: smoltalk2_mid=15.32% dclm=13.26% fineweb100=13.23% cosmo=8.91% pes2o=8.42% pysci=8.40% pubmed=8.36% arxiv=6.68% chatmt2=5.30% tools=3.96% finemath=2.64% b2s=1.38% chatsr=1.20% b2s_far=1.01% proto4k=0.69% proto_far=0.62% tuluif=0.35% recall4k=0.29%
+  [mix_run @ step 736000] since start: smoltalk2_mid=15.28% dclm=13.16% fineweb100=13.11% cosmo=8.88% pubmed=8.58% pes2o=8.55% pysci=8.40% arxiv=6.68% chatmt2=5.29% tools=3.92% finemath=2.64% b2s=1.36% chatsr=1.20% b2s_far=1.03% proto4k=0.67% proto_far=0.62% tuluif=0.34% recall4k=0.29%
+  [checkpoint] step 736000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 736000 cgu=+0.03 +0.03 +0.09 +0.04 +0.05 +0.06 +0.05 +0.04 +0.14 +0.15 +0.18 +0.18 +0.35 +0.51 +0.62 +0.61 +1.29 +2.66 +2.66 +2.30 +9.92 +12.27 +17.82 +10.60  pam=+nan +nan +nan +0.05 +nan +nan +nan +0.22 +nan +nan +nan +0.76 +nan +nan +nan +1.47 +nan +nan +nan +2.90 +nan +nan +nan +1.83
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.82 nan nan nan 0.88 nan nan nan 0.88 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.81 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=2.5e-02 2.4e-02 1.2e-02 6.9e-03 9.5e-03 2.5e-03 5.8e-03 3.0e-02 3.5e-03 4.2e-03 3.0e-03 1.5e-02 4.1e-03 3.7e-03 4.0e-03 1.1e-02 4.9e-03 5.7e-03 5.3e-03 2.3e-02 1.0e-02 2.1e-02 1.2e-02 6.1e-02  wnorm=499.1 495.3 649.9 746.9 749.1 748.9 751.2 754.1 724.5 727.9 733.7 804.4 718.8 717.5 720.0 779.1 718.8 718.7 721.4 779.2 723.1 723.4 723.0 783.8
+step 736050 [736050/2225878  33%]  loss=1.7310 ppl=5.6 lr=8.00e-04 | 21148 tok/s (avg 33612) ETA 48413m40s | gtok=48,237,772,800 | GPU 6.7/77.3GB
+step 736100 [736100/2225878  33%]  loss=1.8635 ppl=6.4 lr=8.00e-04 | 37709 tok/s (avg 33624) ETA 48394m38s | gtok=48,241,049,600 | GPU 6.7/77.3GB
+step 736150 [736150/2225878  33%]  loss=1.6588 ppl=5.3 lr=8.00e-04 | 37660 tok/s (avg 33636) ETA 48375m54s | gtok=48,244,326,400 | GPU 6.7/77.3GB
+step 736200 [736200/2225878  33%]  loss=1.8057 ppl=6.1 lr=8.00e-04 | 37706 tok/s (avg 33648) ETA 48357m06s | gtok=48,247,603,200 | GPU 6.7/77.3GB
+step 736250 [736250/2225878  33%]  loss=1.5773 ppl=4.8 lr=8.00e-04 | 37712 tok/s (avg 33660) ETA 48338m23s | gtok=48,250,880,000 | GPU 6.7/77.3GB
+step 736300 [736300/2225878  33%]  loss=1.6986 ppl=5.5 lr=8.00e-04 | 37710 tok/s (avg 33672) ETA 48319m48s | gtok=48,254,156,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 736350 [736350/2225878  33%]  loss=1.6387 ppl=5.1 lr=8.00e-04 | 37639 tok/s (avg 33683) ETA 48301m35s | gtok=48,257,433,600 | GPU 6.7/77.3GB
+step 736400 [736400/2225878  33%]  loss=2.0246 ppl=7.6 lr=8.00e-04 | 37710 tok/s (avg 33695) ETA 48283m14s | gtok=48,260,710,400 | GPU 6.7/77.3GB
+step 736450 [736450/2225878  33%]  loss=1.7908 ppl=6.0 lr=8.00e-04 | 37702 tok/s (avg 33707) ETA 48265m00s | gtok=48,263,987,200 | GPU 6.7/77.3GB
+step 736500 [736500/2225878  33%]  loss=1.4995 ppl=4.5 lr=8.00e-04 | 37695 tok/s (avg 33718) ETA 48246m54s | gtok=48,267,264,000 | GPU 6.7/77.3GB
+  [checkpoint] step 736500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 736550 [736550/2225878  33%]  loss=1.6262 ppl=5.1 lr=8.00e-04 | 34892 tok/s (avg 33722) ETA 48240m04s | gtok=48,270,540,800 | GPU 6.7/77.3GB
+step 736600 [736600/2225878  33%]  loss=1.5800 ppl=4.9 lr=8.00e-04 | 37649 tok/s (avg 33733) ETA 48222m19s | gtok=48,273,817,600 | GPU 6.7/77.3GB
+step 736650 [736650/2225878  33%]  loss=2.1165 ppl=8.3 lr=8.00e-04 | 37707 tok/s (avg 33744) ETA 48204m28s | gtok=48,277,094,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 736700 [736700/2225878  33%]  loss=1.7447 ppl=5.7 lr=8.00e-04 | 37703 tok/s (avg 33756) ETA 48186m44s | gtok=48,280,371,200 | GPU 6.7/77.3GB
+step 736750 [736750/2225878  33%]  loss=1.8066 ppl=6.1 lr=8.00e-04 | 37701 tok/s (avg 33767) ETA 48169m06s | gtok=48,283,648,000 | GPU 6.7/77.3GB
+step 736800 [736800/2225878  33%]  loss=1.7346 ppl=5.7 lr=8.00e-04 | 37671 tok/s (avg 33778) ETA 48151m42s | gtok=48,286,924,800 | GPU 6.7/77.3GB
+step 736850 [736850/2225878  33%]  loss=1.7301 ppl=5.6 lr=8.00e-04 | 37706 tok/s (avg 33789) ETA 48134m15s | gtok=48,290,201,600 | GPU 6.7/77.3GB
+step 736900 [736900/2225878  33%]  loss=1.5826 ppl=4.9 lr=8.00e-04 | 37708 tok/s (avg 33800) ETA 48116m54s | gtok=48,293,478,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 736950 [736950/2225878  33%]  loss=1.7946 ppl=6.0 lr=8.00e-04 | 37705 tok/s (avg 33811) ETA 48099m40s | gtok=48,296,755,200 | GPU 6.7/77.3GB
+step 737000 [737000/2225878  33%]  loss=1.8110 ppl=6.1 lr=8.00e-04 | 37617 tok/s (avg 33822) ETA 48082m51s | gtok=48,300,032,000 | GPU 6.7/77.3GB
+  [checkpoint] step 737000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 737050 [737050/2225878  33%]  loss=1.6416 ppl=5.2 lr=8.00e-04 | 34912 tok/s (avg 33825) ETA 48076m33s | gtok=48,303,308,800 | GPU 6.7/77.3GB
+step 737100 [737100/2225878  33%]  loss=1.7028 ppl=5.5 lr=8.00e-04 | 37710 tok/s (avg 33836) ETA 48059m34s | gtok=48,306,585,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 737150 [737150/2225878  33%]  loss=1.6849 ppl=5.4 lr=8.00e-04 | 37708 tok/s (avg 33847) ETA 48042m40s | gtok=48,309,862,400 | GPU 6.7/77.3GB
+step 737200 [737200/2225878  33%]  loss=1.7153 ppl=5.6 lr=8.00e-04 | 37650 tok/s (avg 33857) ETA 48026m05s | gtok=48,313,139,200 | GPU 6.7/77.3GB
+step 737250 [737250/2225878  33%]  loss=2.0010 ppl=7.4 lr=8.00e-04 | 37698 tok/s (avg 33868) ETA 48009m25s | gtok=48,316,416,000 | GPU 6.7/77.3GB
+step 737300 [737300/2225878  33%]  loss=2.0113 ppl=7.5 lr=8.00e-04 | 37693 tok/s (avg 33878) ETA 47992m51s | gtok=48,319,692,800 | GPU 6.7/77.3GB
+step 737350 [737350/2225878  33%]  loss=1.7505 ppl=5.8 lr=8.00e-04 | 37699 tok/s (avg 33889) ETA 47976m22s | gtok=48,322,969,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 737400 [737400/2225878  33%]  loss=2.2145 ppl=9.2 lr=8.00e-04 | 37696 tok/s (avg 33899) ETA 47959m59s | gtok=48,326,246,400 | GPU 6.7/77.3GB
+step 737450 [737450/2225878  33%]  loss=1.9486 ppl=7.0 lr=8.00e-04 | 37641 tok/s (avg 33910) ETA 47943m53s | gtok=48,329,523,200 | GPU 6.7/77.3GB
+step 737500 [737500/2225878  33%]  loss=1.8738 ppl=6.5 lr=8.00e-04 | 37702 tok/s (avg 33920) ETA 47927m40s | gtok=48,332,800,000 | GPU 6.7/77.3GB
+  [checkpoint] step 737500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 737550 [737550/2225878  33%]  loss=1.8452 ppl=6.3 lr=8.00e-04 | 34892 tok/s (avg 33923) ETA 47922m01s | gtok=48,336,076,800 | GPU 6.7/77.3GB
+step 737600 [737600/2225878  33%]  loss=1.6977 ppl=5.5 lr=8.00e-04 | 37707 tok/s (avg 33933) ETA 47905m55s | gtok=48,339,353,600 | GPU 6.7/77.3GB
+step 737650 [737650/2225878  33%]  loss=1.9219 ppl=6.8 lr=8.00e-04 | 37631 tok/s (avg 33943) ETA 47890m11s | gtok=48,342,630,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+step 737700 [737700/2225878  33%]  loss=1.7253 ppl=5.6 lr=8.00e-04 | 37712 tok/s (avg 33953) ETA 47874m14s | gtok=48,345,907,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 737750 [737750/2225878  33%]  loss=1.7591 ppl=5.8 lr=8.00e-04 | 37708 tok/s (avg 33963) ETA 47858m24s | gtok=48,349,184,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+step 737800 [737800/2225878  33%]  loss=1.8506 ppl=6.4 lr=8.00e-04 | 37698 tok/s (avg 33973) ETA 47842m41s | gtok=48,352,460,800 | GPU 6.7/77.3GB
+step 737850 [737850/2225878  33%]  loss=1.9915 ppl=7.3 lr=8.00e-04 | 37696 tok/s (avg 33983) ETA 47827m04s | gtok=48,355,737,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 1s [Retry 1/5].
+step 737900 [737900/2225878  33%]  loss=1.8555 ppl=6.4 lr=8.00e-04 | 37655 tok/s (avg 33993) ETA 47811m39s | gtok=48,359,014,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 2s [Retry 2/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 737950 [737950/2225878  33%]  loss=1.9778 ppl=7.2 lr=8.00e-04 | 37696 tok/s (avg 34003) ETA 47796m12s | gtok=48,362,291,200 | GPU 6.7/77.3GB
+step 738000 [738000/2225878  33%]  loss=1.8065 ppl=6.1 lr=8.00e-04 | 37696 tok/s (avg 34013) ETA 47780m49s | gtok=48,365,568,000 | GPU 6.7/77.3GB
+  [val @ step 738000] val_loss=3.0049 val_ppl=20.18 (best 19.48)
+  [wiki_val @ step 738000] val_loss=3.5219 val_ppl=33.85
+  [val_src @ step 738000] dclm=3.0196 fineweb=3.0412 arxiv=1.4732 pubmed=1.8189 pes2o=2.6854 cosmo=1.9427 tools=0.5007 pysci=0.8411 chatmt=1.2983
+  [mix @ step 738000] window: smoltalk2_mid=15.27% dclm=13.10% fineweb100=13.04% cosmo=8.88% pubmed=8.62% pes2o=8.62% pysci=8.29% arxiv=6.82% chatmt2=5.30% tools=3.99% finemath=2.61% b2s=1.36% chatsr=1.20% b2s_far=1.01% proto4k=0.66% proto_far=0.60% tuluif=0.34% recall4k=0.30%
+  [mix_run @ step 738000] since start: smoltalk2_mid=15.28% dclm=13.15% fineweb100=13.10% cosmo=8.88% pubmed=8.58% pes2o=8.56% pysci=8.39% arxiv=6.70% chatmt2=5.29% tools=3.93% finemath=2.63% b2s=1.36% chatsr=1.20% b2s_far=1.03% proto4k=0.67% proto_far=0.62% tuluif=0.34% recall4k=0.30%
+  [checkpoint] step 738000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 738000 cgu=+0.03 +0.03 +0.09 +0.04 +0.05 +0.05 +0.05 +0.04 +0.13 +0.15 +0.18 +0.18 +0.35 +0.51 +0.62 +0.61 +1.29 +2.67 +2.67 +2.31 +9.94 +12.29 +17.85 +10.62  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.22 +nan +nan +nan +0.77 +nan +nan +nan +1.46 +nan +nan +nan +2.90 +nan +nan +nan +1.84
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.82 nan nan nan 0.89 nan nan nan 0.88 nan nan nan 0.93 nan nan nan 0.91 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.81 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=3.8e-02 4.8e-02 8.1e-03 3.4e-02 6.5e-03 1.9e-02 5.9e-03 8.7e-02 8.0e-03 5.8e-03 6.0e-03 1.9e-02 7.0e-03 6.6e-03 7.8e-03 1.9e-02 7.9e-03 1.0e-02 9.0e-03 2.7e-02 1.9e-02 1.5e-02 2.2e-02 5.0e-02  wnorm=498.9 495.4 650.1 747.2 749.3 749.2 751.6 754.6 724.4 727.9 733.7 804.4 718.8 717.5 720.0 779.2 718.8 718.7 721.5 779.3 723.1 723.5 723.0 783.8
+step 738050 [738050/2225878  33%]  loss=2.1199 ppl=8.3 lr=8.00e-04 | 21148 tok/s (avg 33952) ETA 47864m27s | gtok=48,368,844,800 | GPU 6.7/77.3GB
+step 738100 [738100/2225878  33%]  loss=1.6275 ppl=5.1 lr=8.00e-04 | 37653 tok/s (avg 33962) ETA 47849m05s | gtok=48,372,121,600 | GPU 6.7/77.3GB
+step 738150 [738150/2225878  33%]  loss=1.5655 ppl=4.8 lr=8.00e-04 | 37701 tok/s (avg 33972) ETA 47833m39s | gtok=48,375,398,400 | GPU 6.7/77.3GB
+step 738200 [738200/2225878  33%]  loss=1.9790 ppl=7.2 lr=8.00e-04 | 37693 tok/s (avg 33982) ETA 47818m19s | gtok=48,378,675,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 738250 [738250/2225878  33%]  loss=1.8752 ppl=6.5 lr=8.00e-04 | 37701 tok/s (avg 33991) ETA 47803m02s | gtok=48,381,952,000 | GPU 6.7/77.3GB
+step 738300 [738300/2225878  33%]  loss=1.9146 ppl=6.8 lr=8.00e-04 | 37662 tok/s (avg 34001) ETA 47787m57s | gtok=48,385,228,800 | GPU 6.7/77.3GB
+step 738350 [738350/2225878  33%]  loss=1.6671 ppl=5.3 lr=8.00e-04 | 37698 tok/s (avg 34010) ETA 47772m51s | gtok=48,388,505,600 | GPU 6.7/77.3GB
+step 738400 [738400/2225878  33%]  loss=2.0681 ppl=7.9 lr=8.00e-04 | 37706 tok/s (avg 34020) ETA 47757m47s | gtok=48,391,782,400 | GPU 6.7/77.3GB
+step 738450 [738450/2225878  33%]  loss=1.9404 ppl=7.0 lr=8.00e-04 | 37693 tok/s (avg 34030) ETA 47742m51s | gtok=48,395,059,200 | GPU 6.7/77.3GB
+step 738500 [738500/2225878  33%]  loss=1.8840 ppl=6.6 lr=8.00e-04 | 37705 tok/s (avg 34039) ETA 47727m57s | gtok=48,398,336,000 | GPU 6.7/77.3GB
+  [checkpoint] step 738500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 738550 [738550/2225878  33%]  loss=1.5672 ppl=4.8 lr=8.00e-04 | 34848 tok/s (avg 34041) ETA 47723m11s | gtok=48,401,612,800 | GPU 6.7/77.3GB
+step 738600 [738600/2225878  33%]  loss=1.5571 ppl=4.7 lr=8.00e-04 | 37703 tok/s (avg 34051) ETA 47708m25s | gtok=48,404,889,600 | GPU 6.7/77.3GB
+step 738650 [738650/2225878  33%]  loss=1.8447 ppl=6.3 lr=8.00e-04 | 37702 tok/s (avg 34060) ETA 47693m43s | gtok=48,408,166,400 | GPU 6.7/77.3GB
+step 738700 [738700/2225878  33%]  loss=1.6693 ppl=5.3 lr=8.00e-04 | 37698 tok/s (avg 34069) ETA 47679m07s | gtok=48,411,443,200 | GPU 6.7/77.3GB
+step 738750 [738750/2225878  33%]  loss=1.9258 ppl=6.9 lr=8.00e-04 | 37701 tok/s (avg 34079) ETA 47664m35s | gtok=48,414,720,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+step 738800 [738800/2225878  33%]  loss=1.9086 ppl=6.7 lr=8.00e-04 | 37660 tok/s (avg 34088) ETA 47650m14s | gtok=48,417,996,800 | GPU 6.7/77.3GB
+step 738850 [738850/2225878  33%]  loss=1.8829 ppl=6.6 lr=8.00e-04 | 37704 tok/s (avg 34097) ETA 47635m50s | gtok=48,421,273,600 | GPU 6.7/77.3GB
+step 738900 [738900/2225878  33%]  loss=1.7879 ppl=6.0 lr=8.00e-04 | 37703 tok/s (avg 34106) ETA 47621m30s | gtok=48,424,550,400 | GPU 6.7/77.3GB
+step 738950 [738950/2225878  33%]  loss=1.6544 ppl=5.2 lr=8.00e-04 | 37702 tok/s (avg 34115) ETA 47607m15s | gtok=48,427,827,200 | GPU 6.7/77.3GB
+step 739000 [739000/2225878  33%]  loss=1.7829 ppl=5.9 lr=8.00e-04 | 37661 tok/s (avg 34124) ETA 47593m12s | gtok=48,431,104,000 | GPU 6.7/77.3GB
+  [checkpoint] step 739000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 739050 [739050/2225878  33%]  loss=1.7013 ppl=5.5 lr=8.00e-04 | 34917 tok/s (avg 34126) ETA 47588m36s | gtok=48,434,380,800 | GPU 6.7/77.3GB
+step 739100 [739100/2225878  33%]  loss=1.8106 ppl=6.1 lr=8.00e-04 | 37716 tok/s (avg 34135) ETA 47574m30s | gtok=48,437,657,600 | GPU 6.7/77.3GB
+step 739150 [739150/2225878  33%]  loss=1.9741 ppl=7.2 lr=8.00e-04 | 37703 tok/s (avg 34144) ETA 47560m30s | gtok=48,440,934,400 | GPU 6.7/77.3GB
+step 739200 [739200/2225878  33%]  loss=1.8419 ppl=6.3 lr=8.00e-04 | 37654 tok/s (avg 34153) ETA 47546m43s | gtok=48,444,211,200 | GPU 6.7/77.3GB
+step 739250 [739250/2225878  33%]  loss=1.9494 ppl=7.0 lr=8.00e-04 | 37705 tok/s (avg 34162) ETA 47532m51s | gtok=48,447,488,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/common-pile/pubmed_filtered/resolve/main/licensed_pubmed-0001.json.gz
+Retrying in 1s [Retry 1/5].
+step 739300 [739300/2225878  33%]  loss=1.7517 ppl=5.8 lr=8.00e-04 | 37703 tok/s (avg 34170) ETA 47519m03s | gtok=48,450,764,800 | GPU 6.7/77.3GB
+step 739350 [739350/2225878  33%]  loss=1.9278 ppl=6.9 lr=8.00e-04 | 37711 tok/s (avg 34179) ETA 47505m18s | gtok=48,454,041,600 | GPU 6.7/77.3GB
+step 739400 [739400/2225878  33%]  loss=1.8933 ppl=6.6 lr=8.00e-04 | 37644 tok/s (avg 34188) ETA 47491m49s | gtok=48,457,318,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 739450 [739450/2225878  33%]  loss=1.4640 ppl=4.3 lr=8.00e-04 | 37709 tok/s (avg 34196) ETA 47478m12s | gtok=48,460,595,200 | GPU 6.7/77.3GB
+step 739500 [739500/2225878  33%]  loss=1.7598 ppl=5.8 lr=8.00e-04 | 37714 tok/s (avg 34205) ETA 47464m38s | gtok=48,463,872,000 | GPU 6.7/77.3GB
+  [checkpoint] step 739500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 739550 [739550/2225878  33%]  loss=2.0348 ppl=7.7 lr=8.00e-04 | 34913 tok/s (avg 34207) ETA 47460m27s | gtok=48,467,148,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 739600 [739600/2225878  33%]  loss=1.8483 ppl=6.3 lr=8.00e-04 | 37708 tok/s (avg 34215) ETA 47447m00s | gtok=48,470,425,600 | GPU 6.7/77.3GB
+step 739650 [739650/2225878  33%]  loss=1.8104 ppl=6.1 lr=8.00e-04 | 37648 tok/s (avg 34224) ETA 47433m49s | gtok=48,473,702,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 739700 [739700/2225878  33%]  loss=1.9034 ppl=6.7 lr=8.00e-04 | 37707 tok/s (avg 34232) ETA 47420m30s | gtok=48,476,979,200 | GPU 6.7/77.3GB
+step 739750 [739750/2225878  33%]  loss=1.4378 ppl=4.2 lr=8.00e-04 | 37699 tok/s (avg 34240) ETA 47407m17s | gtok=48,480,256,000 | GPU 6.7/77.3GB
+step 739800 [739800/2225878  33%]  loss=1.7993 ppl=6.0 lr=8.00e-04 | 37697 tok/s (avg 34249) ETA 47394m07s | gtok=48,483,532,800 | GPU 6.7/77.3GB
+step 739850 [739850/2225878  33%]  loss=1.5263 ppl=4.6 lr=8.00e-04 | 37623 tok/s (avg 34257) ETA 47381m15s | gtok=48,486,809,600 | GPU 6.7/77.3GB
+step 739900 [739900/2225878  33%]  loss=1.6154 ppl=5.0 lr=8.00e-04 | 37706 tok/s (avg 34265) ETA 47368m12s | gtok=48,490,086,400 | GPU 6.7/77.3GB
+step 739950 [739950/2225878  33%]  loss=1.5652 ppl=4.8 lr=8.00e-04 | 37705 tok/s (avg 34274) ETA 47355m12s | gtok=48,493,363,200 | GPU 6.7/77.3GB
+step 740000 [740000/2225878  33%]  loss=1.9727 ppl=7.2 lr=8.00e-04 | 37693 tok/s (avg 34282) ETA 47342m18s | gtok=48,496,640,000 | GPU 6.7/77.3GB
+  [val @ step 740000] val_loss=2.9886 val_ppl=19.86 (best 19.48)
+  [wiki_val @ step 740000] val_loss=3.5258 val_ppl=33.98
+  [val_src @ step 740000] dclm=3.0048 fineweb=3.0265 arxiv=1.4727 pubmed=1.8143 pes2o=2.6832 cosmo=1.9411 tools=0.5004 pysci=0.8416 chatmt=1.2926
+  [mix @ step 740000] window: smoltalk2_mid=15.40% dclm=13.16% fineweb100=13.10% cosmo=8.92% pysci=8.52% pubmed=8.43% pes2o=8.42% arxiv=6.54% chatmt2=5.32% tools=3.93% finemath=2.71% b2s=1.35% chatsr=1.21% b2s_far=1.08% proto4k=0.68% proto_far=0.61% tuluif=0.34% recall4k=0.28%
+  [mix_run @ step 740000] since start: smoltalk2_mid=15.29% dclm=13.15% fineweb100=13.10% cosmo=8.88% pubmed=8.57% pes2o=8.54% pysci=8.40% arxiv=6.68% chatmt2=5.30% tools=3.93% finemath=2.64% b2s=1.36% chatsr=1.20% b2s_far=1.04% proto4k=0.67% proto_far=0.62% tuluif=0.34% recall4k=0.29%
+  [checkpoint] step 740000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 740000 cgu=+0.03 +0.03 +0.09 +0.04 +0.05 +0.05 +0.05 +0.04 +0.14 +0.15 +0.18 +0.18 +0.35 +0.50 +0.62 +0.61 +1.29 +2.67 +2.68 +2.30 +9.96 +12.31 +17.88 +10.63  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.22 +nan +nan +nan +0.76 +nan +nan +nan +1.47 +nan +nan +nan +2.90 +nan +nan +nan +1.84
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.82 nan nan nan 0.88 nan nan nan 0.88 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.82
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.81 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=2.9e-02 5.0e-02 2.5e-02 2.0e-02 6.1e-03 5.4e-03 7.7e-03 5.6e-02 2.0e-02 8.2e-03 9.1e-03 3.0e-02 9.2e-03 8.5e-03 1.1e-02 3.0e-02 1.3e-02 1.3e-02 1.2e-02 3.7e-02 1.9e-02 1.9e-02 2.2e-02 6.1e-02  wnorm=498.9 495.5 650.2 747.5 749.4 749.5 751.9 755.0 724.5 728.0 733.8 804.4 718.8 717.6 720.1 779.2 718.9 718.8 721.5 779.3 723.1 723.5 723.1 783.8
+step 740050 [740050/2225878  33%]  loss=1.7635 ppl=5.8 lr=8.00e-04 | 21136 tok/s (avg 34226) ETA 47417m59s | gtok=48,499,916,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 740100 [740100/2225878  33%]  loss=1.9128 ppl=6.8 lr=8.00e-04 | 37706 tok/s (avg 34234) ETA 47404m56s | gtok=48,503,193,600 | GPU 6.7/77.3GB
+step 740150 [740150/2225878  33%]  loss=1.9751 ppl=7.2 lr=8.00e-04 | 37707 tok/s (avg 34242) ETA 47391m57s | gtok=48,506,470,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 740200 [740200/2225878  33%]  loss=2.0557 ppl=7.8 lr=8.00e-04 | 37698 tok/s (avg 34251) ETA 47379m02s | gtok=48,509,747,200 | GPU 6.7/77.3GB
+step 740250 [740250/2225878  33%]  loss=1.8429 ppl=6.3 lr=8.00e-04 | 37664 tok/s (avg 34259) ETA 47366m18s | gtok=48,513,024,000 | GPU 6.7/77.3GB
+step 740300 [740300/2225878  33%]  loss=1.6333 ppl=5.1 lr=8.00e-04 | 37701 tok/s (avg 34267) ETA 47353m30s | gtok=48,516,300,800 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 740350 [740350/2225878  33%]  loss=1.9443 ppl=7.0 lr=8.00e-04 | 37701 tok/s (avg 34275) ETA 47340m45s | gtok=48,519,577,600 | GPU 6.7/77.3GB
+step 740400 [740400/2225878  33%]  loss=1.7893 ppl=6.0 lr=8.00e-04 | 37697 tok/s (avg 34283) ETA 47328m05s | gtok=48,522,854,400 | GPU 6.7/77.3GB
+step 740450 [740450/2225878  33%]  loss=1.8446 ppl=6.3 lr=8.00e-04 | 37698 tok/s (avg 34291) ETA 47315m28s | gtok=48,526,131,200 | GPU 6.7/77.3GB
+step 740500 [740500/2225878  33%]  loss=1.6006 ppl=5.0 lr=8.00e-04 | 37661 tok/s (avg 34299) ETA 47303m01s | gtok=48,529,408,000 | GPU 6.7/77.3GB
+  [checkpoint] step 740500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 740550 [740550/2225878  33%]  loss=1.7176 ppl=5.6 lr=8.00e-04 | 34891 tok/s (avg 34300) ETA 47299m23s | gtok=48,532,684,800 | GPU 6.7/77.3GB
+step 740600 [740600/2225878  33%]  loss=1.5041 ppl=4.5 lr=8.00e-04 | 37705 tok/s (avg 34308) ETA 47286m53s | gtok=48,535,961,600 | GPU 6.7/77.3GB
+step 740650 [740650/2225878  33%]  loss=1.9069 ppl=6.7 lr=8.00e-04 | 37706 tok/s (avg 34316) ETA 47274m27s | gtok=48,539,238,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 740700 [740700/2225878  33%]  loss=1.5408 ppl=4.7 lr=8.00e-04 | 37701 tok/s (avg 34324) ETA 47262m05s | gtok=48,542,515,200 | GPU 6.7/77.3GB
+step 740750 [740750/2225878  33%]  loss=2.0699 ppl=7.9 lr=8.00e-04 | 37649 tok/s (avg 34331) ETA 47249m56s | gtok=48,545,792,000 | GPU 6.7/77.3GB
+step 740800 [740800/2225878  33%]  loss=1.7384 ppl=5.7 lr=8.00e-04 | 37707 tok/s (avg 34339) ETA 47237m39s | gtok=48,549,068,800 | GPU 6.7/77.3GB
+step 740850 [740850/2225878  33%]  loss=2.0100 ppl=7.5 lr=8.00e-04 | 37713 tok/s (avg 34347) ETA 47225m25s | gtok=48,552,345,600 | GPU 6.7/77.3GB
+step 740900 [740900/2225878  33%]  loss=1.3137 ppl=3.7 lr=8.00e-04 | 37639 tok/s (avg 34354) ETA 47213m27s | gtok=48,555,622,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 740950 [740950/2225878  33%]  loss=1.8331 ppl=6.3 lr=8.00e-04 | 37702 tok/s (avg 34362) ETA 47201m21s | gtok=48,558,899,200 | GPU 6.7/77.3GB
+step 741000 [741000/2225878  33%]  loss=2.0167 ppl=7.5 lr=8.00e-04 | 37707 tok/s (avg 34370) ETA 47189m18s | gtok=48,562,176,000 | GPU 6.7/77.3GB
+  [checkpoint] step 741000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 741050 [741050/2225878  33%]  loss=1.9201 ppl=6.8 lr=8.00e-04 | 34902 tok/s (avg 34371) ETA 47185m55s | gtok=48,565,452,800 | GPU 6.7/77.3GB
+step 741100 [741100/2225878  33%]  loss=1.7662 ppl=5.8 lr=8.00e-04 | 37708 tok/s (avg 34379) ETA 47173m57s | gtok=48,568,729,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 741150 [741150/2225878  33%]  loss=1.9872 ppl=7.3 lr=8.00e-04 | 37632 tok/s (avg 34386) ETA 47162m14s | gtok=48,572,006,400 | GPU 6.7/77.3GB
+step 741200 [741200/2225878  33%]  loss=2.0051 ppl=7.4 lr=8.00e-04 | 37705 tok/s (avg 34393) ETA 47150m22s | gtok=48,575,283,200 | GPU 6.7/77.3GB
+step 741250 [741250/2225878  33%]  loss=1.8254 ppl=6.2 lr=8.00e-04 | 37699 tok/s (avg 34401) ETA 47138m35s | gtok=48,578,560,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 741300 [741300/2225878  33%]  loss=1.9312 ppl=6.9 lr=8.00e-04 | 37694 tok/s (avg 34408) ETA 47126m51s | gtok=48,581,836,800 | GPU 6.7/77.3GB
+step 741350 [741350/2225878  33%]  loss=1.7085 ppl=5.5 lr=8.00e-04 | 37711 tok/s (avg 34416) ETA 47115m07s | gtok=48,585,113,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu/resolve/87f09149ef4734204d70ed1d046ddc9ca3f2b8f9/sample/100BT/000_00009.parquet
+Retrying in 1s [Retry 1/5].
+step 741400 [741400/2225878  33%]  loss=1.5962 ppl=4.9 lr=8.00e-04 | 37652 tok/s (avg 34423) ETA 47103m36s | gtok=48,588,390,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 741450 [741450/2225878  33%]  loss=1.7823 ppl=5.9 lr=8.00e-04 | 37703 tok/s (avg 34430) ETA 47092m00s | gtok=48,591,667,200 | GPU 6.7/77.3GB
+step 741500 [741500/2225878  33%]  loss=1.9943 ppl=7.3 lr=8.00e-04 | 37707 tok/s (avg 34438) ETA 47080m26s | gtok=48,594,944,000 | GPU 6.7/77.3GB
+  [checkpoint] step 741500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 741550 [741550/2225878  33%]  loss=1.7472 ppl=5.7 lr=8.00e-04 | 34890 tok/s (avg 34439) ETA 47077m22s | gtok=48,598,220,800 | GPU 6.7/77.3GB
+step 741600 [741600/2225878  33%]  loss=2.1185 ppl=8.3 lr=8.00e-04 | 37628 tok/s (avg 34446) ETA 47066m06s | gtok=48,601,497,600 | GPU 6.7/77.3GB
+step 741650 [741650/2225878  33%]  loss=1.8077 ppl=6.1 lr=8.00e-04 | 37706 tok/s (avg 34453) ETA 47054m39s | gtok=48,604,774,400 | GPU 6.7/77.3GB
+step 741700 [741700/2225878  33%]  loss=1.8509 ppl=6.4 lr=8.00e-04 | 37706 tok/s (avg 34460) ETA 47043m16s | gtok=48,608,051,200 | GPU 6.7/77.3GB
+step 741750 [741750/2225878  33%]  loss=2.0232 ppl=7.6 lr=8.00e-04 | 37693 tok/s (avg 34467) ETA 47031m57s | gtok=48,611,328,000 | GPU 6.7/77.3GB
+step 741800 [741800/2225878  33%]  loss=2.0175 ppl=7.5 lr=8.00e-04 | 37650 tok/s (avg 34474) ETA 47020m49s | gtok=48,614,604,800 | GPU 6.7/77.3GB
+step 741850 [741850/2225878  33%]  loss=2.0139 ppl=7.5 lr=8.00e-04 | 37706 tok/s (avg 34481) ETA 47009m34s | gtok=48,617,881,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 741900 [741900/2225878  33%]  loss=1.8250 ppl=6.2 lr=8.00e-04 | 37694 tok/s (avg 34488) ETA 46998m24s | gtok=48,621,158,400 | GPU 6.7/77.3GB
+step 741950 [741950/2225878  33%]  loss=1.5405 ppl=4.7 lr=8.00e-04 | 37699 tok/s (avg 34495) ETA 46987m16s | gtok=48,624,435,200 | GPU 6.7/77.3GB
+step 742000 [742000/2225878  33%]  loss=1.6634 ppl=5.3 lr=8.00e-04 | 37645 tok/s (avg 34502) ETA 46976m19s | gtok=48,627,712,000 | GPU 6.7/77.3GB
+  [val @ step 742000] val_loss=2.9954 val_ppl=19.99 (best 19.48)
+  [wiki_val @ step 742000] val_loss=3.5207 val_ppl=33.81
+  [val_src @ step 742000] dclm=3.0130 fineweb=3.0312 arxiv=1.4774 pubmed=1.8405 pes2o=2.6906 cosmo=1.9480 tools=0.4990 pysci=0.8427 chatmt=1.2996
+  [mix @ step 742000] window: smoltalk2_mid=15.24% dclm=13.33% fineweb100=13.05% cosmo=8.88% pes2o=8.70% pubmed=8.56% pysci=8.22% arxiv=6.73% chatmt2=5.27% tools=3.88% finemath=2.62% b2s=1.38% chatsr=1.19% b2s_far=1.03% proto4k=0.70% proto_far=0.60% tuluif=0.33% recall4k=0.30%
+  [mix_run @ step 742000] since start: smoltalk2_mid=15.29% dclm=13.17% fineweb100=13.10% cosmo=8.88% pubmed=8.57% pes2o=8.56% pysci=8.38% arxiv=6.68% chatmt2=5.29% tools=3.93% finemath=2.64% b2s=1.36% chatsr=1.20% b2s_far=1.04% proto4k=0.67% proto_far=0.61% tuluif=0.34% recall4k=0.29%
+  [checkpoint] step 742000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 742000 cgu=+0.03 +0.03 +0.09 +0.04 +0.05 +0.05 +0.05 +0.04 +0.14 +0.15 +0.17 +0.18 +0.36 +0.51 +0.62 +0.61 +1.30 +2.67 +2.67 +2.32 +9.97 +12.33 +17.92 +10.66  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.22 +nan +nan +nan +0.77 +nan +nan +nan +1.46 +nan +nan +nan +2.89 +nan +nan +nan +1.85
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.35 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.83 nan nan nan 0.89 nan nan nan 0.89 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.81 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=9.5e-03 4.8e-02 6.5e-03 2.6e-02 5.9e-03 1.7e-02 9.0e-03 3.2e-02 1.2e-02 5.5e-03 6.0e-03 1.4e-02 5.9e-03 6.1e-03 6.2e-03 2.6e-02 8.0e-03 7.9e-03 7.8e-03 2.3e-02 1.4e-02 1.3e-02 1.8e-02 7.3e-02  wnorm=498.6 495.2 650.3 747.7 749.7 749.7 752.2 755.4 724.5 728.0 733.8 804.5 718.9 717.6 720.2 779.2 718.9 718.8 721.4 779.3 723.1 723.5 723.1 783.8
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 742050 [742050/2225878  33%]  loss=1.8788 ppl=6.5 lr=8.00e-04 | 21148 tok/s (avg 34451) ETA 47045m12s | gtok=48,630,988,800 | GPU 6.7/77.3GB
+step 742100 [742100/2225878  33%]  loss=1.7397 ppl=5.7 lr=8.00e-04 | 37706 tok/s (avg 34458) ETA 47033m59s | gtok=48,634,265,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 2s [Retry 2/5].
+step 742150 [742150/2225878  33%]  loss=1.5825 ppl=4.9 lr=8.00e-04 | 37698 tok/s (avg 34465) ETA 47022m51s | gtok=48,637,542,400 | GPU 6.7/77.3GB
+step 742200 [742200/2225878  33%]  loss=1.5536 ppl=4.7 lr=8.00e-04 | 37702 tok/s (avg 34472) ETA 47011m44s | gtok=48,640,819,200 | GPU 6.7/77.3GB
+step 742250 [742250/2225878  33%]  loss=1.3898 ppl=4.0 lr=8.00e-04 | 37656 tok/s (avg 34479) ETA 47000m48s | gtok=48,644,096,000 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 742300 [742300/2225878  33%]  loss=1.9424 ppl=7.0 lr=8.00e-04 | 37704 tok/s (avg 34485) ETA 46989m47s | gtok=48,647,372,800 | GPU 6.7/77.3GB
+step 742350 [742350/2225878  33%]  loss=1.9250 ppl=6.9 lr=8.00e-04 | 37697 tok/s (avg 34492) ETA 46978m49s | gtok=48,650,649,600 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 742400 [742400/2225878  33%]  loss=1.7344 ppl=5.7 lr=8.00e-04 | 37698 tok/s (avg 34499) ETA 46967m54s | gtok=48,653,926,400 | GPU 6.7/77.3GB
+step 742450 [742450/2225878  33%]  loss=1.7376 ppl=5.7 lr=8.00e-04 | 37650 tok/s (avg 34506) ETA 46957m09s | gtok=48,657,203,200 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/smoltalk2/resolve/fc6cc2103c066455aade5d7fbb346039ae36ca5e/Mid/Llama_Nemotron_Post_Training_Dataset_reasoning_r1-00081-of-00124.parquet
+Retrying in 1s [Retry 1/5].
+step 742500 [742500/2225878  33%]  loss=1.6714 ppl=5.3 lr=8.00e-04 | 37707 tok/s (avg 34513) ETA 46946m18s | gtok=48,660,480,000 | GPU 6.7/77.3GB
+  [checkpoint] step 742500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 742550 [742550/2225878  33%]  loss=2.2552 ppl=9.5 lr=8.00e-04 | 34911 tok/s (avg 34514) ETA 46943m29s | gtok=48,663,756,800 | GPU 6.7/77.3GB
+step 742600 [742600/2225878  33%]  loss=1.7097 ppl=5.5 lr=8.00e-04 | 37706 tok/s (avg 34520) ETA 46932m42s | gtok=48,667,033,600 | GPU 6.7/77.3GB
+step 742650 [742650/2225878  33%]  loss=1.8613 ppl=6.4 lr=8.00e-04 | 37647 tok/s (avg 34527) ETA 46922m07s | gtok=48,670,310,400 | GPU 6.7/77.3GB
+step 742700 [742700/2225878  33%]  loss=2.1987 ppl=9.0 lr=8.00e-04 | 37698 tok/s (avg 34534) ETA 46911m26s | gtok=48,673,587,200 | GPU 6.7/77.3GB
+step 742750 [742750/2225878  33%]  loss=1.6811 ppl=5.4 lr=8.00e-04 | 37704 tok/s (avg 34540) ETA 46900m47s | gtok=48,676,864,000 | GPU 6.7/77.3GB
+step 742800 [742800/2225878  33%]  loss=1.9338 ppl=6.9 lr=8.00e-04 | 37711 tok/s (avg 34547) ETA 46890m10s | gtok=48,680,140,800 | GPU 6.7/77.3GB
+step 742850 [742850/2225878  33%]  loss=1.9433 ppl=7.0 lr=8.00e-04 | 37709 tok/s (avg 34554) ETA 46879m35s | gtok=48,683,417,600 | GPU 6.7/77.3GB
+step 742900 [742900/2225878  33%]  loss=2.0088 ppl=7.5 lr=8.00e-04 | 37652 tok/s (avg 34560) ETA 46869m12s | gtok=48,686,694,400 | GPU 6.7/77.3GB
+step 742950 [742950/2225878  33%]  loss=1.8136 ppl=6.1 lr=8.00e-04 | 37709 tok/s (avg 34567) ETA 46858m42s | gtok=48,689,971,200 | GPU 6.7/77.3GB
+step 743000 [743000/2225878  33%]  loss=1.8960 ppl=6.7 lr=8.00e-04 | 37706 tok/s (avg 34573) ETA 46848m15s | gtok=48,693,248,000 | GPU 6.7/77.3GB
+  [checkpoint] step 743000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 743050 [743050/2225878  33%]  loss=1.7191 ppl=5.6 lr=8.00e-04 | 34916 tok/s (avg 34574) ETA 46845m38s | gtok=48,696,524,800 | GPU 6.7/77.3GB
+step 743100 [743100/2225878  33%]  loss=1.6435 ppl=5.2 lr=8.00e-04 | 37672 tok/s (avg 34580) ETA 46835m20s | gtok=48,699,801,600 | GPU 6.7/77.3GB
+step 743150 [743150/2225878  33%]  loss=1.9587 ppl=7.1 lr=8.00e-04 | 37715 tok/s (avg 34587) ETA 46824m58s | gtok=48,703,078,400 | GPU 6.7/77.3GB
+'The read operation timed out' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/dclm-edu/resolve/dbad8ad71224482740cd9c9d353591adbf62fe04/data/002_00008.parquet
+Retrying in 1s [Retry 1/5].
+step 743200 [743200/2225878  33%]  loss=2.1186 ppl=8.3 lr=8.00e-04 | 37711 tok/s (avg 34593) ETA 46814m40s | gtok=48,706,355,200 | GPU 6.7/77.3GB
+step 743250 [743250/2225878  33%]  loss=1.7753 ppl=5.9 lr=8.00e-04 | 37715 tok/s (avg 34600) ETA 46804m22s | gtok=48,709,632,000 | GPU 6.7/77.3GB
+step 743300 [743300/2225878  33%]  loss=1.8472 ppl=6.3 lr=8.00e-04 | 37661 tok/s (avg 34606) ETA 46794m16s | gtok=48,712,908,800 | GPU 6.7/77.3GB
+step 743350 [743350/2225878  33%]  loss=1.5842 ppl=4.9 lr=8.00e-04 | 37701 tok/s (avg 34613) ETA 46784m06s | gtok=48,716,185,600 | GPU 6.7/77.3GB
+step 743400 [743400/2225878  33%]  loss=1.6118 ppl=5.0 lr=8.00e-04 | 37707 tok/s (avg 34619) ETA 46773m57s | gtok=48,719,462,400 | GPU 6.7/77.3GB
+step 743450 [743450/2225878  33%]  loss=1.8049 ppl=6.1 lr=8.00e-04 | 37713 tok/s (avg 34625) ETA 46763m50s | gtok=48,722,739,200 | GPU 6.7/77.3GB
+step 743500 [743500/2225878  33%]  loss=1.9708 ppl=7.2 lr=8.00e-04 | 37715 tok/s (avg 34631) ETA 46753m44s | gtok=48,726,016,000 | GPU 6.7/77.3GB
+  [checkpoint] step 743500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 743550 [743550/2225878  33%]  loss=2.1508 ppl=8.6 lr=8.00e-04 | 34859 tok/s (avg 34632) ETA 46751m29s | gtok=48,729,292,800 | GPU 6.7/77.3GB
+step 743600 [743600/2225878  33%]  loss=1.8919 ppl=6.6 lr=8.00e-04 | 37712 tok/s (avg 34638) ETA 46741m28s | gtok=48,732,569,600 | GPU 6.7/77.3GB
+step 743650 [743650/2225878  33%]  loss=2.1368 ppl=8.5 lr=8.00e-04 | 37707 tok/s (avg 34644) ETA 46731m29s | gtok=48,735,846,400 | GPU 6.7/77.3GB
+step 743700 [743700/2225878  33%]  loss=1.4986 ppl=4.5 lr=8.00e-04 | 37699 tok/s (avg 34651) ETA 46721m34s | gtok=48,739,123,200 | GPU 6.7/77.3GB
+step 743750 [743750/2225878  33%]  loss=1.7292 ppl=5.6 lr=8.00e-04 | 37662 tok/s (avg 34657) ETA 46711m47s | gtok=48,742,400,000 | GPU 6.7/77.3GB
+step 743800 [743800/2225878  33%]  loss=1.9631 ppl=7.1 lr=8.00e-04 | 37698 tok/s (avg 34663) ETA 46701m57s | gtok=48,745,676,800 | GPU 6.7/77.3GB
+step 743850 [743850/2225878  33%]  loss=2.0089 ppl=7.5 lr=8.00e-04 | 37716 tok/s (avg 34669) ETA 46692m06s | gtok=48,748,953,600 | GPU 6.7/77.3GB
+step 743900 [743900/2225878  33%]  loss=1.7060 ppl=5.5 lr=8.00e-04 | 37703 tok/s (avg 34675) ETA 46682m19s | gtok=48,752,230,400 | GPU 6.7/77.3GB
+step 743950 [743950/2225878  33%]  loss=1.8357 ppl=6.3 lr=8.00e-04 | 37707 tok/s (avg 34681) ETA 46672m34s | gtok=48,755,507,200 | GPU 6.7/77.3GB
+step 744000 [744000/2225878  33%]  loss=1.7598 ppl=5.8 lr=8.00e-04 | 37654 tok/s (avg 34687) ETA 46662m59s | gtok=48,758,784,000 | GPU 6.7/77.3GB
+  [val @ step 744000] val_loss=2.9958 val_ppl=20.00 (best 19.48)
+  [wiki_val @ step 744000] val_loss=3.5336 val_ppl=34.25
+  [val_src @ step 744000] dclm=3.0103 fineweb=3.0259 arxiv=1.4752 pubmed=1.8177 pes2o=2.6940 cosmo=1.9526 tools=0.5005 pysci=0.8441 chatmt=1.3027
+  [mix @ step 744000] window: smoltalk2_mid=15.30% fineweb100=13.26% dclm=13.13% cosmo=8.89% pes2o=8.56% pysci=8.41% pubmed=8.41% arxiv=6.68% chatmt2=5.25% tools=3.96% finemath=2.55% b2s=1.37% chatsr=1.24% b2s_far=1.04% proto4k=0.66% proto_far=0.65% tuluif=0.34% recall4k=0.30%
+  [mix_run @ step 744000] since start: smoltalk2_mid=15.29% dclm=13.16% fineweb100=13.11% cosmo=8.88% pes2o=8.56% pubmed=8.55% pysci=8.38% arxiv=6.68% chatmt2=5.29% tools=3.93% finemath=2.63% b2s=1.36% chatsr=1.20% b2s_far=1.04% proto4k=0.67% proto_far=0.62% tuluif=0.34% recall4k=0.30%
+  [checkpoint] step 744000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 744000 cgu=+0.03 +0.03 +0.09 +0.03 +0.05 +0.06 +0.05 +0.04 +0.14 +0.15 +0.18 +0.18 +0.36 +0.51 +0.63 +0.61 +1.30 +2.68 +2.68 +2.32 +9.98 +12.35 +17.95 +10.67  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.22 +nan +nan +nan +0.77 +nan +nan +nan +1.47 +nan +nan +nan +2.90 +nan +nan +nan +1.86
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.35 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.83 nan nan nan 0.88 nan nan nan 0.88 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.82 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=4.5e-02 1.3e-02 8.5e-03 2.9e-02 1.2e-02 5.2e-03 1.3e-02 1.8e-02 6.6e-03 1.7e-02 8.9e-03 2.3e-02 8.3e-03 9.8e-03 9.2e-03 2.4e-02 1.1e-02 1.1e-02 1.4e-02 2.7e-02 3.0e-02 2.2e-02 2.0e-02 3.9e-02  wnorm=498.2 495.3 650.6 748.0 749.9 749.8 752.4 755.7 724.4 727.9 733.8 804.5 718.8 717.6 720.1 779.2 718.9 718.8 721.4 779.3 723.1 723.5 723.0 783.8
+step 744050 [744050/2225878  33%]  loss=1.7126 ppl=5.5 lr=8.00e-04 | 21148 tok/s (avg 34639) ETA 46726m13s | gtok=48,762,060,800 | GPU 6.7/77.3GB
+step 744100 [744100/2225878  33%]  loss=1.6616 ppl=5.3 lr=8.00e-04 | 37712 tok/s (avg 34645) ETA 46716m23s | gtok=48,765,337,600 | GPU 6.7/77.3GB
+step 744150 [744150/2225878  33%]  loss=1.6548 ppl=5.2 lr=8.00e-04 | 37698 tok/s (avg 34651) ETA 46706m39s | gtok=48,768,614,400 | GPU 6.7/77.3GB
+step 744200 [744200/2225878  33%]  loss=1.8007 ppl=6.1 lr=8.00e-04 | 37713 tok/s (avg 34657) ETA 46696m54s | gtok=48,771,891,200 | GPU 6.7/77.3GB
+step 744250 [744250/2225878  33%]  loss=1.7608 ppl=5.8 lr=8.00e-04 | 37660 tok/s (avg 34663) ETA 46687m19s | gtok=48,775,168,000 | GPU 6.7/77.3GB
+step 744300 [744300/2225878  33%]  loss=2.2710 ppl=9.7 lr=8.00e-04 | 37714 tok/s (avg 34669) ETA 46677m38s | gtok=48,778,444,800 | GPU 6.7/77.3GB
+step 744350 [744350/2225878  33%]  loss=1.6568 ppl=5.2 lr=8.00e-04 | 37713 tok/s (avg 34675) ETA 46668m00s | gtok=48,781,721,600 | GPU 6.7/77.3GB
+step 744400 [744400/2225878  33%]  loss=1.5029 ppl=4.5 lr=8.00e-04 | 37711 tok/s (avg 34681) ETA 46658m24s | gtok=48,784,998,400 | GPU 6.7/77.3GB
+step 744450 [744450/2225878  33%]  loss=1.7965 ppl=6.0 lr=8.00e-04 | 37646 tok/s (avg 34687) ETA 46648m59s | gtok=48,788,275,200 | GPU 6.7/77.3GB
+step 744500 [744500/2225878  33%]  loss=1.8227 ppl=6.2 lr=8.00e-04 | 37708 tok/s (avg 34693) ETA 46639m28s | gtok=48,791,552,000 | GPU 6.7/77.3GB
+  [checkpoint] step 744500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 744550 [744550/2225878  33%]  loss=1.8962 ppl=6.7 lr=8.00e-04 | 34905 tok/s (avg 34693) ETA 46637m17s | gtok=48,794,828,800 | GPU 6.7/77.3GB
+step 744600 [744600/2225878  33%]  loss=1.8232 ppl=6.2 lr=8.00e-04 | 37717 tok/s (avg 34699) ETA 46627m47s | gtok=48,798,105,600 | GPU 6.7/77.3GB
+step 744650 [744650/2225878  33%]  loss=1.4362 ppl=4.2 lr=8.00e-04 | 37645 tok/s (avg 34705) ETA 46618m30s | gtok=48,801,382,400 | GPU 6.7/77.3GB
+step 744700 [744700/2225878  33%]  loss=1.7932 ppl=6.0 lr=8.00e-04 | 37711 tok/s (avg 34711) ETA 46609m05s | gtok=48,804,659,200 | GPU 6.7/77.3GB
+step 744750 [744750/2225878  33%]  loss=1.8659 ppl=6.5 lr=8.00e-04 | 37713 tok/s (avg 34717) ETA 46599m42s | gtok=48,807,936,000 | GPU 6.7/77.3GB
+step 744800 [744800/2225878  33%]  loss=1.3171 ppl=3.7 lr=8.00e-04 | 37705 tok/s (avg 34722) ETA 46590m23s | gtok=48,811,212,800 | GPU 6.7/77.3GB
+step 744850 [744850/2225878  33%]  loss=1.5575 ppl=4.7 lr=8.00e-04 | 37704 tok/s (avg 34728) ETA 46581m05s | gtok=48,814,489,600 | GPU 6.7/77.3GB
+step 744900 [744900/2225878  33%]  loss=1.7573 ppl=5.8 lr=8.00e-04 | 37643 tok/s (avg 34734) ETA 46571m58s | gtok=48,817,766,400 | GPU 6.7/77.3GB
+step 744950 [744950/2225878  33%]  loss=1.9340 ppl=6.9 lr=8.00e-04 | 37709 tok/s (avg 34740) ETA 46562m43s | gtok=48,821,043,200 | GPU 6.7/77.3GB
+step 745000 [745000/2225878  33%]  loss=2.0166 ppl=7.5 lr=8.00e-04 | 37713 tok/s (avg 34745) ETA 46553m30s | gtok=48,824,320,000 | GPU 6.7/77.3GB
+  [checkpoint] step 745000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 745050 [745050/2225878  33%]  loss=1.7974 ppl=6.0 lr=8.00e-04 | 34916 tok/s (avg 34746) ETA 46551m27s | gtok=48,827,596,800 | GPU 6.7/77.3GB
+step 745100 [745100/2225878  33%]  loss=1.7650 ppl=5.8 lr=8.00e-04 | 37654 tok/s (avg 34751) ETA 46542m25s | gtok=48,830,873,600 | GPU 6.7/77.3GB
+step 745150 [745150/2225878  33%]  loss=1.8931 ppl=6.6 lr=8.00e-04 | 37701 tok/s (avg 34757) ETA 46533m19s | gtok=48,834,150,400 | GPU 6.7/77.3GB
+step 745200 [745200/2225878  33%]  loss=1.7607 ppl=5.8 lr=8.00e-04 | 37720 tok/s (avg 34762) ETA 46524m11s | gtok=48,837,427,200 | GPU 6.7/77.3GB
+step 745250 [745250/2225878  33%]  loss=1.7445 ppl=5.7 lr=8.00e-04 | 37710 tok/s (avg 34768) ETA 46515m07s | gtok=48,840,704,000 | GPU 6.7/77.3GB
+step 745300 [745300/2225878  33%]  loss=1.5384 ppl=4.7 lr=8.00e-04 | 37704 tok/s (avg 34774) ETA 46506m06s | gtok=48,843,980,800 | GPU 6.7/77.3GB
+step 745350 [745350/2225878  33%]  loss=2.1168 ppl=8.3 lr=8.00e-04 | 37652 tok/s (avg 34779) ETA 46497m14s | gtok=48,847,257,600 | GPU 6.7/77.3GB
+step 745400 [745400/2225878  33%]  loss=1.6368 ppl=5.1 lr=8.00e-04 | 37705 tok/s (avg 34785) ETA 46488m16s | gtok=48,850,534,400 | GPU 6.7/77.3GB
+step 745450 [745450/2225878  33%]  loss=1.7932 ppl=6.0 lr=8.00e-04 | 37701 tok/s (avg 34790) ETA 46479m21s | gtok=48,853,811,200 | GPU 6.7/77.3GB
+step 745500 [745500/2225878  33%]  loss=1.8939 ppl=6.6 lr=8.00e-04 | 37707 tok/s (avg 34796) ETA 46470m26s | gtok=48,857,088,000 | GPU 6.7/77.3GB
+  [checkpoint] step 745500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 745550 [745550/2225878  33%]  loss=1.5553 ppl=4.7 lr=8.00e-04 | 34846 tok/s (avg 34796) ETA 46468m44s | gtok=48,860,364,800 | GPU 6.7/77.3GB
+step 745600 [745600/2225878  33%]  loss=1.7207 ppl=5.6 lr=8.00e-04 | 37707 tok/s (avg 34801) ETA 46459m52s | gtok=48,863,641,600 | GPU 6.7/77.3GB
+step 745650 [745650/2225878  33%]  loss=1.5981 ppl=4.9 lr=8.00e-04 | 37710 tok/s (avg 34807) ETA 46451m02s | gtok=48,866,918,400 | GPU 6.7/77.3GB
+step 745700 [745700/2225878  34%]  loss=1.9267 ppl=6.9 lr=8.00e-04 | 37697 tok/s (avg 34812) ETA 46442m15s | gtok=48,870,195,200 | GPU 6.7/77.3GB
+step 745750 [745750/2225878  34%]  loss=1.6557 ppl=5.2 lr=8.00e-04 | 37654 tok/s (avg 34817) ETA 46433m36s | gtok=48,873,472,000 | GPU 6.7/77.3GB
+step 745800 [745800/2225878  34%]  loss=1.7733 ppl=5.9 lr=8.00e-04 | 37697 tok/s (avg 34823) ETA 46424m53s | gtok=48,876,748,800 | GPU 6.7/77.3GB
+step 745850 [745850/2225878  34%]  loss=1.9766 ppl=7.2 lr=8.00e-04 | 37708 tok/s (avg 34828) ETA 46416m10s | gtok=48,880,025,600 | GPU 6.7/77.3GB
+step 745900 [745900/2225878  34%]  loss=1.6304 ppl=5.1 lr=8.00e-04 | 37704 tok/s (avg 34833) ETA 46407m29s | gtok=48,883,302,400 | GPU 6.7/77.3GB
+step 745950 [745950/2225878  34%]  loss=1.6195 ppl=5.1 lr=8.00e-04 | 37694 tok/s (avg 34839) ETA 46398m52s | gtok=48,886,579,200 | GPU 6.7/77.3GB
+step 746000 [746000/2225878  34%]  loss=2.0411 ppl=7.7 lr=8.00e-04 | 37656 tok/s (avg 34844) ETA 46390m21s | gtok=48,889,856,000 | GPU 6.7/77.3GB
+  [val @ step 746000] val_loss=2.9905 val_ppl=19.90 (best 19.48)
+  [wiki_val @ step 746000] val_loss=3.5031 val_ppl=33.22
+  [val_src @ step 746000] dclm=3.0088 fineweb=3.0178 arxiv=1.4764 pubmed=1.8246 pes2o=2.6866 cosmo=1.9426 tools=0.4996 pysci=0.8416 chatmt=1.2987
+  [mix @ step 746000] window: smoltalk2_mid=15.25% dclm=13.42% fineweb100=13.10% cosmo=8.88% pes2o=8.59% pubmed=8.50% pysci=8.32% arxiv=6.75% chatmt2=5.31% tools=3.91% finemath=2.54% b2s=1.32% chatsr=1.15% b2s_far=1.06% proto4k=0.66% proto_far=0.62% tuluif=0.33% recall4k=0.30%
+  [mix_run @ step 746000] since start: smoltalk2_mid=15.28% dclm=13.19% fineweb100=13.11% cosmo=8.88% pes2o=8.56% pubmed=8.55% pysci=8.38% arxiv=6.69% chatmt2=5.29% tools=3.93% finemath=2.62% b2s=1.36% chatsr=1.20% b2s_far=1.04% proto4k=0.67% proto_far=0.62% tuluif=0.34% recall4k=0.30%
+  [checkpoint] step 746000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 746000 cgu=+0.03 +0.03 +0.09 +0.04 +0.05 +0.06 +0.05 +0.04 +0.14 +0.15 +0.18 +0.18 +0.36 +0.51 +0.63 +0.61 +1.30 +2.68 +2.68 +2.32 +10.01 +12.37 +17.99 +10.69  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.22 +nan +nan +nan +0.77 +nan +nan +nan +1.47 +nan +nan +nan +2.91 +nan +nan +nan +1.85
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.89 nan nan nan -3.75 nan nan nan -4.34 nan nan nan -4.12 nan nan nan -3.95  ret=nan nan nan 0.82 nan nan nan 0.88 nan nan nan 0.87 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.82 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=3.1e-02 5.3e-02 2.3e-02 7.8e-02 1.3e-02 1.2e-02 1.1e-02 1.4e-01 2.7e-02 1.7e-02 1.9e-02 4.3e-02 1.5e-02 1.9e-02 1.5e-02 4.6e-02 2.0e-02 2.1e-02 2.5e-02 1.2e-01 6.8e-02 3.6e-02 4.8e-02 1.4e-01  wnorm=497.9 495.0 650.7 748.3 750.0 749.9 752.7 756.0 724.4 727.9 733.7 804.6 718.8 717.6 720.1 779.2 718.9 718.8 721.4 779.3 723.0 723.5 723.1 783.7
+step 746050 [746050/2225878  34%]  loss=1.8555 ppl=6.4 lr=8.00e-04 | 21152 tok/s (avg 34799) ETA 46448m43s | gtok=48,893,132,800 | GPU 6.7/77.3GB
+step 746100 [746100/2225878  34%]  loss=1.6626 ppl=5.3 lr=8.00e-04 | 37700 tok/s (avg 34804) ETA 46440m02s | gtok=48,896,409,600 | GPU 6.7/77.3GB
+step 746150 [746150/2225878  34%]  loss=1.5587 ppl=4.8 lr=8.00e-04 | 37712 tok/s (avg 34810) ETA 46431m21s | gtok=48,899,686,400 | GPU 6.7/77.3GB
+step 746200 [746200/2225878  34%]  loss=1.7200 ppl=5.6 lr=8.00e-04 | 37653 tok/s (avg 34815) ETA 46422m49s | gtok=48,902,963,200 | GPU 6.7/77.3GB
+step 746250 [746250/2225878  34%]  loss=2.0895 ppl=8.1 lr=8.00e-04 | 37710 tok/s (avg 34820) ETA 46414m12s | gtok=48,906,240,000 | GPU 6.7/77.3GB
+step 746300 [746300/2225878  34%]  loss=2.1435 ppl=8.5 lr=8.00e-04 | 37705 tok/s (avg 34825) ETA 46405m37s | gtok=48,909,516,800 | GPU 6.7/77.3GB
+step 746350 [746350/2225878  34%]  loss=1.8929 ppl=6.6 lr=8.00e-04 | 37711 tok/s (avg 34831) ETA 46397m02s | gtok=48,912,793,600 | GPU 6.7/77.3GB
+step 746400 [746400/2225878  34%]  loss=1.8591 ppl=6.4 lr=8.00e-04 | 37654 tok/s (avg 34836) ETA 46388m37s | gtok=48,916,070,400 | GPU 6.7/77.3GB
+step 746450 [746450/2225878  34%]  loss=1.7588 ppl=5.8 lr=8.00e-04 | 37713 tok/s (avg 34841) ETA 46380m06s | gtok=48,919,347,200 | GPU 6.7/77.3GB
+step 746500 [746500/2225878  34%]  loss=1.7219 ppl=5.6 lr=8.00e-04 | 37706 tok/s (avg 34846) ETA 46371m38s | gtok=48,922,624,000 | GPU 6.7/77.3GB
+  [checkpoint] step 746500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 746550 [746550/2225878  34%]  loss=1.8285 ppl=6.2 lr=8.00e-04 | 34901 tok/s (avg 34846) ETA 46369m55s | gtok=48,925,900,800 | GPU 6.7/77.3GB
+step 746600 [746600/2225878  34%]  loss=2.1844 ppl=8.9 lr=8.00e-04 | 37713 tok/s (avg 34851) ETA 46361m28s | gtok=48,929,177,600 | GPU 6.7/77.3GB
+step 746650 [746650/2225878  34%]  loss=1.6593 ppl=5.3 lr=8.00e-04 | 37662 tok/s (avg 34857) ETA 46353m10s | gtok=48,932,454,400 | GPU 6.7/77.3GB
+step 746700 [746700/2225878  34%]  loss=1.7144 ppl=5.6 lr=8.00e-04 | 37702 tok/s (avg 34862) ETA 46344m47s | gtok=48,935,731,200 | GPU 6.7/77.3GB
+step 746750 [746750/2225878  34%]  loss=1.6737 ppl=5.3 lr=8.00e-04 | 37707 tok/s (avg 34867) ETA 46336m26s | gtok=48,939,008,000 | GPU 6.7/77.3GB
+step 746800 [746800/2225878  34%]  loss=1.4401 ppl=4.2 lr=8.00e-04 | 37703 tok/s (avg 34872) ETA 46328m07s | gtok=48,942,284,800 | GPU 6.7/77.3GB
+step 746850 [746850/2225878  34%]  loss=1.6587 ppl=5.3 lr=8.00e-04 | 37658 tok/s (avg 34877) ETA 46319m55s | gtok=48,945,561,600 | GPU 6.7/77.3GB
+step 746900 [746900/2225878  34%]  loss=1.5100 ppl=4.5 lr=8.00e-04 | 37705 tok/s (avg 34882) ETA 46311m39s | gtok=48,948,838,400 | GPU 6.7/77.3GB
+step 746950 [746950/2225878  34%]  loss=1.8841 ppl=6.6 lr=8.00e-04 | 37709 tok/s (avg 34887) ETA 46303m23s | gtok=48,952,115,200 | GPU 6.7/77.3GB
+step 747000 [747000/2225878  34%]  loss=1.9816 ppl=7.3 lr=8.00e-04 | 37707 tok/s (avg 34892) ETA 46295m10s | gtok=48,955,392,000 | GPU 6.7/77.3GB
+  [checkpoint] step 747000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 747050 [747050/2225878  34%]  loss=1.9359 ppl=6.9 lr=8.00e-04 | 34914 tok/s (avg 34892) ETA 46293m32s | gtok=48,958,668,800 | GPU 6.7/77.3GB
+step 747100 [747100/2225878  34%]  loss=1.9998 ppl=7.4 lr=8.00e-04 | 37664 tok/s (avg 34897) ETA 46285m27s | gtok=48,961,945,600 | GPU 6.7/77.3GB
+step 747150 [747150/2225878  34%]  loss=1.6939 ppl=5.4 lr=8.00e-04 | 37699 tok/s (avg 34902) ETA 46277m18s | gtok=48,965,222,400 | GPU 6.7/77.3GB
+step 747200 [747200/2225878  34%]  loss=2.1276 ppl=8.4 lr=8.00e-04 | 37706 tok/s (avg 34907) ETA 46269m10s | gtok=48,968,499,200 | GPU 6.7/77.3GB
+step 747250 [747250/2225878  34%]  loss=1.8413 ppl=6.3 lr=8.00e-04 | 37722 tok/s (avg 34912) ETA 46261m02s | gtok=48,971,776,000 | GPU 6.7/77.3GB
+step 747300 [747300/2225878  34%]  loss=1.7375 ppl=5.7 lr=8.00e-04 | 37648 tok/s (avg 34917) ETA 46253m04s | gtok=48,975,052,800 | GPU 6.7/77.3GB
+step 747350 [747350/2225878  34%]  loss=1.8382 ppl=6.3 lr=8.00e-04 | 37714 tok/s (avg 34922) ETA 46245m00s | gtok=48,978,329,600 | GPU 6.7/77.3GB
+step 747400 [747400/2225878  34%]  loss=1.9061 ppl=6.7 lr=8.00e-04 | 37707 tok/s (avg 34926) ETA 46236m58s | gtok=48,981,606,400 | GPU 6.7/77.3GB
+step 747450 [747450/2225878  34%]  loss=1.7523 ppl=5.8 lr=8.00e-04 | 37717 tok/s (avg 34931) ETA 46228m56s | gtok=48,984,883,200 | GPU 6.7/77.3GB
+step 747500 [747500/2225878  34%]  loss=1.8606 ppl=6.4 lr=8.00e-04 | 37649 tok/s (avg 34936) ETA 46221m05s | gtok=48,988,160,000 | GPU 6.7/77.3GB
+  [checkpoint] step 747500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 747550 [747550/2225878  34%]  loss=1.8176 ppl=6.2 lr=8.00e-04 | 34883 tok/s (avg 34936) ETA 46219m39s | gtok=48,991,436,800 | GPU 6.7/77.3GB
+step 747600 [747600/2225878  34%]  loss=1.8625 ppl=6.4 lr=8.00e-04 | 37706 tok/s (avg 34941) ETA 46211m42s | gtok=48,994,713,600 | GPU 6.7/77.3GB
+step 747650 [747650/2225878  34%]  loss=1.7076 ppl=5.5 lr=8.00e-04 | 37712 tok/s (avg 34946) ETA 46203m46s | gtok=48,997,990,400 | GPU 6.7/77.3GB
+  [checkpoint] step 747691 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/step_747691.pt
+step 747700 [747700/2225878  34%]  loss=2.0640 ppl=7.9 lr=8.00e-04 | 36874 tok/s (avg 34949) ETA 46197m41s | gtok=49,001,267,200 | GPU 6.7/77.3GB
+step 747750 [747750/2225878  34%]  loss=1.6720 ppl=5.3 lr=8.00e-04 | 37705 tok/s (avg 34954) ETA 46189m48s | gtok=49,004,544,000 | GPU 6.7/77.3GB
+step 747800 [747800/2225878  34%]  loss=2.1474 ppl=8.6 lr=8.00e-04 | 37712 tok/s (avg 34959) ETA 46181m56s | gtok=49,007,820,800 | GPU 6.7/77.3GB
+step 747850 [747850/2225878  34%]  loss=1.8087 ppl=6.1 lr=8.00e-04 | 37704 tok/s (avg 34963) ETA 46174m07s | gtok=49,011,097,600 | GPU 6.7/77.3GB
+step 747900 [747900/2225878  34%]  loss=1.6599 ppl=5.3 lr=8.00e-04 | 37657 tok/s (avg 34968) ETA 46166m25s | gtok=49,014,374,400 | GPU 6.7/77.3GB
+step 747950 [747950/2225878  34%]  loss=1.7736 ppl=5.9 lr=8.00e-04 | 37713 tok/s (avg 34973) ETA 46158m37s | gtok=49,017,651,200 | GPU 6.7/77.3GB
+step 748000 [748000/2225878  34%]  loss=1.7180 ppl=5.6 lr=8.00e-04 | 37707 tok/s (avg 34977) ETA 46150m52s | gtok=49,020,928,000 | GPU 6.7/77.3GB
+  [val @ step 748000] val_loss=2.9946 val_ppl=19.98 (best 19.48)
+  [wiki_val @ step 748000] val_loss=3.5332 val_ppl=34.23
+  [val_src @ step 748000] dclm=3.0102 fineweb=3.0306 arxiv=1.4740 pubmed=1.8269 pes2o=2.6843 cosmo=1.9413 tools=0.4997 pysci=0.8400 chatmt=1.2980
+  [mix @ step 748000] window: smoltalk2_mid=15.45% dclm=13.13% fineweb100=13.11% cosmo=8.97% pes2o=8.49% pysci=8.39% pubmed=8.35% arxiv=6.68% chatmt2=5.35% tools=3.95% finemath=2.60% b2s=1.41% chatsr=1.22% b2s_far=1.03% proto4k=0.70% proto_far=0.58% tuluif=0.33% recall4k=0.28%
+  [mix_run @ step 748000] since start: smoltalk2_mid=15.30% dclm=13.18% fineweb100=13.11% cosmo=8.89% pes2o=8.55% pubmed=8.53% pysci=8.38% arxiv=6.69% chatmt2=5.30% tools=3.93% finemath=2.62% b2s=1.36% chatsr=1.20% b2s_far=1.04% proto4k=0.67% proto_far=0.62% tuluif=0.33% recall4k=0.29%
+  [checkpoint] step 748000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+  [diag] step 748000 cgu=+0.03 +0.03 +0.09 +0.04 +0.05 +0.06 +0.05 +0.04 +0.14 +0.15 +0.18 +0.18 +0.36 +0.51 +0.62 +0.61 +1.31 +2.68 +2.68 +2.32 +10.03 +12.40 +18.01 +10.71  pam=+nan +nan +nan +0.04 +nan +nan +nan +0.22 +nan +nan +nan +0.77 +nan +nan +nan +1.47 +nan +nan +nan +2.90 +nan +nan +nan +1.85
+  [diag] dtbias=nan nan nan -3.32 nan nan nan -3.88 nan nan nan -3.75 nan nan nan -4.35 nan nan nan -4.12 nan nan nan -3.96  ret=nan nan nan 0.83 nan nan nan 0.89 nan nan nan 0.88 nan nan nan 0.94 nan nan nan 0.92 nan nan nan 0.83
+  [diag] dtbias/head(layer-mean)=-3.78 -4.14 -4.02 -4.82 -3.20 -3.65 -3.92 -3.64
+  [diag] gnorm=2.1e-02 1.3e-02 6.9e-03 4.2e-02 5.2e-03 6.0e-03 1.8e-02 5.7e-02 1.6e-02 7.0e-03 8.0e-03 2.8e-02 1.0e-02 8.8e-03 1.1e-02 3.5e-02 1.1e-02 1.2e-02 1.4e-02 2.5e-02 3.8e-02 2.5e-02 1.8e-02 3.4e-02  wnorm=498.0 495.0 650.9 748.6 750.3 750.3 753.1 756.3 724.5 727.9 733.8 804.7 718.9 717.7 720.1 779.3 719.0 718.9 721.4 779.2 723.1 723.5 723.1 783.8
+step 748050 [748050/2225878  34%]  loss=1.3650 ppl=3.9 lr=8.00e-04 | 21140 tok/s (avg 34935) ETA 46205m08s | gtok=49,024,204,800 | GPU 6.7/77.3GB
+step 748100 [748100/2225878  34%]  loss=1.8113 ppl=6.1 lr=8.00e-04 | 37707 tok/s (avg 34940) ETA 46197m18s | gtok=49,027,481,600 | GPU 6.7/77.3GB
+step 748150 [748150/2225878  34%]  loss=1.6450 ppl=5.2 lr=8.00e-04 | 37659 tok/s (avg 34945) ETA 46189m36s | gtok=49,030,758,400 | GPU 6.7/77.3GB
+step 748200 [748200/2225878  34%]  loss=1.9957 ppl=7.4 lr=8.00e-04 | 37710 tok/s (avg 34949) ETA 46181m49s | gtok=49,034,035,200 | GPU 6.7/77.3GB
+step 748250 [748250/2225878  34%]  loss=1.9766 ppl=7.2 lr=8.00e-04 | 37719 tok/s (avg 34954) ETA 46174m02s | gtok=49,037,312,000 | GPU 6.7/77.3GB
+step 748300 [748300/2225878  34%]  loss=1.5599 ppl=4.8 lr=8.00e-04 | 37702 tok/s (avg 34959) ETA 46166m18s | gtok=49,040,588,800 | GPU 6.7/77.3GB
+step 748350 [748350/2225878  34%]  loss=1.7095 ppl=5.5 lr=8.00e-04 | 37656 tok/s (avg 34963) ETA 46158m42s | gtok=49,043,865,600 | GPU 6.7/77.3GB
+step 748400 [748400/2225878  34%]  loss=1.8205 ppl=6.2 lr=8.00e-04 | 37714 tok/s (avg 34968) ETA 46150m59s | gtok=49,047,142,400 | GPU 6.7/77.3GB
+step 748450 [748450/2225878  34%]  loss=1.7631 ppl=5.8 lr=8.00e-04 | 37711 tok/s (avg 34972) ETA 46143m19s | gtok=49,050,419,200 | GPU 6.7/77.3GB
+step 748500 [748500/2225878  34%]  loss=1.8937 ppl=6.6 lr=8.00e-04 | 37710 tok/s (avg 34977) ETA 46135m40s | gtok=49,053,696,000 | GPU 6.7/77.3GB
+  [checkpoint] step 748500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 748550 [748550/2225878  34%]  loss=1.8481 ppl=6.3 lr=8.00e-04 | 34847 tok/s (avg 34977) ETA 46134m25s | gtok=49,056,972,800 | GPU 6.7/77.3GB
+step 748600 [748600/2225878  34%]  loss=1.4759 ppl=4.4 lr=8.00e-04 | 37702 tok/s (avg 34981) ETA 46126m49s | gtok=49,060,249,600 | GPU 6.7/77.3GB
+step 748650 [748650/2225878  34%]  loss=1.4256 ppl=4.2 lr=8.00e-04 | 37706 tok/s (avg 34986) ETA 46119m14s | gtok=49,063,526,400 | GPU 6.7/77.3GB
+step 748700 [748700/2225878  34%]  loss=1.6375 ppl=5.1 lr=8.00e-04 | 37708 tok/s (avg 34991) ETA 46111m39s | gtok=49,066,803,200 | GPU 6.7/77.3GB
+step 748750 [748750/2225878  34%]  loss=2.1097 ppl=8.2 lr=8.00e-04 | 37714 tok/s (avg 34995) ETA 46104m06s | gtok=49,070,080,000 | GPU 6.7/77.3GB
+step 748800 [748800/2225878  34%]  loss=1.8329 ppl=6.3 lr=8.00e-04 | 37649 tok/s (avg 35000) ETA 46096m41s | gtok=49,073,356,800 | GPU 6.7/77.3GB
+step 748850 [748850/2225878  34%]  loss=1.7281 ppl=5.6 lr=8.00e-04 | 37713 tok/s (avg 35004) ETA 46089m10s | gtok=49,076,633,600 | GPU 6.7/77.3GB
+step 748900 [748900/2225878  34%]  loss=1.7425 ppl=5.7 lr=8.00e-04 | 37706 tok/s (avg 35009) ETA 46081m42s | gtok=49,079,910,400 | GPU 6.7/77.3GB
+step 748950 [748950/2225878  34%]  loss=1.8540 ppl=6.4 lr=8.00e-04 | 37696 tok/s (avg 35013) ETA 46074m16s | gtok=49,083,187,200 | GPU 6.7/77.3GB
+step 749000 [749000/2225878  34%]  loss=2.0009 ppl=7.4 lr=8.00e-04 | 37653 tok/s (avg 35017) ETA 46066m56s | gtok=49,086,464,000 | GPU 6.7/77.3GB
+  [checkpoint] step 749000 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt
+step 749050 [749050/2225878  34%]  loss=1.6550 ppl=5.2 lr=8.00e-04 | 34877 tok/s (avg 35017) ETA 46065m42s | gtok=49,089,740,800 | GPU 6.7/77.3GB
+step 749100 [749100/2225878  34%]  loss=1.9351 ppl=6.9 lr=8.00e-04 | 37710 tok/s (avg 35022) ETA 46058m18s | gtok=49,093,017,600 | GPU 6.7/77.3GB
+step 749150 [749150/2225878  34%]  loss=1.7723 ppl=5.9 lr=8.00e-04 | 37705 tok/s (avg 35026) ETA 46050m55s | gtok=49,096,294,400 | GPU 6.7/77.3GB
+step 749200 [749200/2225878  34%]  loss=1.8574 ppl=6.4 lr=8.00e-04 | 37701 tok/s (avg 35030) ETA 46043m34s | gtok=49,099,571,200 | GPU 6.7/77.3GB
+step 749250 [749250/2225878  34%]  loss=1.7316 ppl=5.6 lr=8.00e-04 | 37658 tok/s (avg 35035) ETA 46036m19s | gtok=49,102,848,000 | GPU 6.7/77.3GB
+step 749300 [749300/2225878  34%]  loss=1.7629 ppl=5.8 lr=8.00e-04 | 37713 tok/s (avg 35039) ETA 46028m59s | gtok=49,106,124,800 | GPU 6.7/77.3GB
+step 749350 [749350/2225878  34%]  loss=1.6876 ppl=5.4 lr=8.00e-04 | 37715 tok/s (avg 35044) ETA 46021m40s | gtok=49,109,401,600 | GPU 6.7/77.3GB
+step 749400 [749400/2225878  34%]  loss=1.8666 ppl=6.5 lr=8.00e-04 | 37703 tok/s (avg 35048) ETA 46014m23s | gtok=49,112,678,400 | GPU 6.7/77.3GB
+step 749450 [749450/2225878  34%]  loss=1.9857 ppl=7.3 lr=8.00e-04 | 37656 tok/s (avg 35052) ETA 46007m14s | gtok=49,115,955,200 | GPU 6.7/77.3GB
+step 749500 [749500/2225878  34%]  loss=1.8412 ppl=6.3 lr=8.00e-04 | 37701 tok/s (avg 35056) ETA 46000m00s | gtok=49,119,232,000 | GPU 6.7/77.3GB
+  [checkpoint] step 749500 -> checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt

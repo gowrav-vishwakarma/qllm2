@@ -1,0 +1,22 @@
+{
+ "ckpt": "checkpoints_v13_sempty/nt_pam_nofar_decay_a3ffb14b/latest.pt",
+ "results": {
+  "hellaswag": {
+   "acc": 0.27305317665803625,
+   "acc_norm": 0.2787293367855009,
+   "n": 10042
+  },
+  "arc_easy": {
+   "acc": 0.46254208754208753,
+   "acc_norm": 0.41119528619528617,
+   "n": 2376
+  },
+  "piqa": {
+   "acc": 0.5924918389553863,
+   "acc_norm": 0.5832426550598476,
+   "n": 1838
+  }
+ },
+ "sec": 254.0,
+ "fp32": false
+}

@@ -1,0 +1,10 @@
+per task: {'shift_wide_new@0': 0.93, 'shift_wide_new@2048': 0.833, 'shift_wide_new@4096': 0.67, 'shift_wide_new@8192': 0.38, 'affine_map_new@0': 0.745, 'affine_map_new@2048': 0.715, 'affine_map_new@4096': 0.69, 'affine_map_new@8192': 0.58}  mean 0.693
+Results saved to logs/wio/v13_sempty_split_ko_none_d75a27c_t40_16k.json (aggregates, 360 rows omitted)
+=== ko none done 2026-11-19T01:41:27Z
+per task: {'shift_wide_new@0': 0.007, 'shift_wide_new@2048': 0.003, 'shift_wide_new@4096': 0.003, 'shift_wide_new@8192': 0.007, 'affine_map_new@0': 0.152, 'affine_map_new@2048': 0.138, 'affine_map_new@4096': 0.125, 'affine_map_new@8192': 0.045}  mean 0.06
+Results saved to logs/wio/v13_sempty_split_ko_clock_d75a27c_t40_16k.json (aggregates, 360 rows omitted)
+=== ko clock done 2026-11-19T01:50:59Z
+per task: {'shift_wide_new@0': 0.845, 'shift_wide_new@2048': 0.472, 'shift_wide_new@4096': 0.335, 'shift_wide_new@8192': 0.203, 'affine_map_new@0': 0.65, 'affine_map_new@2048': 0.41, 'affine_map_new@4096': 0.26, 'affine_map_new@8192': 0.152}  mean 0.416
+Results saved to logs/wio/v13_sempty_split_ko_rope_d75a27c_t40_16k.json (aggregates, 360 rows omitted)
+=== ko rope done 2026-11-19T02:03:27Z
+=== KO ALL DONE

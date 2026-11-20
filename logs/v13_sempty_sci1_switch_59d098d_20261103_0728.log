@@ -1,0 +1,10 @@
+switch: waiting for checkpoints_v13_sempty/sci1_main_59c3cf5/step_061036.pt and a log step > 61036 in logs/v13_sempty_sci1_main_59c3cf5_20261102_1256.log (2026-11-03T07:28:31Z)
+switch: milestone ok 61036 4000055296
+switch: stopping old chain 2026-11-03T15:43:54Z
+error: The following untracked working tree files would be overwritten by checkout:
+	logs/diag/v13_sempty_clk2_echo_sci1_step_015259_59c3cf5.jsonl
+	logs/diag/v13_sempty_skillpack_sci1_step_015259_59c3cf5.jsonl
+	logs/learning_probes/v13_sempty_sci1_step_015259_59c3cf5_spread_s7000_t400.json
+Please move or remove them before you switch branches.
+Aborting
+switch: checkout 59d098d failed

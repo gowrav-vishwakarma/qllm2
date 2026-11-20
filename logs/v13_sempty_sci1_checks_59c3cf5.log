@@ -1,0 +1,7 @@
+=== CHECK sci1_step_015259_59c3cf5 (checkpoints_v13_sempty/sci1_main_59c3cf5/step_015259.pt) 2026-11-02T17:02:49Z
+per task: {'shift_wide_new@0': 0.958, 'shift_wide_new@2048': 0.627, 'shift_wide_new@4096': 0.258, 'affine_map_new@0': 0.432, 'affine_map_new@2048': 0.217, 'affine_map_new@4096': 0.185}  mean 0.446
+free (A7): {'shift_wide_new@0': 0.953, 'shift_wide_new@2048': 0.562, 'shift_wide_new@4096': 0.215, 'affine_map_new@0': 0.175, 'affine_map_new@2048': 0.105, 'affine_map_new@4096': 0.06}  mean 0.345
+saved logs/learning_probes/v13_sempty_sci1_step_015259_59c3cf5_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1.54 GiB. GPU 0 has a total capacity of 94.97 GiB of which 684.19 MiB is free. Process 2622826 has 89.83 GiB memory in use. Including non-PyTorch memory, this process has 4.46 GiB memory in use. Of the allocated memory 2.89 GiB is allocated by PyTorch, and 923.46 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

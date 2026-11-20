@@ -1,0 +1,7 @@
+v13_sempty/tmp/sci1_seg3_switch.sh: line 8: FROM: FROM=28b or 344k
+=== seg3 switch: waiting for checkpoints_v13_sempty/sci1_long2_4a97ca7/step_427252.pt 2026-11-12T08:06:52Z
+start step 427252
+=== seg3 switch: segment 2 stopped; start = checkpoints_v13_sempty/sci1_long2_4a97ca7/step_427252.pt 2026-11-12T11:50:23Z
+=== seg3 switch: RAMP_FROM_TOKENS=28007223104 2026-11-12T11:50:34Z
+sci1 continuation chain: code 91bdc49 in /home/ubuntu/Development/qllm_sci1c, 2026-11-12T11:50:34Z; from checkpoints_v13_sempty/sci1_long2_4a97ca7/step_427252.pt; tokens 99999940608; SOURCES=dclm,fineweb100,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt2,tools,pysci,b2s,recall4k,proto4k,b2s_far,proto_far,chatsr,tuluif WEIGHTS=0.22103,0.23013,0.05043,0.07254,0.10145,0.11762,0.02232,0.02244,0.03152,0.03501,0.04631,0.01696,0.00377,0.00846,0.01200,0.00800,0.00000,0.00000
+=== sci1_long3 start 2026-11-12T11:50:34Z commit=91bdc49 log=logs/v13_sempty_sci1_long3_91bdc49_20261112_1150.log ckpt=checkpoints_v13_sempty/sci1_long3_91bdc49 ===

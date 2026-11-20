@@ -1,0 +1,4 @@
+=== sci1_decay_m9 start from checkpoints_v13_sempty/sci1_cont3_449e320/step_137331.pt: code 8290f7d, 2026-11-05T15:49:34Z; tokens 1000013824; SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k WEIGHTS=0.23083,0.24033,0.05043,0.07254,0.10145,0.11762,0.02232,0.02244,0.03152,0.03501,0.04631,0.01696,0.00377,0.00846
+=== sci1_decay_m9 start 2026-11-05T15:49:34Z commit=8290f7d log=logs/v13_sempty_sci1_decay_m9_8290f7d_20261105_1549.log ckpt=checkpoints_v13_sempty/sci1_decay_m9_8290f7d ===
+=== sci1_decay_m9 end 1793922261 exit=0 attempts=1 ===
+=== sci1_decay_m9 exit=0 2026-11-05T23:44:21Z

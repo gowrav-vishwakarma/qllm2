@@ -1,0 +1,4 @@
+=== set B done seen 2026-11-19T14:53:11Z
+=== resuming 3r from checkpoints_v13_sempty/sci1_long3r_91a87ed/seg3r_pause.pt (step 721,000) 2026-11-19T14:53:11Z
+sci1 continuation chain: code 91a87ed in /home/ubuntu/Development/qllm_sci1e, 2026-11-19T14:53:11Z; from checkpoints_v13_sempty/sci1_long3r_91a87ed/seg3r_pause.pt; tokens 99999940608; SOURCES=dclm,fineweb100,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt2,tools,pysci,b2s,recall4k,proto4k,b2s_far,proto_far,chatsr,tuluif WEIGHTS=0.14997,0.15615,0.05043,0.07254,0.10145,0.11762,0.02232,0.12000,0.06000,0.03501,0.04631,0.01696,0.00377,0.00846,0.01200,0.00800,0.01500,0.00400
+=== sci1_long3r start 2026-11-19T14:53:11Z commit=91a87ed log=logs/v13_sempty_sci1_long3r_91a87ed_20261119_1453.log ckpt=checkpoints_v13_sempty/sci1_long3r_91a87ed ===

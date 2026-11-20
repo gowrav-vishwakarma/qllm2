@@ -1,0 +1,5 @@
+HEADER {"unit": "SCOPE probe", "hash": "d75a27c", "args": {"ckpt": "checkpoints_v13_sempty/wio_pam_main_227f3eb/stable_final.pt", "lengths": "2048", "docs": 100, "device": "cuda", "out": "logs/v14_scope_c_parent_s13733_d75a27c_20261118_1550.jsonl", "fullctx": true, "guard_only": false}}
+fullctx arch pam
+L 2048: 4-tuple B -4.87 C +1.659 scope_fu 0.69 prec_u1 0.20 | P_fu 0.07 twin unit_acc 0.93 | S_fu_held 0.15 S_bound_fu 0.29 | R_u2 0.80
+SUMMARY {"2048": {"B": -4.868125, "P_fu": 0.07, "C": 1.65875, "C_mid_twin": 0.93, "S_fu": 0.69, "S_fu_held": 0.15, "S_bound_fu": 0.29, "R_u1": 0.2, "R_u2": 0.8}}
+SCOPE DONE

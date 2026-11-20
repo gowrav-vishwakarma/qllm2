@@ -1,0 +1,72 @@
+twins chain (BOX=6000) arms: nochrono_nofar:CHRONO=0 ECHO=1 OUT_GATE=1 DELTA=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2128 SHARE_READS=1 SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc WEIGHTS=0.23324,0.24116,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112; code a3ffb14b in /home/ubuntu/Development/qllm_twins, 2026-11-18T15:20:32Z; SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc,b2s_far,proto_far WEIGHTS=0.22341,0.23099,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112,0.01200,0.00800
+=== nt_nochrono_nofar_main run 1 2026-11-18T15:25:32Z
+=== nt_nochrono_nofar_main start 2026-11-18T15:25:32Z commit=a3ffb14b log=logs/v13_sempty_nt_nochrono_nofar_main_a3ffb14b_20261118_1525.log ckpt=checkpoints_v13_sempty/nt_nochrono_nofar_main_a3ffb14b ===
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 691572 (tok/s not an arm speed) from 2026-11-18T15:27:03Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 691572 822441 (tok/s not an arm speed) from 2026-11-18T15:48:05Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 691572 (tok/s not an arm speed) from 2026-11-18T15:49:05Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 691572 837035 (tok/s not an arm speed) from 2026-11-18T15:50:20Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 691572 (tok/s not an arm speed) from 2026-11-18T15:51:05Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 (tok/s not an arm speed) from 2026-11-18T19:49:50Z
+twins chain (BOX=6000) arms: nochrono_nofar:CHRONO=0 ECHO=1 OUT_GATE=1 DELTA=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2128 SHARE_READS=1 SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc WEIGHTS=0.23324,0.24116,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112; code a3ffb14b in /home/ubuntu/Development/qllm_twins, 2026-11-18T20:02:07Z; SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc,b2s_far,proto_far WEIGHTS=0.22341,0.23099,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112,0.01200,0.00800
+=== nt_nochrono_nofar_main: adopting running trainer 691296 2026-11-18T20:02:07Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 (tok/s not an arm speed) from 2026-11-18T20:02:07Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 2234398 (tok/s not an arm speed) from 2026-11-18T20:07:23Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 (tok/s not an arm speed) from 2026-11-18T20:49:43Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 2520683 (tok/s not an arm speed) from 2026-11-18T21:00:14Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 2545512 (tok/s not an arm speed) from 2026-11-18T21:04:30Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 2556690 (tok/s not an arm speed) from 2026-11-18T21:06:30Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 2576046 (tok/s not an arm speed) from 2026-11-18T21:10:00Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 2631689 (tok/s not an arm speed) from 2026-11-18T21:20:17Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 2654694 (tok/s not an arm speed) from 2026-11-18T21:24:32Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 (tok/s not an arm speed) from 2026-11-18T21:28:33Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 2677471 (tok/s not an arm speed) from 2026-11-18T21:28:48Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 690991 (tok/s not an arm speed) from 2026-11-18T21:32:48Z
+=== nt_nochrono_nofar_main: GPU SOLO from 2026-11-18T22:23:39Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 (tok/s not an arm speed) from 2026-11-18T22:23:54Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 2997033 (tok/s not an arm speed) from 2026-11-18T22:29:10Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 2997033 3066905 (tok/s not an arm speed) from 2026-11-18T22:42:11Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 2997033 (tok/s not an arm speed) from 2026-11-18T22:42:56Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 2997033 3326682 (tok/s not an arm speed) from 2026-11-18T23:31:02Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 2997033 (tok/s not an arm speed) from 2026-11-18T23:31:47Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 (tok/s not an arm speed) from 2026-11-18T23:33:18Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 3393621 (tok/s not an arm speed) from 2026-11-18T23:43:34Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 3428515 (tok/s not an arm speed) from 2026-11-18T23:50:05Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 (tok/s not an arm speed) from 2026-11-18T23:54:20Z
+=== nt_nochrono_nofar_main: GPU SHARED with pids 2968787 3461768 (tok/s not an arm speed) from 2026-11-18T23:54:35Z
+=== nt_nochrono_nofar_main done 2026-11-18T23:57:10Z
+=== nt_nochrono_nofar_decay run 1 2026-11-19T00:02:11Z
+!!! WARNING: code changed since pinned a3ffb14b (ALLOW_CODE_DRIFT=1):
+v13_sempty/tmp/mind_seeds_after_night.sh
+v13_sempty/tmp/setb_chain.sh
+=== nt_nochrono_nofar_decay start 2026-11-19T00:02:11Z commit=d75a27c log=logs/v13_sempty_nt_nochrono_nofar_decay_d75a27c_20261119_0002.log ckpt=checkpoints_v13_sempty/nt_nochrono_nofar_decay_a3ffb14b ===
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 3489351 (tok/s not an arm speed) from 2026-11-19T00:03:41Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 3513568 (tok/s not an arm speed) from 2026-11-19T00:03:56Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 3513568 3534336 (tok/s not an arm speed) from 2026-11-19T00:07:41Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 3534336 3536508 (tok/s not an arm speed) from 2026-11-19T00:07:56Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 3536508 (tok/s not an arm speed) from 2026-11-19T00:08:11Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 3569424 (tok/s not an arm speed) from 2026-11-19T00:14:12Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 3569424 3570475 (tok/s not an arm speed) from 2026-11-19T00:14:27Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 3570475 (tok/s not an arm speed) from 2026-11-19T00:14:57Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 (tok/s not an arm speed) from 2026-11-19T00:22:43Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 3794977 (tok/s not an arm speed) from 2026-11-19T00:57:03Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 (tok/s not an arm speed) from 2026-11-19T00:57:48Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 3851725 (tok/s not an arm speed) from 2026-11-19T01:07:49Z
+=== nt_nochrono_nofar_decay: GPU SHARED with pids 2968787 3474723 (tok/s not an arm speed) from 2026-11-19T01:08:34Z
+=== nt_nochrono_nofar_decay end 1795051351 exit=0 attempts=1 ===
+=== nt_nochrono_nofar_decay done 2026-11-19T01:22:56Z
+=== nt_nochrono_nofar_a3ffb14b readouts (.venv/bin/python) 2026-11-19T01:32:56Z
+per task: {'shift_wide_new@0': 0.998, 'shift_wide_new@2048': 0.71, 'shift_wide_new@4096': 0.372, 'shift_wide_new@8192': 0.115, 'affine_map_new@0': 0.757, 'affine_map_new@2048': 0.263, 'affine_map_new@4096': 0.128, 'affine_map_new@8192': 0.077}  mean 0.427
+free (A7): {'shift_wide_new@0': 0.998, 'shift_wide_new@2048': 0.705, 'shift_wide_new@4096': 0.362, 'shift_wide_new@8192': 0.102, 'affine_map_new@0': 0.345, 'affine_map_new@2048': 0.045, 'affine_map_new@4096': 0.028, 'affine_map_new@8192': 0.018}  mean 0.325
+saved logs/wio/v13_sempty_nt_nochrono_nofar_a3ffb14b_spread_s7000_t400.json.part
+  affine_map_new done
+Results saved to logs/wio/v13_sempty_nt_nochrono_nofar_a3ffb14b_t40_behavioral.json.part (aggregates, 1440 rows omitted)
+hellaswag {'acc': 0.2737, 'acc_norm': 0.282, 'n': 10042}
+arc_easy {'acc': 0.4533, 'acc_norm': 0.4188, 'n': 2376}
+piqa {'acc': 0.5925, 'acc_norm': 0.5871, 'n': 1838}
+per task: {'shift_wide_new@0': 0.815, 'shift_wide_new@2048': 0.677, 'shift_wide_new@4096': 0.485, 'shift_wide_new@8192': 0.19, 'affine_map_new@0': 0.642, 'affine_map_new@2048': 0.275, 'affine_map_new@4096': 0.185, 'affine_map_new@8192': 0.13}  mean 0.425
+saved logs/wio/v13_sempty_nt_nochrono_nofar_a3ffb14b_step_014000_spread_s7000_t400.json.part
+per task: {'shift_wide_new@0': 0.998, 'shift_wide_new@2048': 0.777, 'shift_wide_new@4096': 0.492, 'shift_wide_new@8192': 0.17, 'affine_map_new@0': 0.657, 'affine_map_new@2048': 0.292, 'affine_map_new@4096': 0.2, 'affine_map_new@8192': 0.125}  mean 0.464
+saved logs/wio/v13_sempty_nt_nochrono_nofar_a3ffb14b_step_014500_spread_s7000_t400.json.part
+per task: {'shift_wide_new@0': 0.998, 'shift_wide_new@2048': 0.728, 'shift_wide_new@4096': 0.4, 'shift_wide_new@8192': 0.138, 'affine_map_new@0': 0.738, 'affine_map_new@2048': 0.297, 'affine_map_new@4096': 0.185, 'affine_map_new@8192': 0.102}  mean 0.448
+saved logs/wio/v13_sempty_nt_nochrono_nofar_a3ffb14b_step_015000_spread_s7000_t400.json.part
+=== wio chain DONE 2026-11-19T02:29:45Z

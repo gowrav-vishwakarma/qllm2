@@ -1,0 +1,40 @@
+twins chain (BOX=6000) arms: gdn_nofar:ARCH=gdn PYTHON=/home/ubuntu/.venvs/qllm_gdn/bin/python CHRONO=0 OUT_GATE=0 DELTA=0 ECHO=0 SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc WEIGHTS=0.23324,0.24116,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112; code a3ffb14b in /home/ubuntu/Development/qllm_twins, 2026-11-18T15:20:34Z; SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc,b2s_far,proto_far WEIGHTS=0.22341,0.23099,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112,0.01200,0.00800
+=== nt_gdn_nofar_main run 1 2026-11-18T15:25:34Z
+=== nt_gdn_nofar_main start 2026-11-18T15:25:34Z commit=a3ffb14b log=logs/v13_sempty_nt_gdn_nofar_main_a3ffb14b_20261118_1525.log ckpt=checkpoints_v13_sempty/nt_gdn_nofar_main_a3ffb14b ===
+=== nt_gdn_nofar_main: GPU SHARED with pids 690991 691296 (tok/s not an arm speed) from 2026-11-18T15:27:05Z
+=== nt_gdn_nofar_main: GPU SHARED with pids 690991 691296 822441 (tok/s not an arm speed) from 2026-11-18T15:47:52Z
+=== nt_gdn_nofar_main: GPU SHARED with pids 690991 691296 (tok/s not an arm speed) from 2026-11-18T15:49:07Z
+=== nt_gdn_nofar_main: GPU SHARED with pids 690991 691296 837035 (tok/s not an arm speed) from 2026-11-18T15:50:22Z
+=== nt_gdn_nofar_main: GPU SHARED with pids 690991 691296 (tok/s not an arm speed) from 2026-11-18T15:51:07Z
+=== nt_gdn_nofar_main end 1795031388 exit=0 attempts=1 ===
+=== nt_gdn_nofar_main done 2026-11-18T19:50:12Z
+=== nt_gdn_nofar_decay run 1 2026-11-18T19:55:13Z
+REFUSING to launch: code changed since the pinned commit a3ffb14b (HEAD d75a27c); resume on the pinned code (git checkout a3ffb14b) or start a new run. Changed:
+v13_sempty/tmp/mind_seeds_after_night.sh
+v13_sempty/tmp/setb_chain.sh
+=== nt_gdn_nofar_decay: no trainer after 90 s
+twins chain (BOX=6000) arms: gdn_nofar:ARCH=gdn PYTHON=/home/ubuntu/.venvs/qllm_gdn/bin/python CHRONO=0 OUT_GATE=0 DELTA=0 ECHO=0 SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc WEIGHTS=0.23324,0.24116,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112; code a3ffb14b in /home/ubuntu/Development/qllm_twins, 2026-11-18T20:02:07Z; SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc,b2s_far,proto_far WEIGHTS=0.22341,0.23099,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112,0.01200,0.00800
+=== nt_gdn_nofar_decay run 1 2026-11-18T20:07:07Z
+!!! WARNING: code changed since pinned a3ffb14b (ALLOW_CODE_DRIFT=1):
+v13_sempty/tmp/mind_seeds_after_night.sh
+v13_sempty/tmp/setb_chain.sh
+=== nt_gdn_nofar_decay start 2026-11-18T20:07:07Z commit=d75a27c log=logs/v13_sempty_nt_gdn_nofar_decay_d75a27c_20261118_2007.log ckpt=checkpoints_v13_sempty/nt_gdn_nofar_decay_a3ffb14b ===
+=== nt_gdn_nofar_decay: GPU SHARED with pids 690991 691296 (tok/s not an arm speed) from 2026-11-18T20:08:37Z
+=== nt_gdn_nofar_decay end 1795034970 exit=0 attempts=1 ===
+=== nt_gdn_nofar_decay done 2026-11-18T20:50:02Z
+=== nt_gdn_nofar_a3ffb14b readouts (/home/ubuntu/.venvs/qllm_gdn/bin/python) 2026-11-18T21:00:03Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.845, 'shift_wide_new@4096': 0.547, 'shift_wide_new@8192': 0.28, 'affine_map_new@0': 0.99, 'affine_map_new@2048': 0.53, 'affine_map_new@4096': 0.388, 'affine_map_new@8192': 0.23}  mean 0.601
+free (A7): {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.725, 'shift_wide_new@4096': 0.43, 'shift_wide_new@8192': 0.18, 'affine_map_new@0': 0.912, 'affine_map_new@2048': 0.21, 'affine_map_new@4096': 0.147, 'affine_map_new@8192': 0.05}  mean 0.457
+saved logs/wio/v13_sempty_nt_gdn_nofar_a3ffb14b_spread_s7000_t400.json.part
+  affine_map_new done
+Results saved to logs/wio/v13_sempty_nt_gdn_nofar_a3ffb14b_t40_behavioral.json.part (aggregates, 1440 rows omitted)
+hellaswag {'acc': 0.2731, 'acc_norm': 0.2836, 'n': 10042}
+arc_easy {'acc': 0.4659, 'acc_norm': 0.407, 'n': 2376}
+piqa {'acc': 0.5914, 'acc_norm': 0.5925, 'n': 1838}
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.79, 'shift_wide_new@4096': 0.515, 'shift_wide_new@8192': 0.242, 'affine_map_new@0': 0.897, 'affine_map_new@2048': 0.453, 'affine_map_new@4096': 0.3, 'affine_map_new@8192': 0.205}  mean 0.55
+saved logs/wio/v13_sempty_nt_gdn_nofar_a3ffb14b_step_014000_spread_s7000_t400.json.part
+per task: {'shift_wide_new@0': 0.998, 'shift_wide_new@2048': 0.825, 'shift_wide_new@4096': 0.502, 'shift_wide_new@8192': 0.225, 'affine_map_new@0': 0.978, 'affine_map_new@2048': 0.45, 'affine_map_new@4096': 0.318, 'affine_map_new@8192': 0.17}  mean 0.558
+saved logs/wio/v13_sempty_nt_gdn_nofar_a3ffb14b_step_014500_spread_s7000_t400.json.part
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.85, 'shift_wide_new@4096': 0.623, 'shift_wide_new@8192': 0.307, 'affine_map_new@0': 0.99, 'affine_map_new@2048': 0.56, 'affine_map_new@4096': 0.407, 'affine_map_new@8192': 0.237}  mean 0.622
+saved logs/wio/v13_sempty_nt_gdn_nofar_a3ffb14b_step_015000_spread_s7000_t400.json.part
+=== wio chain DONE 2026-11-18T21:32:46Z

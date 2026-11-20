@@ -1,0 +1,31 @@
+set B chain: code d75a27c, parent checkpoints_v13_sempty/wio_pam_main_227f3eb/stable_final.pt, 2026-11-18T20:07:36Z
+=== parent C 2k = 1.659
+=== start f08_lr12 2026-11-18T22:23:38Z
+=== setb_f08_lr12 start 2026-11-18T22:23:38Z commit=d75a27c log=logs/v13_sempty_setb_f08_lr12_d75a27c_20261118_2223.log ckpt=checkpoints_v13_sempty/setb_f08_lr12_d75a27c ===
+=== start f16_lr12 2026-11-18T23:56:39Z
+=== setb_f16_lr12 start 2026-11-18T23:56:39Z commit=d75a27c log=logs/v13_sempty_setb_f16_lr12_d75a27c_20261118_2356.log ckpt=checkpoints_v13_sempty/setb_f16_lr12_d75a27c ===
+=== setb_f08_lr12 end 1795052323 exit=0 attempts=1 ===
+=== f08_lr12 trained 2026-11-19T01:38:43Z
+ls: cannot access 'checkpoints_v13_sempty/setb_f08_lr12_d75a27c/step_*.pt': No such file or directory
+=== scope f08_lr12_end: 0 tracebacks | L 2048: 4-tuple B -2.65 C +1.015 scope_fu 0.76 prec_u1 0.08 | P_fu 0.53 twin unit_acc 0.71 | S_fu_held 0.60 S_bound_fu 0.69 | R_u2 0.92
+=== f08_lr12 DONE 2026-11-19T01:39:21Z
+=== setb_f16_lr12 end 1795059729 exit=0 attempts=1 ===
+=== f16_lr12 trained 2026-11-19T03:42:09Z
+ls: cannot access 'checkpoints_v13_sempty/setb_f16_lr12_d75a27c/step_*.pt': No such file or directory
+=== scope f16_lr12_end: 0 tracebacks | L 2048: 4-tuple B -3.53 C +1.930 scope_fu 0.82 prec_u1 0.44 | P_fu 0.29 twin unit_acc 0.88 | S_fu_held 0.34 S_bound_fu 0.52 | R_u2 0.56
+=== f16_lr12 DONE 2026-11-19T03:42:45Z
+=== start f16_lr06 2026-11-19T11:21:47Z
+=== setb_f16_lr06 start 2026-11-19T11:21:47Z commit=d75a27c log=logs/v13_sempty_setb_f16_lr06_d75a27c_20261119_1121.log ckpt=checkpoints_v13_sempty/setb_f16_lr06_d75a27c ===
+=== start f08_lr06 2026-11-19T11:26:47Z
+=== setb_f08_lr06 start 2026-11-19T11:26:47Z commit=d75a27c log=logs/v13_sempty_setb_f08_lr06_d75a27c_20261119_1126.log ckpt=checkpoints_v13_sempty/setb_f08_lr06_d75a27c ===
+=== setb_f16_lr06 end 1795099545 exit=0 attempts=1 ===
+=== f16_lr06 trained 2026-11-19T14:45:45Z
+ls: cannot access 'checkpoints_v13_sempty/setb_f16_lr06_d75a27c/step_*.pt': No such file or directory
+=== scope f16_lr06_end: 0 tracebacks | L 2048: 4-tuple B -4.31 C +1.207 scope_fu 0.44 prec_u1 0.13 | P_fu 0.04 twin unit_acc 0.89 | S_fu_held 0.02 S_bound_fu 0.08 | R_u2 0.87
+=== f16_lr06 DONE 2026-11-19T14:46:10Z
+=== setb_f08_lr06 end 1795099857 exit=0 attempts=1 ===
+=== f08_lr06 trained 2026-11-19T14:50:57Z
+ls: cannot access 'checkpoints_v13_sempty/setb_f08_lr06_d75a27c/step_*.pt': No such file or directory
+=== scope f08_lr06_end: 0 tracebacks | L 2048: 4-tuple B -4.36 C +0.930 scope_fu 0.27 prec_u1 0.02 | P_fu 0.03 twin unit_acc 0.80 | S_fu_held 0.07 S_bound_fu 0.09 | R_u2 0.98
+=== f08_lr06 DONE 2026-11-19T14:51:16Z
+=== SET B DONE 2026-11-19T14:51:16Z

@@ -1,0 +1,8 @@
+switch: waiting for checkpoints_v13_sempty/sci1_cont3_449e320/step_137331.pt and a log step > 137331 in logs/v13_sempty_sci1_cont3_449e320_20261104_1544.log (2026-11-05T01:46:54Z)
+switch: milestone ok 137331 9000124416
+switch: stopping old chain 2026-11-05T07:06:16Z
+/dev/root           484G  450G       35G  93% /
+sci1: 1 windows (created Thu Nov  5 07:06:18 2026)
+sci1sw: 1 windows (created Thu Nov  5 01:46:54 2026)
+switch: launched cont4 at 8284510 2026-11-05T07:06:23Z
+switch: cont4 training: step 137350 [137350/160218  86%]  loss=2.2712 ppl=9.7 lr=3.04e-05 | 1087 tok/s (avg 1087) 

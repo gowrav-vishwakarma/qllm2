@@ -1,0 +1,5 @@
+HEADER {"unit": "SCOPE probe", "hash": "d75a27c", "args": {"ckpt": "checkpoints_v13_sempty/setb_f08_lr12_d75a27c/step_015260.pt", "lengths": "2048", "docs": 100, "device": "cuda", "out": "logs/v14_scope_c_f08_lr12_015260_d75a27c_20261118_2330.jsonl", "fullctx": true, "guard_only": false}}
+fullctx arch pam
+L 2048: 4-tuple B -5.01 C +1.603 scope_fu 0.54 prec_u1 0.15 | P_fu 0.05 twin unit_acc 0.92 | S_fu_held 0.06 S_bound_fu 0.13 | R_u2 0.85
+SUMMARY {"2048": {"B": -5.00625, "P_fu": 0.05, "C": 1.6028125, "C_mid_twin": 0.92, "S_fu": 0.54, "S_fu_held": 0.06, "S_bound_fu": 0.13, "R_u1": 0.15, "R_u2": 0.85}}
+SCOPE DONE

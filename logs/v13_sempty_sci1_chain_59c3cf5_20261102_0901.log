@@ -1,0 +1,5 @@
+sci1 chain: code 59c3cf5 in /home/ubuntu/Development/qllm_sci1, 2026-11-02T09:01:48Z; GEOM=DIM=1024 N_LAYERS=24 N_HEADS=8 HEAD_DIM=128 MLP_HIDDEN=3704 PAM_LAYERS=3,7,11,15,19,23 SHARE_READS=1 MAIN=9999998976 DECAY=1000013824 BATCH=16 x2 LR=8e-4 KEEP_EVERY=15259
+=== sci1_stageA start 2026-11-02T09:01:49Z commit=59c3cf5 log=logs/v13_sempty_sci1_stageA_59c3cf5_20261102_0901.log ckpt=checkpoints_v13_sempty/sci1_stageA_59c3cf5 ===
+=== sci1_stageA end 1793624206 exit=0 attempts=1 ===
+=== sci1 stage A exit=0 2026-11-02T12:56:46Z
+=== sci1_main start 2026-11-02T12:56:47Z commit=59c3cf5 log=logs/v13_sempty_sci1_main_59c3cf5_20261102_1256.log ckpt=checkpoints_v13_sempty/sci1_main_59c3cf5 ===

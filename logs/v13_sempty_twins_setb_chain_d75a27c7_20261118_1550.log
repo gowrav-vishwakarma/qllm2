@@ -1,0 +1,3 @@
+set B chain: code d75a27c, parent checkpoints_v13_sempty/wio_pam_main_227f3eb/stable_final.pt, 2026-11-18T15:50:07Z
+=== scope parent_s13733: 0 tracebacks | L 2048: 4-tuple B -4.87 C +1.659 scope_fu 0.69 prec_u1 0.20 | P_fu 0.07 twin unit_acc 0.93 | S_fu_held 0.15 S_bound_fu 0.29 | R_u2 0.80
+=== parent C 2k = 1.659

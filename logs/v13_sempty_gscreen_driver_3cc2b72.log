@@ -1,0 +1,4 @@
+=== gscreen start 2026-10-29T07:52:14Z SCREEN_HASH=3cc2b72 arms='onorm:OUT_NORM=1 conv:SHORT_CONV=1 both:SHORT_CONV=1,OUT_NORM=1' base='LR=1.2e-3 TARGET_TOKENS=599998464 VAL_EVERY=4069 SAVE_EVERY=1000 KEEP_EVERY=4069 KEEP_LAST=1' ===
+=== arm onorm (OUT_NORM=1) ckpt=checkpoints_v13_sempty/gscreen_onorm_3cc2b72 log=logs/v13_sempty_gscreen_onorm_3cc2b72_20261029_0752.log 2026-10-29T07:52:14Z ===
+=== gscreen_onorm start 2026-10-29T07:52:14Z commit=3cc2b72 log=logs/v13_sempty_gscreen_onorm_3cc2b72_20261029_0752.log ckpt=checkpoints_v13_sempty/gscreen_onorm_3cc2b72 ===
+=== gscreen STOPPED (manual) 2026-10-29T08:16:59Z: onorm stopped for futility at step ~2250 (+0.14 nats vs ctl on the same batches); conv moved to screen e1g ===

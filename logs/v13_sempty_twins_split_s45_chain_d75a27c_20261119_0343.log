@@ -1,0 +1,39 @@
+twins chain (BOX=6000) arms: split_s45:CHRONO=1 CHRONO_HEADS=3 SEED=45 ECHO=1 OUT_GATE=1 DELTA=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2128 SHARE_READS=1; code d75a27c in /home/ubuntu/Development/qllm_twins, 2026-11-19T03:43:48Z; SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc,b2s_far,proto_far WEIGHTS=0.22341,0.23099,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112,0.01200,0.00800
+=== nt_split_s45_main run 1 2026-11-19T03:48:48Z
+=== nt_split_s45_main start 2026-11-19T03:48:48Z commit=d75a27c log=logs/v13_sempty_nt_split_s45_main_d75a27c_20261119_0348.log ckpt=checkpoints_v13_sempty/nt_split_s45_main_d75a27c ===
+=== nt_split_s45_main: GPU SHARED with pids 4016077 4045296 (tok/s not an arm speed) from 2026-11-19T03:50:18Z
+=== nt_split_s45_main: GPU SHARED with pids 4045296 (tok/s not an arm speed) from 2026-11-19T09:32:32Z
+=== nt_split_s45_main: GPU SHARED with pids 4045296 2415946 (tok/s not an arm speed) from 2026-11-19T09:38:03Z
+=== nt_split_s45_main: GPU SHARED with pids 4045296 (tok/s not an arm speed) from 2026-11-19T10:42:11Z
+=== nt_split_s45_main: GPU SHARED with pids 4045296 2817598 (tok/s not an arm speed) from 2026-11-19T10:52:43Z
+=== nt_split_s45_main: GPU SHARED with pids 4045296 2851725 (tok/s not an arm speed) from 2026-11-19T10:58:58Z
+=== nt_split_s45_main: GPU SHARED with pids 4045296 2863318 (tok/s not an arm speed) from 2026-11-19T11:00:59Z
+=== nt_split_s45_main: GPU SHARED with pids 4045296 2893889 (tok/s not an arm speed) from 2026-11-19T11:06:44Z
+=== nt_split_s45_main: GPU SHARED with pids 4045296 2943315 (tok/s not an arm speed) from 2026-11-19T11:15:46Z
+=== nt_split_s45_main end 1795087305 exit=0 attempts=1 ===
+=== nt_split_s45_main done 2026-11-19T11:22:06Z
+=== nt_split_s45_decay run 1 2026-11-19T11:27:07Z
+=== nt_split_s45_decay start 2026-11-19T11:27:07Z commit=d75a27c log=logs/v13_sempty_nt_split_s45_decay_d75a27c_20261119_1127.log ckpt=checkpoints_v13_sempty/nt_split_s45_decay_d75a27c ===
+=== nt_split_s45_decay: GPU SHARED with pids 2976796 3003537 3005318 (tok/s not an arm speed) from 2026-11-19T11:28:37Z
+=== nt_split_s45_decay: GPU SHARED with pids 2976796 3003537 3005318 3077023 (tok/s not an arm speed) from 2026-11-19T11:40:23Z
+=== nt_split_s45_decay: GPU SHARED with pids 2976796 3003537 3005318 (tok/s not an arm speed) from 2026-11-19T11:41:23Z
+=== nt_split_s45_decay: GPU SHARED with pids 2976796 3003537 3005318 3103657 (tok/s not an arm speed) from 2026-11-19T11:45:24Z
+=== nt_split_s45_decay: GPU SHARED with pids 2976796 3003537 3005318 (tok/s not an arm speed) from 2026-11-19T11:46:24Z
+=== nt_split_s45_decay end 1795092511 exit=0 attempts=1 ===
+=== nt_split_s45_decay done 2026-11-19T12:48:53Z
+=== nt_split_s45_d75a27c readouts (.venv/bin/python) 2026-11-19T12:58:53Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 1.0, 'shift_wide_new@4096': 0.998, 'shift_wide_new@8192': 0.94, 'affine_map_new@0': 0.985, 'affine_map_new@2048': 0.955, 'affine_map_new@4096': 0.922, 'affine_map_new@8192': 0.812}  mean 0.952
+free (A7): {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.998, 'shift_wide_new@4096': 0.995, 'shift_wide_new@8192': 0.915, 'affine_map_new@0': 0.772, 'affine_map_new@2048': 0.69, 'affine_map_new@4096': 0.625, 'affine_map_new@8192': 0.427}  mean 0.803
+saved logs/wio/v13_sempty_nt_split_s45_d75a27c_spread_s7000_t400.json.part
+  affine_map_new done
+Results saved to logs/wio/v13_sempty_nt_split_s45_d75a27c_t40_behavioral.json.part (aggregates, 1440 rows omitted)
+hellaswag {'acc': 0.2736, 'acc_norm': 0.2795, 'n': 10042}
+arc_easy {'acc': 0.4651, 'acc_norm': 0.4179, 'n': 2376}
+piqa {'acc': 0.5892, 'acc_norm': 0.593, 'n': 1838}
+per task: {'shift_wide_new@0': 0.998, 'shift_wide_new@2048': 0.993, 'shift_wide_new@4096': 0.975, 'shift_wide_new@8192': 0.86, 'affine_map_new@0': 0.897, 'affine_map_new@2048': 0.8, 'affine_map_new@4096': 0.725, 'affine_map_new@8192': 0.598}  mean 0.856
+saved logs/wio/v13_sempty_nt_split_s45_d75a27c_step_014000_spread_s7000_t400.json.part
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.993, 'shift_wide_new@4096': 0.978, 'shift_wide_new@8192': 0.887, 'affine_map_new@0': 0.96, 'affine_map_new@2048': 0.868, 'affine_map_new@4096': 0.818, 'affine_map_new@8192': 0.675}  mean 0.897
+saved logs/wio/v13_sempty_nt_split_s45_d75a27c_step_014500_spread_s7000_t400.json.part
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 1.0, 'shift_wide_new@4096': 0.998, 'shift_wide_new@8192': 0.935, 'affine_map_new@0': 0.978, 'affine_map_new@2048': 0.953, 'affine_map_new@4096': 0.915, 'affine_map_new@8192': 0.8}  mean 0.947
+saved logs/wio/v13_sempty_nt_split_s45_d75a27c_step_015000_spread_s7000_t400.json.part
+=== wio chain DONE 2026-11-19T13:47:31Z
