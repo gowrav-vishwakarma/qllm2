@@ -921,6 +921,9 @@ class RealPAMLayer(nn.Module):
             keys.raw(batch, self.heads, time, self.head_feature).float(), dim=-1)
         v = values.raw(batch, self.heads, time, self.head_feature).float()
         g = decay.raw(batch, self.heads, time).float()                            # [B,H,T]
+        keep = getattr(self, '_keep', None)      # reset_at_eos: retention 0 at a separator, exactly as _chunked_delta (the
+        if keep is not None:                      # decode path missed it until 2026-11-24: found by the HF-port parity work)
+            g = g * keep[:, None, :].to(g.dtype)
         bw, be = self._delta_gates(tokens)
         bw, be = bw.float(), be.float()
         if state is not None:
