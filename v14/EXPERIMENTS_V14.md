@@ -4225,6 +4225,21 @@ fitted threshold:
     | recall at 32k, free: needle among 8 / latest-wins / two-hop | 0.00 / 0.20 / 0.00 | **1.00 / 1.00 / 0.95** |
     | recall at 32k, 20-way (pooled) | 0.25 | **0.98** |
 
+    - **PKG-SUITE ROW (recorded late, 2026-11-24 by Library): c4a = the CONSTANT-LR twin of that decay at the same 10.0B tokens**
+      (sci1_cont4_8284510, step 152,590; run 2026-11-05 21:02 IST, code 178be1d; `logs/v14_pkg_suite_c4a_178be1d_20261105_2102.*`;
+      100 docs per cell, recall 20 per task). It had finished but was never tabled.
+
+      | cell | bare | package |
+      |---|---|---|
+      | R x K, 2k / 8k (first token) | 0.00 / 0.00 | **0.63 / 0.43** |
+      | told rule held in state (twin), 2k / 8k | 0.03 / 0.00 | **0.56 / 0.02** |
+      | recall at 32k, free: needle among 8 / latest-wins / two-hop | 0.00 / 0.05 / 0.00 | **1.00 / 1.00 / 1.00** |
+      | recall at 32k, 20-way: kv / kvupd / hop2 | 0.05 / 0.40 / 0.10 | **1.00 / 1.00 / 1.00** |
+
+      The rewrite cell ran on package v0.3.0 (the decimal-dropping read, fixed in v0.3.1 below), so its 0.32 / 0.18 is not a number
+      of the package and is not tabled. Equal tokens, decay vs constant LR: R x K 0.46 / 0.16 vs 0.63 / 0.43 (the decay loses held
+      rules, the same direction as DECAY B / C); told-in-state 0.74 / 0.10 vs 0.56 / 0.02 (the decay is higher at 2k); recall is
+      equal (1.00).
     - **The v0.3.0 rewrite read dropped decimals on this body** (0.35 / 0.37: unit 0.93, value 0.40; "68.9" → "68 nM").
       The no-pack twin's contrast cancelled the "." of a pack placed ADJACENT to the query. Fixed in v0.3.1 (an adjacent
       pack reads warm), after Lead / the outside review flagged it. The 0.35 never enters a table.
@@ -5826,6 +5841,11 @@ claim (there is no twin at 386M).
   (no-lure acc at 2k / 8k / 16k; SCI-1 trains at a longer context than the wio bodies, so the D values are reported as distances only)?
 - Reported per distance and style: acc, free, lure-win. It goes on the user's final readout page as "natural recall".
 Order in the window: pam, nochrono (no-lure), then 47B lure, 47B no-lure, then the other 100M no-lure bodies if the gate passed.
+AMENDMENT (2026-11-24 10:33 IST, before any number; Lead at the pause wrap-up): part (b) moves from 47B to the RELEASE checkpoint
+final_step_749500.pt (SCI-1 386M, 3r, 49.119B tokens; sha b403ad63 per Lead), because these numbers go on the model card. It runs
+both the original (lure) and the no-lure probe, unchanged (same docs, D, n, scores), PLUS the standing SCOPE 4-tuple at 2k / 8k (n 100,
+the default package path). It is descriptive, with no bar. The 100M no-lure part (a) runs only if the window has time left after (b)
+(pam and nochrono first, same validity gate). It runs on the 4090 after the release CHECK (tmux lead_relcheck) has ended.
 Closest prior work as before (NIAH / RULER, BABILong).
 
 ### SPLIT key geometry: CHRONO_HEADS (Library owns the mechanism; built 2026-11-18 15:03 IST; Mind's twin (b) runs it)
