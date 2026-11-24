@@ -8278,7 +8278,7 @@ for orientation only): SFT better on 10 (sci1, sci3, sci6, chat3, chat6, tool_re
 (sci5, mt2, q2, icl2), the rest ties or both wrong. Verdict status: **every pre-registered guard and chat bar HOLDS; RELEASE-SFT waits
 only on the user's A/B majority.**
 
-### sft1 blind A/B verdict (Lead, 2026-11-24 ~18:30 IST; at the user's request "you read and as bigger model.. vote and decide")
+### sft1 blind A/B verdict (Lead, 2026-11-24 18:11 IST; at the user's request "you read and as bigger model.. vote and decide")
 - Judge: Lead (Claude Opus 5.5), NOT a human. Read all 60 pairs (greedy answers) from the A/B page's pairs.json with the side key
   removed; votes fixed before the key was opened. Not written into the page's vote store (that stays for a human vote).
 - **Tally: SFT preferred 24, base 8, tie 14, both bad 14 → RELEASE-SFT** (rule: majority SFT among decided prompts).
@@ -8288,4 +8288,4 @@ only on the user's A/B majority.**
   no runaway list (haiku loop / DNA list in base). What neither model does: arithmetic (15 % of 80, concentration, cell doubling), capital
   of Australia (both "Melbourne"), Celsius→Kelvin code (both use the Fahrenheit formula), YES/NO protocol, recalling the user's name
   in turn 2 (both answer as the user). Base beat SFT on 4 of 6 technical Q&A (SFT stated wrong p-value / hypothesis facts).
-- Votes: logs/v13_sempty_sft1_ab_lead_vote_6e2a5f5_20261124_1830.json.
+- Votes: logs/v13_sempty_sft1_ab_lead_vote_6e2a5f5_20261124_1811.json.
