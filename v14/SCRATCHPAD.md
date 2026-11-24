@@ -4,6 +4,21 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
+## STATE NOW (Library, 2026-11-24 19:21 IST): read first; the user's GO ended the pause for this lane
+- **PKG-RELEASE** (pre-registered f1bba05; EXPERIMENTS_V14 "PKG-RELEASE"). The package suite and BENCH-PKG run on the
+  released base (749,500) and Chat (753,315) checkpoints.
+  - Part 1 (suite + RULER-style) is recorded: f8fd49a6.
+  - BABILong is still running, split into parallel jobs:
+    - 6000 `~/Development/qllm_lib` tmux `pr_babi*`, logs `logs/v14_babilong_pkg_*_f1bba05_*`. The 0k16k jobs are stopped
+      after 4k by `pr_split2`; 8k / 16k come from the `_1350` files. The base 32k job is stopped after qa2 by `pr_split`;
+      qa3-5 come from `_32k_qa345_..._1337`.
+    - 4090: Chat 32k, tmux `librelnat` (covered by the user guard), `logs/v14_babilong_pkg_sft_32k_e337eacc_20261124_1304.*`.
+  - When done: copy the logs here, then `python3 v14/pkg_release_tables.py --babilong rel=<files> sft=<files>`. Drop the
+    rows the split overlaps: for each (L, task), keep the rows from the split's own file. Fill BABILONG_TABLE in both
+    hf_release_*/PACKAGE.md, record, and send Lead the table + card lines.
+- **PKG-PORT**: both cards have package_lite.py + run_package.py + bg counts + PACKAGE.md; parity is 20 / 20 for both
+  (e337eacc). Not uploaded; Lead reviews and asks the user.
+
 ## Step back 2026-11-17 23:32 IST: Mind's chrono EUREKA (ffc22422) next to SCOPE
 - Mind: a content-driven phase makes keys position-specific: needles up, rules averaged across offset shots down.
 - SCOPE (ours): a told rule is bound to "a rule exists", not to its quantity. Both are about what a rule is KEYED on. A rule wants a
