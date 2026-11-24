@@ -43,7 +43,7 @@ Status: `[ ]` open · `[~]` running · `[x]` done and in the paper. Owner in bra
 - [x] Complex vs real on record (Sept 2026, recipe caveat) (§1 footnote).
 
 ## C. Paper housekeeping
-- [x] Co-authors: none on this paper (user, 2026-11-24: the co-author of arXiv:2604.05030 did not work on this part; the title block lists the author only).
+- [x] Co-authors: Christopher J. Agostino added to the title block (user, 2026-11-24, later decision; supersedes the earlier 'author only').
 - [x] The citation of arXiv:2604.05030 keeps its published author list as it is (user, 2026-11-24: do not fill in the co-author's name).
 - [ ] Public repository URL + Hugging Face release tag (§Reproducibility). [user]
 - [ ] Mind's number check of data/numbers.json against the notebooks; Library's check of §5, §7.3-7.4, §8. [Mind, Library]
