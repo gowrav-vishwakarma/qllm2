@@ -1190,6 +1190,10 @@ def build_argparser():
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
                         '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
+    p.add_argument('--sft_share', type=float, default=0.0,
+                   help='sft1: share of windows that are packed assistant-only smoltalk2-SFT chat (0 = off, the plain pretrain mix)')
+    p.add_argument('--sft_think_fraction', type=float, default=0.0,
+                   help='sft1: kept fraction of think-trace conversations (0 = none; the base answers directly)')
     p.add_argument('--dump_batches', type=int, default=0,
                    help='data check: hash the first N micro-batches of the train loader, print the sha, exit (0 = off)')
     p.add_argument('--stream_worker', type=int, default=1,
@@ -1392,6 +1396,14 @@ def main():
             ramp_from_tokens=args.ramp_from_tokens, ramp_tokens=args.ramp_tokens,
         )
         cfg.vocab_size = len(tokenizer)
+        if args.sft_share > 0:
+            # sft1 (2026-11-24): packed assistant-only smoltalk2-SFT windows, base-mix replay for the rest (v13_sempty/sft_mix.py)
+            from v13_sempty.sft_mix import SFTMixDataset
+            train_ds = SFTMixDataset(train_ds, tokenizer, args.seq_len, args.sft_share, args.seed, doc_counters, token_counters,
+                                     think_fraction=args.sft_think_fraction,
+                                     decontam_path=os.environ.get('DECONTAM_INDEX', '').strip())
+            print(f"[sft_mix] SFT share {args.sft_share} (think fraction {args.sft_think_fraction}); replay = the pretrain mix above",
+                  flush=True)
         is_streaming = not getattr(train_ds, 'pretrain_cached', False)
         # Streaming stops on the token budget; derive the step count so the LR
         # schedule and the header's planned_tokens stay honest.

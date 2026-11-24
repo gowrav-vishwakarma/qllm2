@@ -118,6 +118,7 @@ if [ -n "$PAM_LAYERS" ]; then EXTRA+=(--pam_layers "$PAM_LAYERS"); fi
 if [ -n "${SWA_LAYERS:-}" ]; then EXTRA+=(--swa_layers "$SWA_LAYERS" --swa_window "${SWA_WINDOW:-128}"); fi
 if [ -n "${LR_SCHEDULE:-}" ]; then EXTRA+=(--lr_schedule "$LR_SCHEDULE"); fi
 if [ -n "${CONTINUE_FROM:-}" ]; then EXTRA+=(--continue_from "$CONTINUE_FROM"); fi
+if [ -n "${SFT_SHARE:-}" ]; then EXTRA+=(--sft_share "$SFT_SHARE"); fi   # sft1: packed chat SFT + replay (v13_sempty/sft_mix.py)
 # R2 ramp (v16/PLAN_LONGRUN.md): WEIGHTS -> RAMP_WEIGHTS over RAMP_TOKENS from cumulative RAMP_FROM_TOKENS; unset = no ramp
 if [ -n "${RAMP_WEIGHTS:-}" ]; then EXTRA+=(--ramp_weights "$RAMP_WEIGHTS" --ramp_from_tokens "${RAMP_FROM_TOKENS:?}" --ramp_tokens "${RAMP_TOKENS:?}"); fi
 if [ -n "${DIM:-}" ]; then EXTRA+=(--dim "$DIM"); fi
