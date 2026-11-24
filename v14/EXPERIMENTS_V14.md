@@ -6064,3 +6064,27 @@ whose demos the O(1) mind compiled itself.
   logs/v14_scope_c_f{08,16}_lr{06,12}_*.jsonl.
 - Open, not run: NATURAL RECALL follow-ups (55f4e9ae: no-lure 100M + both probes on SCI-1 47B), BIND-LURE Step 0 (7d20317b), the
   dual-phase synchrony binding proposal (3caae6d0). Package stays v0.3.1; A32c / contrast gate not adoptable (scope guard).
+
+## PKG-RELEASE: the package on both released SCI-1 checkpoints (PRE-REGISTERED 2026-11-24 18:26 IST, before any number; Lead relays the user's GO, 18:3x)
+- **Why:** the package suite last ran at 10B (M10, 4bfbb22), and BENCH-PKG (pre-registered 11-05 14:10, above) never ran. The
+  HF cards for the base and the chat model need the package numbers on the released weights.
+- **Checkpoints** (same code, same docs, same prompts for both; no chat template on the chat model, so its rows read the
+  package's plain prompts):
+  - base SCI-1: `sci1_long3r_91a87ed`, step 749,500, 49.12B tokens, sha256 b403ad63.
+  - SCI-1 Chat (SFT): `sci1_decay_6e2a5f5/best_model.pt` (= sft1_final_step_753315.pt), step 753,315, 49.37B tokens
+    (+0.25B SFT), sha256 cd9eee84.
+- **(1) PKG-SUITE at package v0.3.1**: the cells of the 10B rows, `v14/pkg_suite.py --cells rxk,rewrite,told,recall --docs 100
+  --recall_docs 32768:20`: R×K 2k / 8k, rewrite 2k / 8k, told twin 2k / 8k, recall at 32k (needle / latest-wins / two-hop, free +
+  20-way). Bare vs package; MB held per 32k session.
+- **(2) BENCH-PKG as pre-registered on 11-05:**
+  - BABILong qa1-qa5 at 0k / 2k / 4k / 8k / 16k / 32k, 100 docs per cell: `v16/babilong_eval.py --package --chain`, with
+    bare = the model as is on the whole input, package, and the planner chain (TEXT, labelled).
+  - RULER-style (our generator, not the official suite): niah_single / niah_multikey / VT at 4k / 8k / 16k / 32k, 50 docs per
+    cell, seed 28000: `v14/ruler_pkg.py`, with bare, package and planner (VT), MB per row.
+- **Descriptive, no bar.** ≤ 32k (user cap 128k). Base vs chat on the same docs is reported as is; no verdict about SFT
+  is drawn from these cells. Reference block (published BABILong / RULER numbers) only with training tokens stated.
+- **Closest prior work:** BABILong (Kuratov et al. 2024) and RULER (Hsieh et al. 2024) for the tasks; kNN-LM / RETRO for
+  fetch plus read. Difference: an O(1)-state mind plus a text library fetched at question time, with MB stated per row.
+  This is measurement, not a new mechanism.
+- **Machine:** the 6000 (`~/Development/qllm_lib`, PACKAGE_BG = `~/Development/qllm_lib_data/bg_wordcounts_fineweb014.json`).
+  Logs: `logs/v14_{pkg_suite,ruler_pkg,babilong_pkg}_{rel,sft}_<hash>_<stamp>.{log,jsonl}`.
