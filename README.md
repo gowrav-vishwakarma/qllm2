@@ -384,9 +384,11 @@ learning rate; a half-clocked notebook did not replicate across seeds; at 100M e
 language model than Mamba-2 and Gated DeltaNet.
 
 **The mind + library package** (`v14`, `v16`): the O(1) state as the *mind* (rules, instructions) plus an outside *library*
-(exact text, fetched rows) read at query time. On SCI-1, a rule held only in the state applied to a fetched fact goes from
-0.01 alone to 0.67 with the library; recall at 32k from 0.05–0.30 to 0.85–1.00, at ~4 MB per session. BABILong single-fact
-and relation questions to 32k with no tuning on the benchmark.
+(exact text, fetched rows) read at query time. On an early SCI-1 checkpoint (9B tokens), a rule held only in the state and
+applied to a fetched fact goes from 0.01 alone to 0.67 with the library at 2k (0.42 at 8k); recall at 32k goes from 0.00–0.30
+to 0.85–1.00, holding ~4 MB per session (3.7 MB of state plus text and indexes). On a 103M body (600M tokens) the package carries
+BABILong single-fact and three-argument relation questions to 32k with no tuning on the benchmark (qa1 0.85 → 0.59, qa5 ~0.55);
+two- and three-fact composition stays ≤ 0.20. The package was not re-measured on the released 49B checkpoint.
 
 **Paper (draft):** [`v16/paper/main.pdf`](v16/paper/main.pdf) — *every* number above with its run hash, the failed bars stated
 as failed. Notebooks: [`v13_sempty/EXPERIMENTS_SEMPY.md`](v13_sempty/EXPERIMENTS_SEMPY.md) (body, long run, controls; see
