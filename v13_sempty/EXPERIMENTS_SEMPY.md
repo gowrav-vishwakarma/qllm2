@@ -8126,7 +8126,7 @@ t40 (needles, 40 trials x positions 0 / 0.5 / 1 x associations 1 / 4 / 8) at 32,
 target margin per task and distance; no verdict. Code: the CHECK's probe path (scripts/run_learning_probe.py, memory_probes/spread.py;
 the v13_sempty path is unchanged since 59c3cf5), run from the 6000 worktree qllm_sci1e @ 91a87ed.
 
-### sft1 FINAL (Mind 2026-11-24 11:3x IST; code 3b9b2156; supersedes the draft where they differ; user approved SFT as a separate release, Lead gives the GO)
+### sft1 FINAL (Mind 2026-11-24 11:02 IST; code 3b9b2156; supersedes the draft where they differ; user approved SFT as a separate release, Lead gives the GO)
 - **Box: the 6000** (user, 10:4x: "release base model and keep plan sft for later tonight (when 6000 will be free)"; free now).
 - **Code:** train.py --sft_share 0.8 / --sft_think_fraction 0 + v13_sempty/sft_mix.py (packed, assistant-only, EOS-separated,
   interleaved by kept volume, decontam v2 + probe-template 13-grams, base replay). Verified: test_sft_mix.py ALL PASS; share 0 =
