@@ -8173,3 +8173,14 @@ better than the rule at 8x (0.78; 0.58 even with the needle at the very start, 3
 - Chat script fix before release: `run_chat.py` double-counted the pending `<|im_end|>\n` in its history / penalty context
   (the model's input was always right); SAMPLES regenerated, text unchanged.
 - SFT (sft1) runs next on the 6000 as a separate release.
+
+## Release CHECKs (Lead's lead_relcheck on the 4090, 2026-11-24, ../qllm_sci1check @ 59c3cf5 = the milestone CHECK code; outputs committed by Mind)
+
+| save | tokens | s8 @8k (shift / affine) | skill @8k | t40 16k | clk2 8k / 32k-run @16k | HellaSwag acc / norm | ARC-e acc / norm | PIQA acc / norm |
+|---|---|---|---|---|---|---|---|---|
+| 48B (step 732,432) | 48.00B | 0.950 (0.925 / 0.975) | 0.680 | 0.922 | 0.92 / 0.58 | 0.3230 / 0.3698 | 0.5593 / 0.5059 | 0.6404 / 0.6268 |
+| 49B (step 747,691) | 49.00B | 0.961 (0.955 / 0.968) | 0.635 | 0.744 | 0.89 / 0.46 | 0.3200 / 0.3669 | 0.5522 / 0.5000 | 0.6458 / 0.6469 |
+| **release (step 749,500)** | **49.12B** | **0.964** (0.938 / 0.990) | 0.645 | **0.942** | 0.90 / 0.40 | 0.3200 / **0.3719** | **0.5593** / 0.5008 | 0.6376 / 0.6355 |
+
+Harness: scripts/mc_eval.py (fp32; parity with lm-eval 0.4.9.1 to 4 decimals on Pythia-160M, 59e9197), full validation sets, zero-shot.
+t40 16k moves 0.92 -> 0.74 -> 0.94 over three saves 0.07B apart: single-save noise on this cell is ~0.1 at 386M too.

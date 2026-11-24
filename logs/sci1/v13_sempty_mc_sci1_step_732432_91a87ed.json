@@ -1,0 +1,22 @@
+{
+ "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_long3r_91a87ed/step_732432_weights.pt",
+ "results": {
+  "hellaswag": {
+   "acc": 0.32304321848237405,
+   "acc_norm": 0.36984664409480184,
+   "n": 10042
+  },
+  "arc_easy": {
+   "acc": 0.5593434343434344,
+   "acc_norm": 0.5058922558922558,
+   "n": 2376
+  },
+  "piqa": {
+   "acc": 0.6403699673558215,
+   "acc_norm": 0.6267682263329706,
+   "n": 1838
+  }
+ },
+ "sec": 94.7,
+ "fp32": false
+}
