@@ -72,13 +72,13 @@ base = list(Base())
 orig_iter = sm.iter_sft_conversations
 sm.iter_sft_conversations = lambda dc, skip=0, tf=0.0, d=None, p=None: iter(convs * 50)
 sm.build_probe_index = lambda tok_, n=0: np.zeros(0, dtype=np.uint64)
-ds0 = sm.SFTMixDataset(Base(), tok, SEQ, 0.0, 43, {}, {})
+ds0 = sm.SFTMixDataset(Base(), tok, SEQ, 0.0, 43, {}, {}, parallel=False)
 out0 = list(ds0)
 same0 = len(out0) == len(base) and all(torch.equal(a['input_ids'], b['input_ids']) and torch.equal(a['labels'], b['labels'])
                                         and torch.all(a['loss_mask'] == 1) for a, b in zip(out0, base))
 print('3 share 0 == base stream (+ ones mask)', same0)
 ok &= same0
-ds1 = sm.SFTMixDataset(Base(), tok, SEQ, 1.0, 43, {}, {})
+ds1 = sm.SFTMixDataset(Base(), tok, SEQ, 1.0, 43, {}, {}, parallel=False)
 it1 = iter(ds1)
 first = [next(it1) for _ in range(5)]
 only_sft = all(float(w['loss_mask'].min()) == 0.0 for w in first)   # SFT windows have masked context; base windows are all ones

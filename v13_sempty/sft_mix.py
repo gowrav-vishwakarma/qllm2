@@ -219,33 +219,152 @@ def pack_windows(convs: Iterator[List[dict]], tokenizer, seq_len: int,
         yield emit()
 
 
+def _hit(idx: np.ndarray, h: np.ndarray) -> bool:
+    if not h.size or not idx.size:
+        return False
+    pos = np.searchsorted(idx, h)
+    pos[pos >= idx.size] = idx.size - 1
+    return bool((idx[pos] == h).any())
+
+
+def _sft_producer(sp: str, skip_rows: int, think_fraction: float, decontam_path: str, probe_index: np.ndarray, q) -> None:
+    """One smoltalk2-SFT split -> its kept conversations in order, with their raw row index (child process). A failure to open or
+    read the split (network) is RETRIED with backoff from the current raw row; only the true end of the split sends 'end', so a
+    transient error can never change the interleave."""
+    import time
+    from v7.data import _cap_keep, _should_filter_smoltalk, _smoltalk2_row_iter, _smoltalk2_split_cap, _think_keep
+    from v7.decontam import ngram_hashes
+    dec_idx = np.load(decontam_path) if decontam_path else np.zeros(0, dtype=np.uint64)
+    row, tries = skip_rows, 0
+    while True:
+        try:
+            for split, msgs in _smoltalk2_row_iter('SFT', splits=[sp], emit_source=True, skip_rows=row):
+                row += 1
+                tries = 0
+                if not _cap_keep(msgs, _smoltalk2_split_cap(split)) or not _think_keep(msgs, think_fraction):
+                    continue
+                if _should_filter_smoltalk(msgs, split, 'hard'):
+                    continue
+                h = ngram_hashes(_conv_text(msgs))                   # hashed once, checked against both indexes
+                if _hit(dec_idx, h):
+                    q.put(('drop', 'decon'))
+                    continue
+                if _hit(probe_index, h):
+                    q.put(('drop', 'probe'))
+                    continue
+                q.put(('conv', row, msgs))
+            break                                                    # the split's true end
+        except Exception as exc:  # noqa: BLE001 - network / hub errors: retry from the current row
+            tries += 1
+            wait = min(300, 5 * 2 ** min(tries, 6))
+            print(f'[sft_mix] producer {sp}: {type(exc).__name__} at raw row {row} (try {tries}); retry in {wait}s', flush=True)
+            time.sleep(wait)
+    q.put(('end',))
+
+
+class ParallelSFTStream:
+    """Kept smoltalk2-SFT conversations from one producer PROCESS per allowed split (started in the trainer process, before the
+    DataLoader worker forks, since a daemonic worker cannot have children), interleaved by a fixed-seed rng that draws a split per
+    KEPT conversation with probability proportional to its kept volume (bytes x cap; think splits 0 when think traces are off).
+    Cursor (in doc_counters): SFT_KEY = kept conversations consumed, '@draws' = rng draws, '@r:<split>' = raw row of the last
+    consumed conversation of that split, '@x:<split>' = the draw at which that split ran out. A resume replays the draws (cheap)
+    and restarts each producer at its raw row (skip_rows), with no re-filtering."""
+
+    def __init__(self, doc_counters: Dict, think_fraction: float = 0.0, decontam_path: str = '',
+                 probe_index: Optional[np.ndarray] = None, seed: int = 1234, qsize: int = 512):
+        import multiprocessing as mp
+        from v7.data import _smoltalk2_sft_splits, _smoltalk2_split_cap
+        self.dc = doc_counters
+        allowed = _smoltalk2_sft_splits()
+        raw = _split_weights(allowed)
+
+        def _is_think(sp: str) -> bool:
+            x = sp.lower()
+            return x.endswith('_think') and not x.endswith('no_think')
+        w = {sp: raw[sp] * _smoltalk2_split_cap(sp) * (0.0 if (think_fraction <= 0.0 and _is_think(sp)) else 1.0) for sp in allowed}
+        self.splits = [sp for sp in allowed if w[sp] > 0]
+        self.w = {sp: w[sp] for sp in self.splits}
+        tot = sum(self.w.values())
+        print('[sft_mix] interleave weights (kept-volume): ' + ', '.join(f'{sp} {self.w[sp] / tot:.3f}' for sp in self.splits),
+              flush=True)
+        self.rng = random.Random(seed)
+        self.active = list(self.splits)
+        draws = int(doc_counters.get(f'{SFT_KEY}@draws', 0))
+        for d in range(draws):                                          # replay the interleave to the cursor
+            sp = self.rng.choices(self.active, weights=[self.w[n] for n in self.active])[0]
+            if int(doc_counters.get(f'{SFT_KEY}@x:{sp}', -1)) == d:
+                self.active.remove(sp)
+        self.draws = draws
+        ctx = mp.get_context('fork')
+        pidx = probe_index if probe_index is not None else np.zeros(0, dtype=np.uint64)
+        self.qs, self.procs = {}, []
+        for sp in self.active:
+            q = ctx.Queue(maxsize=qsize)
+            pr = ctx.Process(target=_sft_producer, daemon=True,
+                             args=(sp, int(doc_counters.get(f'{SFT_KEY}@r:{sp}', 0)), think_fraction, decontam_path, pidx, q))
+            pr.start()
+            self.qs[sp], self.procs = q, self.procs + [pr]
+        print(f'[sft_mix] {len(self.procs)} producer processes; resume at draw {draws}, kept {doc_counters.get(SFT_KEY, 0)}',
+              flush=True)
+
+    def __iter__(self):
+        dc = self.dc
+        while self.active:
+            sp = self.rng.choices(self.active, weights=[self.w[n] for n in self.active])[0]
+            d = self.draws
+            self.draws += 1
+            dc[f'{SFT_KEY}@draws'] = self.draws
+            while True:
+                item = self.qs[sp].get()
+                if item[0] == 'drop':
+                    dc[f'{SFT_KEY}#{item[1]}'] = dc.get(f'{SFT_KEY}#{item[1]}', 0) + 1
+                    continue
+                break
+            if item[0] == 'end':
+                dc[f'{SFT_KEY}@x:{sp}'] = d
+                self.active.remove(sp)
+                continue
+            _, row, msgs = item
+            dc[f'{SFT_KEY}@r:{sp}'] = row
+            dc[SFT_KEY] = dc.get(SFT_KEY, 0) + 1
+            yield msgs
+
+
 class SFTMixDataset(IterableDataset):
     """Windows: SFT with probability ``sft_share`` (deterministic), else the base-mix stream's next window (replay)."""
 
     def __init__(self, base_ds, tokenizer, seq_len: int, sft_share: float, seed: int,
                  doc_counters: Dict, token_counters: Dict, think_fraction: float = 0.0, decontam_path: str = '',
-                 probe_docs: int = 3000):
+                 probe_docs: int = 3000, parallel: bool = True):
         super().__init__()
         self.base_ds, self.tok, self.seq_len = base_ds, tokenizer, seq_len
         self.share, self.seed = float(sft_share), int(seed)
         self.doc_counters, self.token_counters = doc_counters, token_counters
         self.think_fraction, self.decontam_path, self.probe_docs = think_fraction, decontam_path, probe_docs
         self.skip = int(doc_counters.get(SFT_KEY, 0))
+        self.stream = None
+        if parallel:
+            probe_index = build_probe_index(tokenizer, probe_docs)
+            print(f'[sft_mix] probe 13-grams {probe_index.size:,} | decontam {decontam_path or "off"}', flush=True)
+            self.stream = ParallelSFTStream(doc_counters, think_fraction, decontam_path, probe_index)
         # pass-throughs the trainer reads from the pretrain dataset
         for attr in ('pretrain_cached',):
             if hasattr(base_ds, attr):
                 setattr(self, attr, getattr(base_ds, attr))
 
     def __iter__(self):
-        decontam = None
-        if self.decontam_path:
-            from v7.decontam import DecontamFilter
-            decontam = DecontamFilter(self.decontam_path)
-        probe_index = build_probe_index(self.tok, self.probe_docs)
-        print(f'[sft_mix] share {self.share} | skip {self.skip} kept convs | decontam {"on " + decontam.sha[:8] if decontam else "off"}'
-              f' | probe 13-grams {probe_index.size:,}', flush=True)
-        sft = pack_windows(iter_sft_conversations(self.doc_counters, self.skip, self.think_fraction, decontam, probe_index),
-                           self.tok, self.seq_len, self.token_counters)
+        if self.stream is not None:
+            print(f'[sft_mix] share {self.share} | parallel producers | resume kept {self.skip}', flush=True)
+            convs = iter(self.stream)
+        else:                                       # sequential reference path (tests, small checks)
+            decontam = None
+            if self.decontam_path:
+                from v7.decontam import DecontamFilter
+                decontam = DecontamFilter(self.decontam_path)
+            probe_index = build_probe_index(self.tok, self.probe_docs)
+            print(f'[sft_mix] share {self.share} | sequential | skip {self.skip} kept convs', flush=True)
+            convs = iter_sft_conversations(self.doc_counters, self.skip, self.think_fraction, decontam, probe_index)
+        sft = pack_windows(convs, self.tok, self.seq_len, self.token_counters)
         base = iter(self.base_ds)
         rng = random.Random(self.seed * 1_000_003 + self.skip)
         while True:
