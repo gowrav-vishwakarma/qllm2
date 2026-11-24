@@ -8225,7 +8225,7 @@ of the main dir (kept best, latest, stable_final, step_751555, step_752318).
 **sft1 decay DONE 17:25 IST** (step 753,315, 49.369B; exit 0, attempts 1). The eval started 42 s later on a freed GPU (the
 fe01c6cd fix holding in the real run). Candidate = checkpoints_v13_sempty/sci1_decay_6e2a5f5/best_model.pt (step 753,315).
 
-**sft1 GUARDS (Mind 18:2x IST 11-24; vs the release CHECK row = step 749,500, the SFT's own start, the strict reading of "49B").**
+**sft1 GUARDS (Mind 17:56 IST 11-24; vs the release CHECK row = step 749,500, the SFT's own start, the strict reading of "49B").**
 Same scoring code for both rows (release values reproduce the table; clk2 = free_s at 8.0+c4, as the table). MC = scripts/mc_eval.py
 fp32 on both (the 6000 CHECK's MC ran bf16, 0.3781 / 0.5745 / 0.6545, superseded by the fp32 rerun
 logs/sci1/v13_sempty_mc_sci1_sft1_753315_6e2a5f5_fp32.json). Told tuple: same box (the 6000), same command, both checkpoints.
@@ -8248,7 +8248,7 @@ Reported, no bar: skill @8k 0.645 -> 0.905; clk2 32k-run @16k 0.40 -> 0.64; t40 
 0.77, P_fu 0.02 -> 0.01. Caveat: one save, one seed; the stage ends with an LR decay (2e-4 -> 0), which alone lifts the in-context
 probes at every earlier SCI-1 decay, so the rises are NOT attributed to the SFT data.
 
-**Chat judgment, measurement detail (fixed BEFORE the numbers, 18:2x IST):** the human-eval dump caps answers at 60-120 tokens, so
+**Chat judgment, measurement detail (fixed BEFORE the numbers, 17:56 IST):** the human-eval dump caps answers at 60-120 tokens, so
 its stop rate (base 0.60 / 0.55, SFT 0.55 / 0.50, greedy / sampled) counts truncations of answers still going, not failures to stop;
 it cannot judge the >= 0.95 bar. The bar is read from v13_sempty/tmp/sft1_stoprate.py (be58fac2): stop = <|im_end|> within 768 new
 tokens with no <|endoftext|> / <|im_start|> before it; 60 prompts (the dump's 20 chat-format prompts + 40 natural chat questions in
