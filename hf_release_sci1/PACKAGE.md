@@ -153,11 +153,12 @@ The fetch finds the right row on every niah document (path text2). What fails is
 numbers cut; a word after "is:" is often lost because the model writes ":" and a newline, which stops the answer.
 
 **BABILong** (qa1-qa5, 100 documents per cell, BABILong's scoring):
+- Each cell: bare → package (planner), 100 documents.
 - Bare = the model as is on the whole input.
-- Package = fetch + read, with the repo's multi-sentence hops.
-- Planner = a TEXT chain.
+- Package = fetch + read, with the repo's multi-sentence hops (not in this port).
+- Planner = a TEXT chain of package answers.
 
-Each cell: bare → package (planner), 100 documents. Bare = the model as is on the whole input. Package = fetch + read, with the repo's multi-sentence hops (not in this port). Planner = a TEXT chain of package answers. Mind state 3.67 MB at every length; library text 0.06 MB at 32k (no F2 address is used here).
+Mind state 3.67 MB at every length; library text 0.06 MB at 32k (no F2 address is used here).
 
 | task | 0k | 2k | 4k | 8k | 16k | 32k |
 |---|---|---|---|---|---|---|
@@ -171,7 +172,7 @@ Each cell: bare → package (planner), 100 documents. Bare = the model as is on 
 - The fetch is not the main loss. On 2k-32k the answer word is in the fetched rows on 0.91 of qa1 docs and 0.79 of qa5 docs, yet the package is right on 0.21 and 0.27. (That is an upper bound for the fetch: the word may sit in the wrong row.) The 386M model often misreads several fetched rows.
 - At 0k (the facts only, no haystack) the package does not help: 0.00-0.16 vs bare 0.00-0.20.
 
-Runs: `logs/v14_babilong_pkg_rel_*` in the research repo (code f1bba05; the Chat 32k cell ran on code e337eacc, same runner).
+Runs: `logs/v14_babilong_pkg_rel_*` in the research repo (code f1bba05).
 
 
 ## The background word counts

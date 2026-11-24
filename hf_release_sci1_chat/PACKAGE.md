@@ -145,11 +145,12 @@ The fetch finds the right row on every niah document (path text2). What fails is
 numbers cut; a word after "is:" is often lost because the model writes ":" and a newline, which stops the answer.
 
 **BABILong** (qa1-qa5, 100 documents per cell, BABILong's scoring):
+- Each cell: bare → package (planner), 100 documents.
 - Bare = the model as is on the whole input.
-- Package = fetch + read, with the repo's multi-sentence hops.
-- Planner = a TEXT chain.
+- Package = fetch + read, with the repo's multi-sentence hops (not in this port).
+- Planner = a TEXT chain of package answers.
 
-Each cell: bare → package (planner), 100 documents. Bare = the model as is on the whole input. Package = fetch + read, with the repo's multi-sentence hops (not in this port). Planner = a TEXT chain of package answers. Mind state 3.67 MB at every length; library text 0.06 MB at 32k (no F2 address is used here).
+Mind state 3.67 MB at every length; library text 0.06 MB at 32k (no F2 address is used here).
 
 | task | 0k | 2k | 4k | 8k | 16k | 32k |
 |---|---|---|---|---|---|---|

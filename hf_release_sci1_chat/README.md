@@ -86,6 +86,61 @@ the rises to the chat data.
 * **All 60 prompts, base vs SFT answers side by side, copied exactly as generated:
   [BASE_VS_SFT.md](BASE_VS_SFT.md).**
 
+## With the package: long texts
+
+On its own the model holds a fixed 3.67 MB state, so over a long text it keeps rules and gist but loses most
+exact facts. The **package** adds a small text library of the same text. At question time the library fetches the
+sentence(s) the question is about, and the model reads them next to the question on its state. The state stays
+3.67 MB; the library grows with the text: about 0.4 MB of text and word index at 32k, plus a 33.8 MB
+int8 address that is used only when the text match misses.
+
+Measured on these weights, model alone ("bare") → with the package. Full tables, method and caveats are in
+**[PACKAGE.md](PACKAGE.md)**.
+
+| test (documents per cell) | bare | package |
+|--|--|--|
+| recall at 32k, free answer: needle among 8 / latest of several updates / two-hop (20) | 0.05 / 0.25 / 0.05 | **1.00 / 1.00 / 0.90** |
+| a rule shown earlier applied to a fetched value (R × K), 2k / 8k (100) | 0.00 / 0.00 | **0.97 / 0.85** |
+| a told unit rule compiled next to the question, 2k / 8k (100) | 0.03 / 0.00 | **0.96 / 0.95** |
+| RULER-style needle, single / multi-key, 32k (50; our generator, not the official suite) | 0.02 / 0.00 | 0.20 / 0.30 |
+| BABILong qa1 (one supporting fact), 2k / 32k (100) | 0.10 / 0.00 | 0.52 / 0.12 |
+| BABILong qa5 (three-argument relations), 2k / 32k (100) | 0.22 / 0.06 | 0.44 / 0.29 |
+
+* **The fetch is good; the read is the weak part.** On the needle tests the library fetched the right sentence on
+  every document. The model then garbles uuids, cuts long numbers, or stops after writing ":" and a newline. On
+  BABILong the answer word was in the fetched rows on 0.91 (qa1) / 0.79 (qa5) of documents, but combining
+  several rows is where the 386M model fails. qa3 / qa4 (three facts, two-argument relations) stay ≤ 0.12.
+* **What this folder's runner does:** `run_package.py` has the fetch-and-read path (text matches, then the
+  address). R × K, the held-rule "twin", BABILong's multi-sentence hops and the planner chain are research-repo
+  paths (`v16/package.py`, `v14/`) and are **not** in this port. The port matches the repo on 20 / 20 test items,
+  field by field ([PACKAGE.md](PACKAGE.md), "Parity").
+* **This chat model adds details:** on a short note it may invent a pet's name or a year next to the right fact.
+  Check answers against the text.
+
+## SCI-1 Chat vs SCI-1 base, side by side
+
+Same weights as published, same scoring code. Higher is better unless marked.
+
+| | SCI-1 base | SCI-1 Chat |
+|--|--|--|
+| rule from 8 examples, spread over 8k (2×) | 0.964 | **0.995** |
+| exact recall 16k back (4×) | **0.942** | 0.908 |
+| HellaSwag / ARC-easy / PIQA | 0.372 / 0.559 / 0.636 | **0.380 / 0.575 / 0.651** |
+| ends its answer with `<|im_end|>` (60 × 3 decodes) | 97.8 % | 97.8 % |
+| blind A/B, 60 chat prompts (judge: a larger LM) | 8 wins | **24 wins** (14 ties, 14 both bad) |
+| BABILong qa1-qa5, short input (0k), model alone | 0.00 - 0.20 | **0.18 - 0.62** |
+| BABILong at 32k with the package: qa1 / qa2 / qa3 / qa4 / qa5 | 0.10 / 0.13 / 0.06 / 0.01 / 0.18 | 0.12 / 0.09 / 0.01 / 0.01 / **0.29** |
+| R × K with the package, 2k / 8k | 0.97 / 0.78 | 0.97 / **0.85** |
+| RULER-style needle with the package, 8k single / multi-key | **0.44 / 0.62** | 0.38 / 0.40 |
+| RULER-style needle with the package, 32k single / multi-key | **0.32 / 0.40** | 0.20 / 0.30 |
+| recall at 32k with the package, two-hop free / 20-way | **0.95 / 1.00** | 0.90 / 0.95 |
+| state per conversation | 3.67 MB | 3.67 MB |
+
+Short version: Chat answers short questions much better and keeps the long-range rule skill; the base reads raw
+values (numbers, uuids, needle words) out of a fetched sentence more reliably, so for pure lookup over long
+documents the base with the package is the better choice. One run each, no seeds repeated; differences of a few
+hundredths on 50-100 documents are within noise.
+
 ## Selected examples
 
 Picked from the A/B set (greedy, no repetition penalty; "..." marks cuts): they are the better answers, not
@@ -117,6 +172,8 @@ python run_complete.py --prompt "In 1923, the University of"            # sample
 python run_complete.py --prompt "The capital of France is" --temperature 0   # greedy
 python run_chat.py                                                      # interactive ChatML chat
 python run_chat.py --prompt "What is the capital of France?"            # one turn, then exit
+python run_package.py --demo                                            # 32k needle: model alone vs the package
+python run_package.py --context notes.txt --question "..." --form chat  # ask your own long text
 bash verify.sh                                                          # end-to-end smoke check
 ```
 
@@ -196,6 +253,9 @@ decoding.
 | `run_complete.py`, `run_chat.py` | text continuation and multi-turn ChatML chat |
 | `SAMPLES.md`, `make_samples.py` | sample generations (greedy and sampled) and the script that made them |
 | `BASE_VS_SFT.md` | the 60 A/B prompts: base and SFT answers side by side |
+| `package_lite.py`, `run_package.py` | the package (text library + fetch + read) and its runner: `--mode bare / package / both` |
+| `PACKAGE.md` | how the package works, its measured results (suite, RULER-style, BABILong), memory and parity |
+| `bg_wordcounts_fineweb014.json` | background word counts used by one fetch step (`text4`); derived from FineWeb, ODC-By 1.0 |
 | `PARITY.md`, `test_parity.py` | parity of this file against the original qllm2 model (needs the qllm2 repo); passes on these SFT weights |
 | `export_weights.py` | how `sci1_chat_386m.pt` was made from the training checkpoint |
 | `verify.sh` | end-to-end smoke test |
@@ -223,7 +283,6 @@ Decode cost and memory do not grow with context. bf16 weights change the logits
 parity-tested setting.
 
 ## Limitations
-## Limitations
 
 * A small research model. Its answers are fluent but often wrong in the details.
 * **Arithmetic fails:** in the A/B set it got "15 % of 80", a concentration, and cell doubling wrong.
@@ -233,6 +292,8 @@ parity-tested setting.
   it answered as if it were the user.
 * **Prose facts are short-range** (from the base): a fact stated in prose and asked in natural words is recalled
   near chance beyond ~2k tokens; the long-range recall above is for a literal key next to its value.
+* **With the package**, long-text lookup works when the question shares a key or phrase with the answer
+  sentence; reading the value out is the weak step (uuids, long numbers), and multi-fact BABILong tasks stay low.
 * No tool calling, no multilingual chat, no reasoning traces (left out of SFT on purpose).
 * `modeling_pam2.py` supports only this checkpoint's configuration.
 

@@ -136,6 +136,36 @@ Plainly:
 * Rule scores at this size vary a lot between seeds (0.28–0.84 on one cell),
   so we show every seed we ran.
 
+## With the package: long texts
+
+On its own the model holds a fixed 3.67 MB state, so over a long text it keeps rules and gist but loses most
+exact facts. The **package** adds a small text library of the same text. At question time the library fetches the
+sentence(s) the question is about, and the model reads them next to the question on its state. The state stays
+3.67 MB; the library grows with the text: about 0.4 MB of text and word index at 32k, plus a 33.8 MB
+int8 address that is used only when the text match misses.
+
+Measured on these weights, model alone ("bare") → with the package. Full tables, method and caveats are in
+**[PACKAGE.md](PACKAGE.md)**; the chat model's numbers and a base-vs-Chat table are on the
+[SCI-1 Chat card](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m-chat).
+
+| test (documents per cell) | bare | package |
+|--|--|--|
+| recall at 32k, free answer: needle among 8 / latest of several updates / two-hop (20) | 0.05 / 0.25 / 0.05 | **1.00 / 1.00 / 0.95** |
+| a rule shown earlier applied to a fetched value (R × K), 2k / 8k (100) | 0.00 / 0.00 | **0.97 / 0.78** |
+| a told unit rule compiled next to the question, 2k / 8k (100) | 0.04 / 0.00 | **0.93 / 0.92** |
+| RULER-style needle, single / multi-key, 8k (50; our generator, not the official suite) | 0.00 / 0.00 | 0.44 / 0.62 |
+| RULER-style needle, single / multi-key, 32k (50) | 0.02 / 0.00 | 0.32 / 0.40 |
+| BABILong qa1 (one supporting fact), 2k / 32k (100) | 0.07 / 0.00 | 0.38 / 0.10 |
+| BABILong qa5 (three-argument relations), 2k / 32k (100) | 0.25 / 0.00 | 0.34 / 0.18 |
+
+* **The fetch is good; the read is the weak part.** On the needle tests the library fetched the right sentence on
+  every document; the model then garbles uuids, cuts long numbers, or stops after writing ":" and a newline. On
+  BABILong the answer word was in the fetched rows on 0.91 (qa1) / 0.79 (qa5) of documents; combining several rows
+  is where the 386M model fails. qa3 / qa4 stay ≤ 0.16.
+* **What this folder's runner does:** `run_package.py` has the fetch-and-read path. R × K, the held-rule "twin",
+  BABILong's multi-sentence hops and the planner chain are research-repo paths and are **not** in this port. The
+  port matches the repo on 20 / 20 test items, field by field.
+
 ## Selected examples
 
 Picked by hand from the generations in `SAMPLES.md` (all made by
@@ -173,6 +203,8 @@ python run_complete.py --prompt "In 1923, the University of"            # sample
 python run_complete.py --prompt "The capital of France is" --temperature 0   # greedy
 python run_chat.py                                                      # interactive ChatML chat
 python run_chat.py --prompt "What is the capital of France?"            # one turn, then exit
+python run_package.py --demo                                            # 32k needle: model alone vs the package
+python run_package.py --context notes.txt --question "..."              # ask your own long text
 bash verify.sh                                                          # end-to-end smoke check
 ```
 
@@ -252,6 +284,9 @@ decoding.
 | `run_complete.py`, `run_chat.py` | text continuation and multi-turn ChatML chat |
 | `SAMPLES.md`, `make_samples.py` | sample generations (greedy and sampled) and the script that made them |
 | `PARITY.md`, `test_parity.py` | parity of this file against the original qllm2 model (needs the qllm2 repo) |
+| `package_lite.py`, `run_package.py` | the package (text library + fetch + read) and its runner: `--mode bare / package / both` |
+| `PACKAGE.md` | how the package works, its measured results (suite, RULER-style, BABILong), memory and parity |
+| `bg_wordcounts_fineweb014.json` | background word counts used by one fetch step (`text4`); derived from FineWeb, ODC-By 1.0 |
 | `export_weights.py` | how `sci1_386m_49b.pt` was made from the training checkpoint |
 | `verify.sh` | end-to-end smoke test |
 
@@ -296,6 +331,8 @@ parity-tested setting.
   trained rule formats (reverse a word, uppercase, first letter, translate),
   greedy decoding mostly fails; in our quick try, 1 of 7 was right
   (`3 -> 7, 5 -> 11, ... 6 ->` gives `13`).
+* **With the package**, long-text lookup works when the question shares a key or phrase with the answer
+  sentence; reading the value out is the weak step, and multi-fact BABILong tasks stay low (≤ 0.16 on qa3 / qa4).
 * `modeling_pam2.py` supports only this checkpoint's configuration; other qllm2
   options raise `NotImplementedError`.
 
