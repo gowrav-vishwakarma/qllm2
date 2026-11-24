@@ -43,8 +43,8 @@ Status: `[ ]` open · `[~]` running · `[x]` done and in the paper. Owner in bra
 - [x] Complex vs real on record (Sept 2026, recipe caveat) (§1 footnote).
 
 ## C. Paper housekeeping
-- [ ] Co-authors and affiliations (title block). [user]
-- [ ] Full name of the co-author of arXiv:2604.05030 in refs.bib (left as surname only, not guessed). [user]
+- [x] Co-authors: none on this paper (user, 2026-11-24: the co-author of arXiv:2604.05030 did not work on this part; the title block lists the author only).
+- [x] The citation of arXiv:2604.05030 keeps its published author list as it is (user, 2026-11-24: do not fill in the co-author's name).
 - [ ] Public repository URL + Hugging Face release tag (§Reproducibility). [user]
 - [ ] Mind's number check of data/numbers.json against the notebooks; Library's check of §5, §7.3-7.4, §8. [Mind, Library]
 - [ ] Architecture figure as a drawing (today: a boxed summary, Fig 1 in §3). [Lead]
