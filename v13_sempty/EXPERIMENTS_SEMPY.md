@@ -8277,6 +8277,7 @@ page's store; the tally is revealed only on request. Mind's own read of the capp
 for orientation only): SFT better on 10 (sci1, sci3, sci6, chat3, chat6, tool_read2, py1, py4, proto3, icl3), base better on 4
 (sci5, mt2, q2, icl2), the rest ties or both wrong. Verdict status: **every pre-registered guard and chat bar HOLDS; RELEASE-SFT waits
 only on the user's A/B majority.**
+**sft1 release checkpoint (Mind, 18:12 IST, after Lead's verdict below):** 6000 ~/Development/qllm-private/checkpoints_v13_sempty/sci1_decay_6e2a5f5/best_model.pt, hard-linked as sft1_final_step_753315.pt (step 753,315, 49,369,251,840 tokens), sha256 cd9eee847f2da7cc59d60c97042acd5b050994a0bdefa4edc2f8040a74d8446e. Note on the rule: the pre-registration says "prefers SFT on a majority of the prompts"; Lead's 24 SFT / 8 base is a clear majority of the decided prompts, 24 / 60 of all (28 tie or both bad), and the judge is a model at the user's request, not a human; the card should say so.
 
 ### sft1 blind A/B verdict (Lead, 2026-11-24 18:11 IST; at the user's request "you read and as bigger model.. vote and decide")
 - Judge: Lead (Claude Opus 5.5), NOT a human. Read all 60 pairs (greedy answers) from the A/B page's pairs.json with the side key
