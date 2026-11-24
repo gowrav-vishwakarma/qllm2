@@ -7995,8 +7995,8 @@ writes them here. All s8 numbers are 3-save means (14,500 / 15,000 / end); t40 =
 | split (3 of 6 heads clocked) | 4090 / 43 | 0.473 | 0.695 | .87/.77/.63/.38 | .71/.70/.68/.57 | .844/.742/.692 | .271/.466/.610 | 3.4248 |
 | gdn | 4090 / 43 | 0.408 | 0.638 | .90/.51/.33/.14 | .97/.89/.82/.68 | .681/.458/.325 | .275/.440/.594 | 3.385 |
 | pam | 4090 / 44 | 0.620 | 0.817 | 1.0/.98/.92/.69 | .72/.71/.66/.55 | .867/.839/.786 | .274/.466/.591 | 3.4397 |
-| pam | 6000 / 45 | 0.284 | 0.474 | .56/.42/.27/.13 | .62/.63/.57/.44 | .992/.947/.872 | .272/.461/.592 | 3.4206 |
-| nochrono | 6000 / 45 | 0.414 | 0.608 | .80/.65/.49/.25 | .73/.66/.63/.57 | .622/.536/.492 | .275/.459/.601 | 3.4253 |
+| pam | 6000 / 45 | 0.284 | 0.474 | .56/.42/.27/.13 | .62/.63/.56/.44 | .992/.947/.872 | .272/.461/.592 | 3.4253 |
+| nochrono | 6000 / 45 | 0.414 | 0.608 | .80/.65/.49/.25 | .73/.66/.63/.57 | .622/.536/.492 | .275/.459/.601 | 3.4206 |
 | split | 6000 / 45 | 0.842 | 0.950 | 1.0/1.0/.99/.92 | .97/.92/.89/.76 | .489/.428/.408 | .274/.465/.589 | 3.4264 |
 
 split_s44 is INCOMPLETE (stopped at step 8,350 / 13,733 by the 11-19 reboot and the pause; latest.pt kept, no readouts);
@@ -8030,7 +8030,7 @@ project resumes: test a lower constant LR on the release body before changing th
 ### The main run (SCI-1 386M) at the pause
 
 Segment 3r (= 3c's mix) ran from 45.875B to **step 749,500 = 49.119B tokens**, stopped at its own save on 2026-11-20 11:11 IST.
-Guard on 3r: 46.0B break (the 3f residue, 0.13B in) -> 46.14B pass -> 46.40B pass -> 46.86B clear -> 47B clear (8k P_fu 0.00,
+Guard on 3r: 46.0B break (the 3f residue, 0.13B in) -> 46.14B pass -> 46.40B pass -> 46.89B clear (715,500, CPU n 40) -> 47B clear (8k P_fu 0.00,
 scope_fu 0.01; 2k scope_fu 0.50). Val (trainer set) 2.9946 @ 748,000 (wiki 3.533; best 19.48 ppl earlier). No dry source, no traceback.
 Backups (4090 d_drive, from_6000/checkpoints_v13_sempty/sci1_long3r_91a87ed/): final_step_749500.pt FULL (resumable; sha b403ad63),
 step_732432_weights.pt (48B; b821d45e), step_747691_weights.pt (49B; 763555ba), step_701914.pt / step_717173.pt (46B / 47B weights).
@@ -8040,3 +8040,21 @@ Not backed up: the 100M arm checkpoints of qllm_twins on the 6000 (scores are in
 ### Pre-registered but NOT run (paused): gfd (gate-frozen decay), plavg (plateau average), gdn_srope (GDN + Selective RoPE, the
 closest prior work to the clock, arXiv:2511.17388; required before any novelty claim for the clock), b386 (386M baselines),
 BIND-LURE Step 0 / dual-phase binding (v14). Rerun commands are in their sections and in EXPERIMENT_INDEX.md.
+
+### Mind's audit of the PAUSE RECORD (2026-11-24 10:4x IST; recomputed from the raw logs/wio and logs/v14_scope_c_* files)
+- Every trio row, the counts and the Set B table reproduce from the raw files. **Fixed in place:** (1) pam s45 and nochrono s45 val
+  were swapped: the decay logs read pam_s45 **3.4253**, nochrono_s45 **3.4206** (also fixed in v16/paper/data/numbers.json and the
+  seed45_trio lineage row); (2) the 3r guard point "46.86B" is snapshot step 715,500 = **46.89B** (CPU guard, n 40); (3) pam s45
+  affine @4k .56 (was .57, rounding of 0.565); (4) the split_geom lineage row still said "seed 44 pending" -> s45 result added.
+- **3r resume (was unrecorded):** resumed 2026-11-19 20:23 IST (14:53Z) from seg3r_pause.pt = step 721,000 (47.251B) by
+  sci1_resume_after_setb.sh after Set B ended; [resume] restored step, cursors, optimizer and the constant-LR schedule (no warm-up);
+  log logs/v13_sempty_sci1_long3r_91a87ed_20261119_1453.log; ran to 749,500 with 0 tracebacks. Pause length 23.6 h. After the
+  resume no guard snapshots were taken (the user's hold of 11-19 16:5x IST came first), so the 3r guard series ends at 47B.
+- **Per-arm spread over seeds (far mix, ~103M, 1.0B; s43 / s44 / s45 where they exist):** pam: s8 @8k 0.343 / 0.620 / 0.284 (mean
+  0.416, range 0.336), t40 16k 0.803 / 0.786 / 0.872 (mean 0.820, range 0.086), val 3.4248 / 3.4397 / 3.4253; nochrono: s8 @8k
+  0.427 / - / 0.414, t40 16k 0.353 / - / 0.492, val 3.4267 / - / 3.4206; split: s8 @8k 0.473 / incomplete / 0.842, t40 16k 0.692 / - /
+  0.408, val 3.4248 / - / 3.4264. Recall (t40 16k) varies 0.09 across pam's seeds; rules (s8) 0.34.
+- **Margin finding, now with 3 pam seeds** (shift M0 / M4k / M8k, 3-save means): s43 +1.41 / -0.27 / -1.11; s44 +5.05 / +2.35 / +0.82;
+  s45 +0.53 / -0.95 / -1.64. The seed spread sits at distance 0 already: circuit strength at 1B (acquisition), not survival over
+  filler. nochrono s43 / s45: +2.20 / +1.75 at M0. split s43 / s45: +1.91 / **+10.53** (s45's split formed a very strong shift circuit,
+  M8k +3.99, while its needles fell to 0.41: one body can land in either regime per seed).

@@ -266,3 +266,26 @@ pre-registered d4f33c0; smoke 5897f104).
 is deleted only after its json parses. Never delete on an empty == empty checksum after a dropped link (812463b9); honour skip
 markers and slim snapshots on the remote (18cd8698). Launchers fail closed when the launch guard is missing (89aff04); free-space
 gate before launch (3c7ccb9); a live log tracked in git makes the tree dirty and blocks guarded launches (a29ed174).
+
+## 2026-11-18 .. 11-24 (seeds, the clock vs prior work, the pause; full write-ups in v13_sempty/EXPERIMENTS_SEMPY.md)
+
+- **Seed noise dominates the rule probe at 100M / 1B.** pam, same box / data / recipe, three seeds: s8 @8k 0.343 / 0.620 / 0.284
+  (range 0.34), while t40 16k is 0.803 / 0.786 / 0.872 (range 0.09) and val moves 0.015. The spread is already at distance 0 (shift
+  margin 1.41 / 5.05 / 0.53): the rule circuit's STRENGTH at 1B differs by seed (acquisition timing; s44's shift @8k jumped 0.38 -> 0.67
+  inside the decay window), not its survival over filler. Every single-seed s8 verdict (wio claim, "the clock costs rules", split's
+  rule lead, Set A CLOCK / OURS) is UNDETERMINED (5d2daa2a, c999c141). Cross-box (Ada vs Blackwell) moves s8 D by 0.096 on one pair.
+- **What replicates: the clock's recall past the trained length.** t40 16k pam - nochrono +0.450 (s43) and +0.380 (s45): 2 of 2
+  within-box trios. Without far docs (6000, one box): pam 0.853 vs nochrono 0.633 vs GDN 0.247.
+- **Half-clocked heads (CHRONO_HEADS=3, Library 887aaf15):** s43 0.473 / 0.692 (s8 / t40 16k), s45 0.842 / 0.408: it flips the trade
+  per seed instead of fixing it; keeps-recall 1 of 2. Knockout (s43): turning off the clocked heads kills even adjacent rules
+  (shift @0 0.93 -> 0.007), turning off the phase-free heads hurts needles more (0.69 -> 0.31): a joint code, not two modules (df363029).
+- **Closest prior work: Selective RoPE (arXiv:2511.17388)** adds input-dependent cumulative rotation to GLA / GDN. Its form: free
+  per-channel increments, conv + gate, random init. Ours: one positive rate per head warping RoPE, exact RoPE at init, dilatable,
+  shared readers. The idea is theirs first; the GDN + Selective RoPE baseline (gdn_srope, pre-registered d07ce871) is required before
+  any novelty claim for the clock (699700ab).
+- **Constant-LR swings (Set B, 4 x 0.4B from one 100M parent):** at LR 1.2e-3 the 0.8 % far-share arm swung (P_fu 0.53), the 1.6 %
+  arm nearly; at 6e-4 neither swung. UNCLEAR by the letter, leaning LR-driven; share-driven not supported.
+- **Infrastructure:** the launcher self-delete trap deleted the launch guard on every refusal (fixed b558dd89); train.py
+  --dump_batches (data shas across boxes, 3eacafbb); PYTORCH_CUDA_ALLOC_CONF=expandable_segments for side-by-side arms on the 96 GB card.
+- **SCI-1 386M at the pause:** 3r (3c's mix) from 45.875B to 49.119B (step 749,500), guard clean from 46.14B on; 47B CHECK s8 0.958,
+  t40 16k 0.836, HS / ARC-e / PIQA 0.320 / 0.561 / 0.649.
