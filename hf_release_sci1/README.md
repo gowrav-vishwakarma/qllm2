@@ -96,13 +96,17 @@ words (see Limitations).
 
 | | HellaSwag | ARC-easy | PIQA |
 |--|--|--|--|
-| **SCI-1, 386M, 49B tokens** | 0.320 (norm 0.372) | 0.559 | 0.638 |
+| **SCI-1, 386M, 49B tokens** | 0.372 | 0.559 | 0.636 |
 | Pythia-410M at 10.5B tokens (reference) | 0.297 | 0.434 | 0.607 |
 | Pythia-410M final, 300B tokens (reference) | 0.406 | 0.519 | 0.672 |
 
-Accuracy (HellaSwag also length-normalised), full validation/test sets
-(10,042 / 2,376 / 1,838). Pythia rows are published numbers on a different
-data mix — a reference, not a controlled comparison.
+Zero-shot, full validation/test sets (10,042 / 2,376 / 1,838), one metric for
+every row: HellaSwag and PIQA length-normalised accuracy (acc_norm), ARC-easy
+plain accuracy. Plain accuracy for SCI-1: HellaSwag 0.320, PIQA 0.638. Harness:
+`scripts/mc_eval.py`, matching lm-eval 0.4.9.1 to 4 decimals. Pythia rows are
+measured on the same harness but trained on different data (the Pile): a
+reference, not a controlled comparison. SCI-1 is above Pythia-410M at 10.5B
+tokens on all three, and above its final 300B checkpoint on ARC-easy only.
 
 ## Against Transformer++ and Mamba-2 (same recipe, ~103M, equal data)
 

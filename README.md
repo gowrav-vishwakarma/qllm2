@@ -369,11 +369,11 @@ synthetic rule documents), decontaminated with 13-grams against every reported b
 - What does not reach that far: a fact written in prose and asked in natural words (0.47 at 64 tokens, near chance from 2k),
   and binding a fact to its owner against a same-type distractor (lure wins as often as the answer).
 
-**Standard benchmarks** (zero-shot accuracy, full sets; HellaSwag also length-normalised):
+**Standard benchmarks** (zero-shot, full sets; every row HellaSwag / PIQA acc_norm, ARC-easy acc; harness `scripts/mc_eval.py` = lm-eval 0.4.9.1 to 4 decimals):
 
 | model | tokens | HellaSwag | ARC-easy | PIQA |
 |--|--|--|--|--|
-| **SCI-1 386M (PAM-2)** | 49.1B | 0.320 (0.372) | 0.559 | 0.638 |
+| **SCI-1 386M (PAM-2)** | 49.1B | 0.372 | 0.559 | 0.636 |
 | Pythia-410M (reference, other data) | 10.5B | 0.297 | 0.434 | 0.607 |
 | Pythia-410M (reference, other data) | 300B | 0.406 | 0.519 | 0.672 |
 | PAM-2 ~103M (equal-data control) | 1.0B | 0.282 | 0.455 | 0.588 |
