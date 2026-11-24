@@ -341,3 +341,19 @@ Process lessons added:
   - So the paper shows the clock's recall edge on literal-cue copying (t40) only.
   - EUREKA (55f4e9ae): the missing binding is the same root as SCOPE.
   - Follow-ups pre-registered (55f4e9ae): a no-lure variant on the 100M bodies, and both probes on SCI-1 47B (descriptive). Pending a 4090 window.
+
+## At the pause (2026-11-24, Library wrap-up)
+- **Set B table checked against the raw jsonls** (aa5ee737): all cells match except one rounding (fixed). The 6000 calibration read
+  equals the 4090 read (wio pam decay C 1.50 / scope_fu 0.50 / P_fu 0.01), so the scope probe is reproducible across boxes.
+- **c4a recorded late** (constant-LR twin of the 1B decay at 10.0B tokens): package R x K 0.63 / 0.43, told twin 0.56 / 0.02, recall
+  32k 1.00. Against the decay: the decay loses held rules (0.46 / 0.16) and keeps recall.
+- **Split key geometry** (887aaf15): recall kept in 1 of 2 seeds = NOT replicated (Lead's PAUSE RECORD). Only the clock's t40 recall
+  edge replicates.
+- **Not run:** BIND-LURE Step 0 (7d20317b) and the dual-phase binding proposal (3caae6d0). Both are open, with their review in v14.
+- **README / paper package line made exact** (e9efee03): 0.01 -> 0.67 is SCI-1 at 9B tokens and 2k; BABILong is the 103M body;
+  the package was not re-measured on the 49B release.
+- **Package on the release checkpoint (CPU demo, 11-24; plumbing, not a measurement):** it loads and answers. On one order record
+  it fetched the right sentence but answered the part number instead of the asked depot: field selection inside a fetched row
+  is still the mind's open gap.
+- **Release-checkpoint reads queued** (amendment 10:32 IST): NATURAL RECALL lure + no-lure and the SCOPE 4-tuple at 2k / 8k on
+  final_step_749500.pt, after the release CHECK.
