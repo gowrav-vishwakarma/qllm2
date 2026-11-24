@@ -16,7 +16,7 @@ fixed-size state — there is **no KV cache** that grows with context length.
 **Model weights (Hugging Face):**
 - [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) — **V11, the shipped hero**: ~100M complex-valued PAM, pretrain + chat SFT.
 - [gowravvishwakarma/qllm-pam2-sci1-386m](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m) — **SCI-1 (QLLM-2 / PAM-2), the newest research model**: 386M real-valued PAM-2, 49B tokens of a science-and-chat mix, a base model (no SFT). It applies a rule learned from examples spread over **twice its 4,096-token training window**, and recalls a fact at **four times** it. See [After V11](#after-v11--qllm-2--pam-2-v13_sempty--v16-what-the-newer-models-showed).
-- [gowravvishwakarma/qllm-pam2-sci1-386m-chat](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m-chat) — **SCI-1 Chat**: the same model after a short chat SFT (+0.25B tokens of smoltalk2); keeps the long-context skills (rule at 2× the window 0.995, recall at 4× 0.91), with base-vs-SFT answers to 60 prompts.
+- [gowravvishwakarma/qllm-pam2-sci1-386m-chat](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m-chat) — **SCI-1 Chat**: the same model after a short chat SFT (+0.25B tokens of smoltalk2); keeps the long-context skills (rule at 2× the window 0.995, recall at 4× 0.91), with base-vs-SFT answers to 60 prompts and a base-vs-Chat table. Both SCI-1 cards also ship the mind + library package (`run_package.py`, `PACKAGE.md`).
 
 > **Latest shipped (2026-07-09):** revision **`round-6b-gate`**, also promoted to **`main`** — the
 > v2 gate line at **~6B pretrain + smoltalk2 SFT** (content-aware phase gate, vocab 50261, blended
@@ -406,7 +406,20 @@ language model than Mamba-2 and Gated DeltaNet.
 applied to a fetched fact goes from 0.01 alone to 0.67 with the library at 2k (0.42 at 8k); recall at 32k goes from 0.00–0.30
 to 0.85–1.00, holding ~4 MB per session (3.7 MB of state plus text and indexes). On a 103M body (600M tokens) the package carries
 BABILong single-fact and three-argument relation questions to 32k with no tuning on the benchmark (qa1 0.85 → 0.59, qa5 ~0.55);
-two- and three-fact composition stays ≤ 0.20. The package was not re-measured on the released 49B checkpoint.
+two- and three-fact composition stays ≤ 0.20.
+
+**The package on the released checkpoints** (base 49.12B and SCI-1 Chat 49.37B tokens; model alone → with the package; both
+HF cards ship a standalone runner, `run_package.py`, and the full tables in `PACKAGE.md`):
+- recall at 32k (needle / latest update / two-hop): 0.05 / 0.25 / 0.05 → **1.00 / 1.00 / 0.95** (base), 1.00 / 1.00 / 0.90 (Chat);
+- a rule shown earlier applied to a fetched value, 2k / 8k: 0.00 → **0.97 / 0.78** (base), 0.97 / 0.85 (Chat);
+- RULER-style needles (our generator), 32k: ≤ 0.02 → 0.32–0.40 (base), 0.20–0.30 (Chat). The fetch finds the right sentence on
+  every document; reading the value out (uuids, long numbers) is the loss;
+- BABILong qa1 / qa5 at 2k → 32k: base 0.38 → 0.10 / 0.34 → 0.18, Chat 0.52 → 0.12 / 0.44 → 0.29 (alone ≤ 0.10 beyond 2k);
+  qa3 / qa4 ≤ 0.16. This is well below the 103M body's 32k numbers above; the cause is not yet known.
+- Chat answers short questions much better alone (BABILong at 0k: 0.18–0.62 vs 0.00–0.20 for the base); the base reads raw
+  values out of a fetched sentence better (RULER-style 8k: 0.44 / 0.62 vs 0.38 / 0.40).
+- Memory: state 3.67 MB at any length; library ~0.4 MB of text and word index at 32k (+33.8 MB int8 address, used only when
+  the text match misses).
 
 **Paper (draft):** [`v16/paper/main.pdf`](v16/paper/main.pdf) — *every* number above with its run hash, the failed bars stated
 as failed. Notebooks: [`v13_sempty/EXPERIMENTS_SEMPY.md`](v13_sempty/EXPERIMENTS_SEMPY.md) (body, long run, controls; see

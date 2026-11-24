@@ -8296,3 +8296,11 @@ only on the user's A/B majority.**
   sha256 cd9eee84…), exported fp32 `sci1_chat_386m.pt` sha256 5d4b052d…; test_parity.py ALL PASS on the SFT weights (greedy 40/40
   identical, 3 prompts); verify.sh all checks passed. Card source `hf_release_sci1_chat/` (weights not in git), incl. BASE_VS_SFT.md
   (the 60 A/B prompts, base and SFT greedy answers verbatim, no votes, per the user). Base card and main README link to it.
+
+### SCI-1 cards: package upload (2026-11-24 22:51 IST, Lead, user's go)
+- Uploaded to both HF repos: README (package section; the Chat card also gets the base-vs-Chat table), PACKAGE.md, package_lite.py,
+  run_package.py, bg_wordcounts_fineweb014.json. Card source 26f00ec5; numbers from PKG-RELEASE 5ae5d7e6 / 886d99d8.
+  - HF commits: base qllm-pam2-sci1-386m 55e31115, chat qllm-pam2-sci1-386m-chat 17187273. Weights unchanged.
+- The main README gets a "package on the released checkpoints" paragraph.
+- **Open question for the next lane:** BABILong qa1 at 32k with the package is 0.10 (base) / 0.12 (Chat) on the 386M release,
+  against 0.59 on the 103M / 600M-token body (v14). Cause not yet known (reader, data mix, or package config); not run.
