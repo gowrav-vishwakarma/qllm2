@@ -1,0 +1,28 @@
+HEADER {"unit": "PKG-PORT parity", "hash": "e337eacc", "args": {"ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_long3r_91a87ed/final_step_749500.pt", "release_dir": "hf_release_sci1", "release_ckpt": "/home/gowrav/Development/qllm2/hf_release_sci1/sci1_386m_49b.pt", "device": "cuda", "max_new": 24, "out": "logs/v14_pkg_port_parity_rel_e337eacc_20261124_1302.jsonl"}}
+ruler_niah_single      L  4096 doc 0 EQUAL path text2 bare '5.' package '5449220.' gold '5449220'
+W1124 18:32:39.724971 1650099 torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+ruler_niah_single      L  4096 doc 1 EQUAL path text2 bare '1.5.' package '3142.' gold '3142195'
+ruler_niah_single      L  4096 doc 2 EQUAL path text2 bare 'the special magic word for proud-parrot ' package ':' gold 'granite'
+W1124 18:32:41.948613 1650099 torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+ruler_niah_multikey    L  4096 doc 0 EQUAL path text2 bare ': 5281049.' package ': 9918732.' gold '9918732'
+W1124 18:32:43.300460 1650099 torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+ruler_niah_multikey    L  4096 doc 1 EQUAL path text2 bare ': 1.' package ': 1.' gold 'ce63d535-f6da-3461-8ad5-8b8e1d617cf5'
+ruler_niah_multikey    L  4096 doc 2 EQUAL path text2 bare ':C2v, C3v, C4v, C5v, C6v, C7v' package ': a049da5e-0622-d271-90b2-5cd6193ac4f2.' gold 'a049da5e-0622-d271-90b2-5cd6193ac4f2'
+ruler_niah_single      L  8192 doc 0 EQUAL path text2 bare 'the factorial function\xa0$n!$. The factori' package ': \\[ \\frac{1}{2} \\pi^n \\] (which is the ' gold '7099eddd-8c48-e1fd-f675-836f26a7516a'
+ruler_niah_single      L  8192 doc 1 EQUAL path text2 bare '4.' package ': 9727834.' gold '9727834'
+ruler_niah_single      L  8192 doc 2 EQUAL path text2 bare '24.' package '8584697.' gold '8584697'
+ruler_niah_multikey    L  8192 doc 0 EQUAL path text2 bare ':' package ': 68b0e004-396e-966a-bd71-2a6e12bbfb.' gold '68b0e004-396e-966a-bd71-2a6e12bbfb44'
+ruler_niah_multikey    L  8192 doc 1 EQUAL path text2 bare '"loud-zephyr". The special magic word fo' package ': amber.' gold 'amber'
+ruler_niah_multikey    L  8192 doc 2 EQUAL path text2 bare 'the special magic uuid for hollow-tunnel' package ': \\[ \\text{ uuidset} = \\{ \\text{u} : \\te' gold 'ba54eeb0-136c-7de0-968d-5027fb51e630'
+recall_kv              L  8192 doc 0 EQUAL path text0 bare 'the fact that $\\pi$ is not a fundamental' package 'willow.' gold 'willow'
+recall_kv              L  8192 doc 1 EQUAL path text0 bare 'the fact that he was a member of the Pru' package 'onyx.' gold 'onyx'
+recall_kvupd           L  8192 doc 0 EQUAL path text0 bare 'juniper.' package 'juniper.' gold 'juniper'
+recall_kvupd           L  8192 doc 1 EQUAL path text0 bare 'marigold.' package 'cedar.' gold 'cedar'
+W1124 18:33:03.005838 1650099 torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+natrec_indirect        L  2048 doc 0 EQUAL path text4 bare 'red.' package 'red.' gold 'black'
+natrec_indirect        L  2048 doc 1 EQUAL path F2 bare 'pet, a pet, a pet, a pet, a pet, a pet, ' package 'pet tortoise.' gold 'tortoise'
+natrec_synonym         L  2048 doc 0 EQUAL path F2 bare '.' package 'pet parrot.' gold 'parrot'
+natrec_synonym         L  2048 doc 1 EQUAL path F2 bare '6,000,000.' package '6,000,000' gold 'Toronto'
+PARITY 20 / 20 items equal on every field (bare, package, path, row, f2_row, f2_salient, state_bytes)
+PORT-PARITY DONE
+EXIT 0

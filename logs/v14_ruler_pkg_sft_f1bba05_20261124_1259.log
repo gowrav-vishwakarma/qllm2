@@ -1,0 +1,34 @@
+HEADER {"unit": "BENCH-PKG RULER-style (our generator)", "hash": "f1bba05", "args": {"ckpt": "/home/ubuntu/Development/qllm-private/checkpoints_v13_sempty/sci1_decay_6e2a5f5/best_model.pt", "lengths": "4096,8192,16384,32768", "docs": 50, "tasks": "niah_single,niah_multikey,vt", "seed": 28000, "device": "cuda", "out": "logs/v14_ruler_pkg_sft_f1bba05_20261124_1259.jsonl"}}
+W1124 12:59:18.653000 1327396 torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1124 12:59:28.978000 1327396 torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+/home/ubuntu/Development/qllm-private/.venv/lib/python3.11/site-packages/torch/_inductor/compile_fx.py:282: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+  warnings.warn(
+4096 niah_single done
+W1124 13:00:29.767000 1327396 torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1124 13:00:32.164000 1327396 torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+4096 niah_multikey done
+4096 vt done
+8192 niah_single done
+8192 niah_multikey done
+8192 vt done
+16384 niah_single done
+16384 niah_multikey done
+16384 vt done
+32768 niah_single done
+32768 niah_multikey done
+32768 vt done
+L       task           n   bare  package  planner  mind_MB  library_MB
+4096    niah_multikey   50   0.04     0.30        -     3.50  4.18
+4096    niah_single     50   0.08     0.40        -     3.50  4.08
+4096    vt              50   0.00     0.02     1.00     3.50  0.01
+8192    niah_multikey   50   0.00     0.40        -     3.50  8.22
+8192    niah_single     50   0.00     0.38        -     3.50  8.15
+8192    vt              50   0.00     0.04     1.00     3.50  0.02
+16384   niah_multikey   50   0.00     0.18        -     3.50  16.34
+16384   niah_single     50   0.00     0.34        -     3.50  16.27
+16384   vt              50   0.00     0.00     1.00     3.50  0.03
+32768   niah_multikey   50   0.00     0.30        -     3.50  32.58
+32768   niah_single     50   0.02     0.20        -     3.50  32.51
+32768   vt              50   0.00     0.00     1.00     3.50  0.06
+RULER-PKG DONE
+EXIT 0

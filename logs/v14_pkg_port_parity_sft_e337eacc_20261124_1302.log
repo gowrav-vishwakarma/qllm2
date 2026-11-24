@@ -1,0 +1,29 @@
+HEADER {"unit": "PKG-PORT parity", "hash": "e337eacc", "args": {"ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_decay_6e2a5f5/best_model.pt", "release_dir": "hf_release_sci1_chat", "release_ckpt": "/home/gowrav/Development/qllm2/hf_release_sci1_chat/sci1_chat_386m.pt", "device": "cuda", "max_new": 24, "out": "logs/v14_pkg_port_parity_sft_e337eacc_20261124_1302.jsonl"}}
+ruler_niah_single      L  4096 doc 0 EQUAL path text2 bare '5.' package '5449220.' gold '5449220'
+W1124 18:33:20.191965 1651991 torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+ruler_niah_single      L  4096 doc 1 EQUAL path text2 bare '3.' package '3142195.' gold '3142195'
+ruler_niah_single      L  4096 doc 2 EQUAL path text2 bare ':' package ':' gold 'granite'
+W1124 18:33:22.126098 1651991 torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+ruler_niah_multikey    L  4096 doc 0 EQUAL path text2 bare ': 5281049.' package ': 5281049.' gold '9918732'
+W1124 18:33:23.443572 1651991 torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+ruler_niah_multikey    L  4096 doc 1 EQUAL path text2 bare ':\n\n  • The special magic uuid for jagged' package ':' gold 'ce63d535-f6da-3461-8ad5-8b8e1d617cf5'
+ruler_niah_multikey    L  4096 doc 2 EQUAL path text2 bare ': u1.5.5.5.5.5.5.5.5.5.5.' package ':' gold 'a049da5e-0622-d271-90b2-5cd6193ac4f2'
+ruler_niah_single      L  8192 doc 0 EQUAL path text2 bare 'the “$n$-sphere”.' package 'the following: \\[ \\begin{cases} \\display' gold '7099eddd-8c48-e1fd-f675-836f26a7516a'
+ruler_niah_single      L  8192 doc 1 EQUAL path text2 bare '8.' package '9727834.' gold '9727834'
+ruler_niah_single      L  8192 doc 2 EQUAL path text2 bare '3.' package '8584697.' gold '8584697'
+ruler_niah_multikey    L  8192 doc 0 EQUAL path text2 bare ':' package ': 68b0e004-396e-966a-bd71-2a6e12bbfb44.' gold '68b0e004-396e-966a-bd71-2a6e12bbfb44'
+ruler_niah_multikey    L  8192 doc 1 EQUAL path text2 bare '"luminal." The special magic word for li' package ':' gold 'amber'
+ruler_niah_multikey    L  8192 doc 2 EQUAL path text2 bare 'the following: \\[ \\mathrm{u} = \\frac{1}{' package ': \\[ \\text{u} = \\frac{1}{2\\pi}\\int_0^\\in' gold 'ba54eeb0-136c-7de0-968d-5027fb51e630'
+recall_kv              L  8192 doc 0 EQUAL path text0 bare 'the circle.' package 'willow.' gold 'willow'
+recall_kv              L  8192 doc 1 EQUAL path text0 bare 'the word "possum" in the German language' package 'onyx.' gold 'onyx'
+recall_kvupd           L  8192 doc 0 EQUAL path text0 bare 'onyx.' package 'juniper.' gold 'juniper'
+recall_kvupd           L  8192 doc 1 EQUAL path text0 bare 'a small, hard-to-find planet.' package 'cedar.' gold 'cedar'
+W1124 18:33:43.312716 1651991 torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+natrec_indirect        L  2048 doc 0 EQUAL path text4 bare 'red.' package 'red.' gold 'black'
+natrec_indirect        L  2048 doc 1 EQUAL path F2 bare 'small, white, and yellowish-brown dog.' package 'pet tortoise.' gold 'tortoise'
+natrec_synonym         L  2048 doc 0 EQUAL path F2 bare '.' package 'pet parrot.' gold 'parrot'
+natrec_synonym         L  2048 doc 1 EQUAL path F2 bare 'The town of Yusuf was located in the cit' package 'Toronto' gold 'Toronto'
+PARITY 20 / 20 items equal on every field (bare, package, path, row, f2_row, f2_salient, state_bytes)
+PORT-PARITY DONE
+EXIT 0
+PORTPAR-ALL-DONE

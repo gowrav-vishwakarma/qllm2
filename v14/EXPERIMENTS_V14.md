@@ -6065,7 +6065,7 @@ whose demos the O(1) mind compiled itself.
 - Open, not run: NATURAL RECALL follow-ups (55f4e9ae: no-lure 100M + both probes on SCI-1 47B), BIND-LURE Step 0 (7d20317b), the
   dual-phase synchrony binding proposal (3caae6d0). Package stays v0.3.1; A32c / contrast gate not adoptable (scope guard).
 
-## PKG-RELEASE: the package on both released SCI-1 checkpoints (PRE-REGISTERED 2026-11-24 18:26 IST, before any number; Lead relays the user's GO, 18:3x)
+## PKG-RELEASE: the package on both released SCI-1 checkpoints (PRE-REGISTERED 2026-11-24 18:26 IST, before any number; Lead relayed the user's GO just before 18:25)
 - **Why:** the package suite last ran at 10B (M10, 4bfbb22), and BENCH-PKG (pre-registered 11-05 14:10, above) never ran. The
   HF cards for the base and the chat model need the package numbers on the released weights.
 - **Checkpoints** (same code, same docs, same prompts for both; no chat template on the chat model, so its rows read the
@@ -6088,3 +6088,86 @@ whose demos the O(1) mind compiled itself.
   This is measurement, not a new mechanism.
 - **Machine:** the 6000 (`~/Development/qllm_lib`, PACKAGE_BG = `~/Development/qllm_lib_data/bg_wordcounts_fineweb014.json`).
   Logs: `logs/v14_{pkg_suite,ruler_pkg,babilong_pkg}_{rel,sft}_<hash>_<stamp>.{log,jsonl}`.
+- **RESULT part 1: PKG-SUITE + RULER-style (2026-11-24 19:2x IST; code f1bba05 on the 6000, 8 jobs in parallel from 18:29 IST;
+  `logs/v14_pkg_suite_{rel,sft}_f1bba05_20261124_1259.*`, `logs/v14_ruler_pkg_{rel,sft}_f1bba05_20261124_1259.*`; tables by
+  `v14/pkg_release_tables.py`).** Descriptive.
+
+    PKG-SUITE (bare / package; rel = base 749,500, sft = Chat 753,315):
+
+    | cell | rel bare | rel package | sft bare | sft package |
+    |---|---|---|---|---|
+    | R × K, 2k / 8k (first token) | 0.00 / 0.00 | 0.97 / 0.78 | 0.00 / 0.00 | 0.97 / 0.85 |
+    | rewrite: told rule compiled next to the question, 2k / 8k | 0.04 / 0.00 | 0.93 / 0.92 | 0.03 / 0.00 | 0.96 / 0.95 |
+    | told rule held in state (twin), 2k / 8k | 0.16 / 0.04 | 0.77 / 0.25 | 0.15 / 0.01 | 0.80 / 0.22 |
+    | recall 32k, free: needle among 8 / latest-wins / two-hop | 0.05 / 0.25 / 0.05 | 1.00 / 1.00 / 0.95 | 0.05 / 0.25 / 0.05 | 1.00 / 1.00 / 0.90 |
+    | recall 32k, 20-way: kv / kvupd / hop2 | 0.10 / 0.55 / 0.10 | 1.00 / 1.00 / 1.00 | 0.10 / 0.60 / 0.05 | 1.00 / 1.00 / 0.95 |
+
+    rel: MB held per 32k recall session (mean of 60): mind_state 3.67, library_text 0.07, word_token_indexes_est 0.31, address_int8_all 33.76, address_sal1 0.27
+
+    sft: MB held per 32k recall session (mean of 60): mind_state 3.67, library_text 0.07, word_token_indexes_est 0.31, address_int8_all 33.76, address_sal1 0.27
+
+    RULER-style, our generator (bare / package; VT planner = the TEXT chain found, rel / sft):
+
+    | L | task | n | rel bare | rel package | sft bare | sft package | planner (VT, TEXT) | mind MB | library MB |
+    |---|---|---|---|---|---|---|---|---|---|
+    | 4k | niah_multikey | 50 | 0.04 | 0.46 | 0.04 | 0.30 | - | 3.67 | 4.38 |
+    | 4k | niah_single | 50 | 0.08 | 0.54 | 0.08 | 0.40 | - | 3.67 | 4.28 |
+    | 4k | vt | 50 | 0.00 | 0.00 | 0.00 | 0.02 | 1.00 / 1.00 | 3.67 | 0.01 |
+    | 8k | niah_multikey | 50 | 0.00 | 0.62 | 0.00 | 0.40 | - | 3.67 | 8.62 |
+    | 8k | niah_single | 50 | 0.00 | 0.44 | 0.00 | 0.38 | - | 3.67 | 8.54 |
+    | 8k | vt | 50 | 0.00 | 0.00 | 0.00 | 0.04 | 1.00 / 1.00 | 3.67 | 0.02 |
+    | 16k | niah_multikey | 50 | 0.02 | 0.36 | 0.00 | 0.18 | - | 3.67 | 17.13 |
+    | 16k | niah_single | 50 | 0.02 | 0.50 | 0.00 | 0.34 | - | 3.67 | 17.06 |
+    | 16k | vt | 50 | 0.00 | 0.00 | 0.00 | 0.00 | 1.00 / 1.00 | 3.67 | 0.03 |
+    | 32k | niah_multikey | 50 | 0.00 | 0.40 | 0.00 | 0.30 | - | 3.67 | 34.16 |
+    | 32k | niah_single | 50 | 0.02 | 0.32 | 0.02 | 0.20 | - | 3.67 | 34.09 |
+    | 32k | vt | 50 | 0.00 | 0.02 | 0.00 | 0.00 | 1.00 / 1.00 | 3.67 | 0.07 |
+
+  - **Held rules rose a lot from 10B to 49B.** R×K 2k / 8k went 0.62 / 0.27 (M10) → 0.97 / 0.78 (base) and 0.97 / 0.85 (Chat).
+    Told-in-state went 0.80 / 0.21 → 0.77 / 0.25 (base). Rewrite stays at 0.93-0.96; recall at 32k stays at 1.00 (two-hop
+    0.95 / 0.90).
+  - **SFT kept the package cells.** Chat vs base differs by ≤ 0.07 on every suite cell. R×K 8k is higher (0.85 vs 0.78);
+    told 8k is lower (0.22 vs 0.25).
+  - **RULER niah: the fetch is right; the read loses long or odd values.** The path is text2 on all 400 niah docs per
+    model. Package by needle kind, base / Chat: number 0.85 / 0.75, word 0.48 / 0.18, uuid 0.12 / 0.09. The misses:
+    - uuids are garbled: `3b9d1caa-3ba9-1f050-...`;
+    - numbers are cut: `3142` for 3142195;
+    - many word needles end at `:\n`: the model writes the colon of "is: value", then a newline, which is a stop.
+      The Chat model does this most.
+    Bare is 0.00-0.08 at every length. VT: the TEXT planner finds the chain 1.00 at every length; the mind writing the
+    names reads 0.00-0.04.
+  - MB per 32k session: mind state 3.67; library text 0.07 + word indexes ~0.31; F2 address 33.8 at int8 (0.27 in the
+    sign-bit form).
+  - **Think in the void:** the package's weak link is now the READ of a fetched value, not the fetch. The cells where the
+    answer must be copied exactly (uuid, a 7-digit number, a rare word after "is:") fail most. A copy read is the obvious
+    next idea: a pointer to the fetched row's tokens, so the model chooses WHERE to copy from, not WHAT to spell.
+    It is a mechanism, so it belongs to a new pre-registration, not to this descriptive run.
+
+## PKG-PORT: the package as a standalone runner on the SCI-1 HF cards (Lead 2026-11-24, part (3) of the user's GO; plumbing, no claim)
+- **What:** `hf_release_sci1{,_chat}/package_lite.py` + `run_package.py`. It needs only torch, transformers and the card's
+  `modeling_pam2.py`.
+  - It ports the `answer()` path of `v16/package.py` v0.3.1: token organ → word organ steps 1 / 2 / 4 → F2 (lenient), the
+    field cut, the warm read, and decimal-aware stops.
+  - Not ported: R×K / the rule twin / fork, the BABILong multi-row hops and the TEXT planner chain.
+  - CLI: `--context` + `--question`, `--mode bare|package|both`, `--form plain|chat|raw`, `--strict`, `--demo` (a 32k
+    RULER-noise needle). It prints MB held.
+  - `bg_wordcounts_fineweb014.json` ships in each folder: sha eb4f9c16, 1.47 MB, FineWeb sample-10BT shard 014, ODC-By 1.0.
+    The F2 address is captured by its own copy of `PAM2LM._run` (the card model calls its blocks inline, so a hook
+    cannot see them).
+- **Parity (Lead's bar: the port's answers equal v16/package.py's on the same checkpoint):** `v14/pkg_port_parity.py`.
+  - 20 items: RULER niah single / multikey at 4k / 8k (the BENCH-PKG docs), PKG-SUITE recall kv / kvupd at 8k, and natural
+    recall at 2k (indirect / synonym).
+  - Fields compared: bare, package, path, row, the forced F2 row, the F2 salient tokens, and the state bytes.
+  - **base (749,500, card weights sci1_386m_49b.pt): 20 / 20 equal on every field; Chat (753,315, sci1_chat_386m.pt):
+    20 / 20** (RTX 4090 fp32, code e337eacc; `logs/v14_pkg_port_parity_{rel,sft}_e337eacc_20261124_1302.*`). The paths
+    covered text0 / text2 / text4 / F2.
+- **Demo** (`run_package.py --demo`, 32k, gold 1679215):
+  - base: bare `4.`, package right (3.67 MB state + 0.36 MB library + 32.3 MB address);
+  - Chat: bare `:\n`, package right;
+  - CPU 8k: 13 s in total.
+- **A small natural test, written into each card's PACKAGE.md verbatim:** a 3-sentence note, 4 natural questions + 1 cloze.
+  - base: the fetch is right on 4 of 5 (F2 misses "Which pet does Daniel have?"), but the read is often wrong
+    (`Portugal.`, `blue.`); the cloze is right.
+  - Chat: right in plain form; in chat form it adds invented details ("a parrot named Pica", "in the year 2000"); the
+    package fixes "red" → "silver".
+- Not uploaded. Lead reviews, asks the user, and uploads.

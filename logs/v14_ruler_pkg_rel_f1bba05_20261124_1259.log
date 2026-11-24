@@ -1,0 +1,32 @@
+HEADER {"unit": "BENCH-PKG RULER-style (our generator)", "hash": "f1bba05", "args": {"ckpt": "/home/ubuntu/Development/qllm-private/checkpoints_v13_sempty/sci1_long3r_91a87ed/latest.pt", "lengths": "4096,8192,16384,32768", "docs": 50, "tasks": "niah_single,niah_multikey,vt", "seed": 28000, "device": "cuda", "out": "logs/v14_ruler_pkg_rel_f1bba05_20261124_1259.jsonl"}}
+W1124 12:59:18.689000 1327392 torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1124 12:59:34.424000 1327392 torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+4096 niah_single done
+W1124 13:00:57.773000 1327392 torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1124 13:01:00.294000 1327392 torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+4096 niah_multikey done
+4096 vt done
+8192 niah_single done
+8192 niah_multikey done
+8192 vt done
+16384 niah_single done
+16384 niah_multikey done
+16384 vt done
+32768 niah_single done
+32768 niah_multikey done
+32768 vt done
+L       task           n   bare  package  planner  mind_MB  library_MB
+4096    niah_multikey   50   0.04     0.46        -     3.50  4.18
+4096    niah_single     50   0.08     0.54        -     3.50  4.08
+4096    vt              50   0.00     0.00     1.00     3.50  0.01
+8192    niah_multikey   50   0.00     0.62        -     3.50  8.22
+8192    niah_single     50   0.00     0.44        -     3.50  8.15
+8192    vt              50   0.00     0.00     1.00     3.50  0.02
+16384   niah_multikey   50   0.02     0.36        -     3.50  16.34
+16384   niah_single     50   0.02     0.50        -     3.50  16.27
+16384   vt              50   0.00     0.00     1.00     3.50  0.03
+32768   niah_multikey   50   0.00     0.40        -     3.50  32.58
+32768   niah_single     50   0.02     0.32        -     3.50  32.51
+32768   vt              50   0.00     0.02     1.00     3.50  0.06
+RULER-PKG DONE
+EXIT 0
