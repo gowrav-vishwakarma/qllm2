@@ -8125,3 +8125,70 @@ filler) with the examples spread over **8,192 (anchor, 2x the 4,096 training win
 t40 (needles, 40 trials x positions 0 / 0.5 / 1 x associations 1 / 4 / 8) at 32,768 if VRAM / time allow. Reported: accuracy and mean
 target margin per task and distance; no verdict. Code: the CHECK's probe path (scripts/run_learning_probe.py, memory_probes/spread.py;
 the v13_sempty path is unchanged since 59c3cf5), run from the 6000 worktree qllm_sci1e @ 91a87ed.
+
+### sft1 FINAL (Mind 2026-11-24 11:02 IST; code 3b9b2156; supersedes the draft where they differ; user approved SFT as a separate release, Lead gives the GO)
+- **Box: the 6000** (user, 10:4x: "release base model and keep plan sft for later tonight (when 6000 will be free)"; free now).
+- **Code:** train.py --sft_share 0.8 / --sft_think_fraction 0 + v13_sempty/sft_mix.py (packed, assistant-only, EOS-separated,
+  interleaved by kept volume, decontam v2 + probe-template 13-grams, base replay). Verified: test_sft_mix.py ALL PASS; share 0 =
+  the base loader bit for bit (wio far mix sha 72e954b7); real-data smoke OK; deterministic order + exact resume skip.
+- **Data as measured (first 2,000 kept conversations):** smol_magpie_ultra 41 %, OpenHermes 2.5 34 %, smol_summarize 12 %,
+  systemchats_30k 6 %, smol_rewrite 4 %, tulu-3 personas IF 3 %, rest < 1 %; no think traces, no tool / function schemas, English only.
+  74 % of SFT window tokens are targets -> ~148M target tokens over the run (0.8 x 250M x 0.74). Decontam / probe drop counts are
+  logged in the cursor (#decon / #probe) and reported with the result.
+- **Recipe (unchanged):** from final_step_749500 (49.119B; optimizer kept), 65,536 tokens / step, warm-up 200 steps to 2e-4,
+  constant to 0.20B, then a separate linear decay to 0 over 0.05B (sci1_cont_chain's main + decay segments); saves every 0.05B.
+  Note: 2e-4 is a quarter of the base's 8e-4, so the LR drop itself acts like part of a decay; the guards below are the protection.
+- **Before the GO, on the 6000:** a 100-step smoke of the exact command (same env) to check peak VRAM, tok/s and the loss with masks;
+  it is deleted, not a result.
+- **Guards, chat judgment, verdict:** as in the draft above (vs the 49B CHECK; P_fu 8k <= 0.20 and scope_fu 8k <= 0.30; human eval).
+- **Launch (one command, 6000, from a worktree at >= 3b9b2156 with the base at checkpoints_v13_sempty/sci1_long3r_91a87ed/
+  final_step_749500.pt, sha b403ad63; the 6000's latest.pt in that dir IS that file, sha-verified 11-24):**
+  `tmux new-session -d -s sci1sft1 "bash v13_sempty/tmp/sft1_launch.sh 2>&1 | tee -a logs/v13_sempty_sci1_sft1_launch_<hash>_<stamp>.log"`
+  (sft1_launch.sh sources sci1_env.sh + sci1_long3r_env.sh + sft1_env.sh and runs sci1_cont_chain.sh; outputs
+  checkpoints_v13_sempty/sci1_sft1_<hash> (constant) and sci1_decay_<hash> (the release candidate = its best_model.pt)).
+- **Cost on the 6000:** ~2 h train (37k tok/s solo) + CHECK + chat eval ~1.5 h.
+**reach32k RESULT (6000, 11:07-11:20 IST 11-24; release checkpoint sha b403ad63 verified; descriptive, no bar; logs/learning_probes/
+v13_sempty_sci1_release_749500_91a87ed_reach32k_spread_s7000_t400.json, logs/memory_probes/v13_sempty_sci1_release_749500_91a87ed_t40_32k.json,
+log logs/v13_sempty_sci1_reach32k_91a87ed_20261124_0517.log):**
+
+| examples spread over | x training window | shift_wide acc (margin) | affine_map acc (margin) | s8 mean | free generation (shift / affine) |
+|---|---|---|---|---|---|
+| 8,192 (anchor) | 2x | 0.938 (+7.57) | 0.990 (+10.23) | **0.964** | 0.927 / 0.860 |
+| 16,384 | 4x | 0.693 (+1.90) | 0.890 (+4.24) | **0.791** | 0.642 / 0.520 |
+| 32,768 | 8x | 0.200 (-1.69) | 0.575 (+0.42) | **0.388** | 0.152 / 0.155 |
+
+8-way candidates, chance 0.125; 400 trials per cell (binomial se <= 0.025). The 8k anchor agrees with the 47B CHECK (0.958).
+**t40 needles at 32,768 (8x):** 0.781 overall (n 360, se 0.022); by needle position: start 0.575, middle 0.767, end 1.000; by
+associations 1 / 4 / 8: 0.817 / 0.817 / 0.708.
+Reading (descriptive): the induced rule holds at 4x the trained window (0.79, margins positive on both tasks) and fades by 8x
+(affine still above chance with a small positive margin, shift near chance with a negative margin); exact recall of a fact holds
+better than the rule at 8x (0.78; 0.58 even with the needle at the very start, 32k tokens back).
+
+### SCI-1 base RELEASED (2026-11-24 11:38 IST, Lead)
+- HF: https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m — final_step_749500 (49.12B tokens; ckpt sha256 b403ad63…),
+  exported fp32 `sci1_386m_49b.pt` sha256 03254d70…; standalone `modeling_pam2.py` (parity max logit diff ≤ 2.4e-4, greedy identical).
+  Card source: `hf_release_sci1/` (weights not in git). The v11 card points to it; it points back.
+- Card numbers (release checkpoint): s8 spread 8k 0.94/0.99, 16k 0.69/0.89, 32k 0.20/0.58 (reach32k, c58aec8d);
+  t40 8k 0.98, 16k 0.94, 32k 0.78; HS/ARC-e/PIQA 0.372/0.559/0.636 (acc_norm / acc / acc_norm, as Pythia; plain acc HS 0.320, PIQA 0.638); Library's lure / prose / scope limits (660734ee).
+- Chat script fix before release: `run_chat.py` double-counted the pending `<|im_end|>\n` in its history / penalty context
+  (the model's input was always right); SAMPLES regenerated, text unchanged.
+- SFT (sft1) runs next on the 6000 as a separate release.
+
+## Release CHECKs (Lead's lead_relcheck on the 4090, 2026-11-24, ../qllm_sci1check @ 59c3cf5 = the milestone CHECK code; outputs committed by Mind)
+
+| save | tokens | s8 @8k (shift / affine) | skill @8k | t40 16k | clk2 8k / 32k-run @16k | HellaSwag acc / norm | ARC-e acc / norm | PIQA acc / norm |
+|---|---|---|---|---|---|---|---|---|
+| 48B (step 732,432) | 48.00B | 0.950 (0.925 / 0.975) | 0.680 | 0.922 | 0.92 / 0.58 | 0.3230 / 0.3698 | 0.5593 / 0.5059 | 0.6404 / 0.6268 |
+| 49B (step 747,691) | 49.00B | 0.961 (0.955 / 0.968) | 0.635 | 0.744 | 0.89 / 0.46 | 0.3200 / 0.3669 | 0.5522 / 0.5000 | 0.6458 / 0.6469 |
+| **release (step 749,500)** | **49.12B** | **0.964** (0.938 / 0.990) | 0.645 | **0.942** | 0.90 / 0.40 | 0.3200 / **0.3719** | **0.5593** / 0.5008 | 0.6376 / 0.6355 |
+
+Harness: scripts/mc_eval.py (fp32; parity with lm-eval 0.4.9.1 to 4 decimals on Pythia-160M, 59e9197), full validation sets, zero-shot.
+t40 16k moves 0.92 -> 0.74 -> 0.94 over three saves 0.07B apart: single-save noise on this cell is ~0.1 at 386M too.
+**sft1 SMOKE + LAUNCH (6000; user GO via Lead; maya / nexus confirmed stopped, no compute apps, right before both):** smoke 11:36-12:55
+IST (exact launch path, 100 constant + 10 decay steps, throwaway dirs deleted after): [continue] from final_step_749500 (49.119B),
+lr 2e-4, decontam v2 a4b66d1b on, 624,211 probe 13-grams, kept-volume interleave; masked SFT loss 1.56 -> 1.15; val 2.978 / 2.977
+(base 2.9946), wiki 3.541 / 3.537; decay resume skipped 7,696 kept conversations correctly; **peak 79.4 GB** of 98; both segments
+exit 0. Each segment's stream warm-up is ~20-35 min (base streams re-open at exact cursors; known). **sft1 LAUNCHED 12:56 IST
+2026-11-24** (tmux sci1sft1, worktree ~/Development/qllm_sft @ 2094021 (>= 3b9b2156), log
+logs/v13_sempty_sci1_sft1_2094021_20261124_0726.log, dirs checkpoints_v13_sempty/sci1_sft1_2094021 then sci1_decay_2094021 = the
+release candidate).

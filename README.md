@@ -358,13 +358,30 @@ memory at the head; state reset at document boundaries. Still **O(1) state per t
 **The product-size model, SCI-1 386M** (weights: [qllm-pam2-sci1-386m](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m)).
 24 blocks, d 1024, notebooks in 6 of them; trained at a **4,096-token window** to **49.1B tokens** of filtered public data
 (DCLM, FineWeb-Edu, arXiv / PubMed / peS2o, Cosmopedia, FineMath, SmolTalk chat, tool dialogues, science Python, plus ~2–4 %
-synthetic rule documents), decontaminated with 13-grams against every reported benchmark. At 43–47B tokens:
-- **A rule learned beyond the training context.** Eight examples of an unseen rule spread over **8,192 tokens (2× the window)**,
-  then a new case: **0.94–0.98** (chance 0.125). This appeared once a small share of documents spread a rule's examples over
+synthetic rule documents), decontaminated with 13-grams against every reported benchmark. On the released checkpoint
+(49.12B tokens):
+- **A rule learned beyond the training context.** Eight examples of a rule (held-out values of a symbol shift / an affine map)
+  spread over **8,192 tokens (2× the window)**, then a new case: **0.94 / 0.99**; over **16,384 (4×): 0.69 / 0.89**; over
+  32,768 (8×): 0.20 / 0.58 (chance 0.125). This appeared once a small share of documents spread a rule's examples over
   1.8–3.2k tokens: the model was never shown 8k, nor the gap between its examples (before those documents: 0.19).
-- **Recall beyond the training context:** a fact 16k tokens back (4× the window): **0.81–0.98**.
-- Knowledge benchmarks (HellaSwag / ARC-e / PIQA): **0.32 / 0.56 / 0.65** at 47B. Reference only (different data, no claim):
-  Pythia-410M at 10.5B tokens reads 0.30 / 0.43 / 0.61 on the same harness.
+- **Recall beyond the training context:** a fact 8k back **0.98**, 16k back (4× the window) **0.94**, 32k back (8×) **0.78**
+  (0.58 when the fact is at the very start of the 32k context).
+- What does not reach that far: a fact written in prose and asked in natural words (0.47 at 64 tokens, near chance from 2k),
+  and binding a fact to its owner against a same-type distractor (lure wins as often as the answer).
+
+**Standard benchmarks** (zero-shot, full sets; every row HellaSwag / PIQA acc_norm, ARC-easy acc; harness `scripts/mc_eval.py` = lm-eval 0.4.9.1 to 4 decimals):
+
+| model | tokens | HellaSwag | ARC-easy | PIQA |
+|--|--|--|--|--|
+| **SCI-1 386M (PAM-2)** | 49.1B | 0.372 | 0.559 | 0.636 |
+| Pythia-410M (reference, other data) | 10.5B | 0.297 | 0.434 | 0.607 |
+| Pythia-410M (reference, other data) | 300B | 0.406 | 0.519 | 0.672 |
+| PAM-2 ~103M (equal-data control) | 1.0B | 0.282 | 0.455 | 0.588 |
+| Transformer++ ~103M (same tokens) | 1.0B | 0.281 | 0.457 | 0.590 |
+| Mamba-2 ~103M (same tokens) | 1.0B | 0.284 | 0.459 | 0.588 |
+
+At 3B tokens (~103M, six-benchmark mean): PAM-2 0.403, Transformer++ 0.406, Mamba-2 0.415 — level on knowledge; the
+difference is in context rules and reach.
 
 **Equal-data controls (~103M bodies, identical tokens and code).**
 - Without far documents (1.0B tokens): rules at 2k–4k **0.52** vs **0.15 (Mamba-2)** and **0.07 (Transformer++)**.

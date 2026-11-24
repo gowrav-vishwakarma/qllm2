@@ -13,6 +13,21 @@ Keep all three current as things happen (user rule, 2026-10-29).
   (P_fu / scope_fu up on nochrono) while phased keys under-generalise (s8 down on pam), the right key is content-scoped,
   neither phased nor flat. That would be a design claim for the mind: index rules by what they govern.
 
+## STATE AT THE PAUSE (Library, 2026-11-24 11:21 IST): read first
+- **Paused by the user.** Nothing of mine runs on either box (the 4090 user guard libuserguard2 is the only Library tmux session).
+- **Release checkpoint reads done** (660734ee, on the HF card and in README):
+  - NATURAL RECALL: lure D64 0.320 vs lure 0.335; no-lure 0.465 at 64, near chance from 2k.
+  - SCOPE: 2k scope_fu 0.67, C 8k 0.47.
+- **Open, not run:**
+  - NATURAL RECALL 100M no-lure (55f4e9ae);
+  - BIND-LURE Step 0 (7d20317b);
+  - dual-phase binding proposal (3caae6d0).
+  Each has its prereg / proposal in EXPERIMENTS_V14.
+- **Package:** v0.3.1. It needs PACKAGE_BG = bg_wordcounts_fineweb014.json (sha eb4f9c16; 4090
+  /media/gowrav/d_drive/qllm_ckpt/v14/, 6000 ~/Development/qllm_lib_data/). On the release model it fetches single facts but can
+  pick the wrong field inside the fetched sentence. Not ready for end users.
+- **6000 worktree:** ~/Development/qllm_lib (detached at 40400d2, .cache symlinked to qllm-private/.cache).
+
 ## STATE NOW (Library, 2026-11-18 10:08 IST): read first, newer than the block below
 - **GPU:** nothing of mine runs. The 4090 belongs to the user from ~11:00 IST on 11-18. The libuserguard tmux session kills at 10:30.
 - **Package:** v0.3.1 stays. A32c and cgate v0.4 both fail the scope guard.

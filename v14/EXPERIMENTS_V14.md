@@ -5846,6 +5846,30 @@ final_step_749500.pt (SCI-1 386M, 3r, 49.119B tokens; sha b403ad63 per Lead), be
 both the original (lure) and the no-lure probe, unchanged (same docs, D, n, scores), PLUS the standing SCOPE 4-tuple at 2k / 8k (n 100,
 the default package path). It is descriptive, with no bar. The 100M no-lure part (a) runs only if the window has time left after (b)
 (pam and nochrono first, same validity gate). It runs on the 4090 after the release CHECK (tmux lead_relcheck) has ended.
+AMENDMENT 2 (11:00 IST, before any number; Lead): it ran on the 6000 instead (the box was free), from worktree qllm_lib at origin/master
+40400d2, on qllm_sci1e/.../sci1_long3r_91a87ed/latest.pt (sha b403ad63, the same file as final_step_749500.pt). The filler cache sha
+25f5a6ec is the same as on the 4090. The package background word-count file (bg_wordcounts_fineweb014.json, sha eb4f9c16) was copied
+for the scope probe's fetch. The 4090 chain was dropped. The 100M part (a) was not run.
+RESULT (b), the RELEASE checkpoint (SCI-1 386M, 49.12B tokens; 2026-11-24 10:44-11:15 IST; logs/v14_natrec_sci1rel_{lure,nolure}_40400d2_*,
+logs/v14_scope_sci1rel_749500_40400d2_*; n 200 per D, 0 tracebacks). DESCRIPTIVE:
+| probe | D 64 acc / free / lure | D 2k | D 8k | D 16k |
+|---|---|---|---|---|
+| with the lure | 0.320 / 0.140 / 0.335 | 0.165 / 0.035 / 0.180 | 0.155 / 0.020 / 0.135 | 0.100 / 0.000 / 0.165 |
+| no lure | 0.465 / 0.165 / - | 0.210 / 0.045 | 0.130 / 0.035 | 0.145 / 0.045 |
+Chance 0.125. By style at D 64 (acc): lure direct 0.32, cloze 0.36, indirect 0.32, synonym 0.28; no-lure 0.52 / 0.56 / 0.38 / 0.40.
+By type at D 64, no-lure: city 0.68, job 0.65, colour 0.43, pet 0.34, day 0.24. With the lure, every type splits about evenly between
+gold and lure (city 0.40 vs 0.43, job 0.32 vs 0.38).
+Reading:
+- The release model does NOT bind name -> value. Even at 64 tokens the lure wins as often as the gold (0.335 vs 0.320). The 100M
+  bodies were the same (0.29 vs 0.235): 4x the parameters and 49x the tokens did not add binding.
+- Natural-prose recall WITHOUT a lure reaches only ~64 tokens (0.465; city / job ~0.67). From 2k on it is near chance (0.21 / 0.13 /
+  0.15), INSIDE the 4k training window. The clock's exact recall at 16k (t40) is a literal-cue copy; a fact stated in prose and
+  asked in other words is not carried.
+SCOPE 4-tuple on the release checkpoint (n 100):
+- 2k: B -3.37, C +1.945, scope_fu 0.67, prec_u1 0.58, P_fu 0.02, unit_acc 0.97, R_u2 0.42.
+- 8k: B -3.08, C +0.465, scope_fu 0.06, P_fu 0.04, unit_acc 0.74, R_u2 0.99.
+The 3r guard passes (8k P_fu 0.04, scope_fu 0.06). Against 47B: the carry is the same (C 8k 0.47 vs 0.46); scope_fu 2k went 0.50 ->
+0.67 and precedence 0.55 -> 0.58 (slightly worse). The body keeps its told rules and still applies them past their scope at short range.
 Closest prior work as before (NIAH / RULER, BABILong).
 
 ### SPLIT key geometry: CHRONO_HEADS (Library owns the mechanism; built 2026-11-18 15:03 IST; Mind's twin (b) runs it)
