@@ -8192,3 +8192,11 @@ exit 0. Each segment's stream warm-up is ~20-35 min (base streams re-open at exa
 2026-11-24** (tmux sci1sft1, worktree ~/Development/qllm_sft @ 2094021 (>= 3b9b2156), log
 logs/v13_sempty_sci1_sft1_2094021_20261124_0726.log, dirs checkpoints_v13_sempty/sci1_sft1_2094021 then sci1_decay_2094021 = the
 release candidate).
+**sft1 RELAUNCH (13:56 IST 11-24, code 431eabec):** the first launch (12:56, 2094021) was DATA-BOUND: 12-13k tok/s after warm-up
+(base 37k), GPU idle ~65 %; one data worker ran the HF smoltalk2 stream + v7 filters + two 13-gram hashes per conversation (~3 SFT
+windows/s of ~7 needed), and its decay-segment resume would have re-filtered ~300k conversations. Stopped before any save (dirs
+deleted, logs moved to logs/superseded on the 6000). Fix: one producer process per split (started in the trainer before the worker
+forks), interleave per kept conversation by kept volume, cursor = draws + per-split raw rows (resume via skip_rows, no re-filtering),
+one hash for both indexes, network errors retried from the current row. Verified on real smoltalk2 (with HF rate-limit and timeout
+retries occurring): deterministic order, exact mid-stream resume. Recipe, data policy, filters and guards unchanged; only the order of
+the SFT conversations differs from the first launch. New log logs/v13_sempty_sci1_sft1_431eabe_20261124_0826.log (6000).
