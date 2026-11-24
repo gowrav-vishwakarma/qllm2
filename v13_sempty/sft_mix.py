@@ -227,11 +227,28 @@ def _hit(idx: np.ndarray, h: np.ndarray) -> bool:
     return bool((idx[pos] == h).any())
 
 
+def _die_with_parent() -> None:
+    """Child process: ask the kernel for SIGKILL when the parent dies (Linux prctl PR_SET_PDEATHSIG). A forked producer inherits the
+    trainer's CUDA device handles, so while it lives the driver keeps the trainer's GPU memory allocated. The trainer leaves through
+    os._exit (no multiprocessing cleanup), and sft1's first decay start then died 20x on CUDA OOM behind 89.8 GiB held by orphan
+    producers blocked on full queues (2026-11-24)."""
+    import ctypes
+    import os
+    import signal
+    try:
+        ctypes.CDLL('libc.so.6', use_errno=True).prctl(1, signal.SIGKILL)   # 1 = PR_SET_PDEATHSIG
+    except (OSError, AttributeError):
+        pass
+    if os.getppid() == 1:                                                    # parent already gone before prctl took effect
+        os._exit(0)
+
+
 def _sft_producer(sp: str, skip_rows: int, think_fraction: float, decontam_path: str, probe_index: np.ndarray, q) -> None:
     """One smoltalk2-SFT split -> its kept conversations in order, with their raw row index (child process). A failure to open or
     read the split (network) is RETRIED with backoff from the current raw row; only the true end of the split sends 'end', so a
     transient error can never change the interleave."""
     import time
+    _die_with_parent()
     from v7.data import _cap_keep, _should_filter_smoltalk, _smoltalk2_row_iter, _smoltalk2_split_cap, _think_keep
     from v7.decontam import ngram_hashes
     dec_idx = np.load(decontam_path) if decontam_path else np.zeros(0, dtype=np.uint64)

@@ -1575,6 +1575,13 @@ def main():
         # AFTER everything is saved (smoke 2026-09-04: exit 134 on a complete
         # run). Flush and leave without running finalizers so the wrapper's
         # exit code reflects the training, not the teardown.
+        # os._exit skips multiprocessing's atexit, so end child processes (sft_mix producers, DataLoader workers) here: forked
+        # after CUDA init they hold the GPU memory until they exit (sft1 decay start OOM, 2026-11-24).
+        import multiprocessing as _mp
+        for _p in _mp.active_children():
+            _p.terminate()
+        for _p in _mp.active_children():
+            _p.join(timeout=5)
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(0)
