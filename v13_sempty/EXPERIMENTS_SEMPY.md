@@ -8147,3 +8147,19 @@ the v13_sempty path is unchanged since 59c3cf5), run from the 6000 worktree qllm
   (sft1_launch.sh sources sci1_env.sh + sci1_long3r_env.sh + sft1_env.sh and runs sci1_cont_chain.sh; outputs
   checkpoints_v13_sempty/sci1_sft1_<hash> (constant) and sci1_decay_<hash> (the release candidate = its best_model.pt)).
 - **Cost on the 6000:** ~2 h train (37k tok/s solo) + CHECK + chat eval ~1.5 h.
+**reach32k RESULT (6000, 11:07-11:20 IST 11-24; release checkpoint sha b403ad63 verified; descriptive, no bar; logs/learning_probes/
+v13_sempty_sci1_release_749500_91a87ed_reach32k_spread_s7000_t400.json, logs/memory_probes/v13_sempty_sci1_release_749500_91a87ed_t40_32k.json,
+log logs/v13_sempty_sci1_reach32k_91a87ed_20261124_0517.log):**
+
+| examples spread over | x training window | shift_wide acc (margin) | affine_map acc (margin) | s8 mean | free generation (shift / affine) |
+|---|---|---|---|---|---|
+| 8,192 (anchor) | 2x | 0.938 (+7.57) | 0.990 (+10.23) | **0.964** | 0.927 / 0.860 |
+| 16,384 | 4x | 0.693 (+1.90) | 0.890 (+4.24) | **0.791** | 0.642 / 0.520 |
+| 32,768 | 8x | 0.200 (-1.69) | 0.575 (+0.42) | **0.388** | 0.152 / 0.155 |
+
+8-way candidates, chance 0.125; 400 trials per cell (binomial se <= 0.025). The 8k anchor agrees with the 47B CHECK (0.958).
+**t40 needles at 32,768 (8x):** 0.781 overall (n 360, se 0.022); by needle position: start 0.575, middle 0.767, end 1.000; by
+associations 1 / 4 / 8: 0.817 / 0.817 / 0.708.
+Reading (descriptive): the induced rule holds at 4x the trained window (0.79, margins positive on both tasks) and fades by 8x
+(affine still above chance with a small positive margin, shift near chance with a negative margin); exact recall of a fact holds
+better than the rule at 8x (0.78; 0.58 even with the needle at the very start, 32k tokens back).

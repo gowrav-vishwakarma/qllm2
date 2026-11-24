@@ -1,0 +1,9 @@
+ckpt sha256 b403ad633887c3e1eba50425d0abd7358d685b2d4fad08959679d09c77bb4fdb
+sha OK
+per task: {'shift_wide_new@8192': 0.938, 'shift_wide_new@16384': 0.693, 'shift_wide_new@32768': 0.2, 'affine_map_new@8192': 0.99, 'affine_map_new@16384': 0.89, 'affine_map_new@32768': 0.575}  mean 0.714
+free (A7): {'shift_wide_new@8192': 0.927, 'shift_wide_new@16384': 0.642, 'shift_wide_new@32768': 0.152, 'affine_map_new@8192': 0.86, 'affine_map_new@16384': 0.52, 'affine_map_new@32768': 0.155}  mean 0.543
+saved logs/learning_probes/v13_sempty_sci1_release_749500_91a87ed_reach32k_spread_s7000_t400.json
+=== s8 done 2026-11-24T05:45:34Z
+  warnings.warn(
+Results saved to logs/memory_probes/v13_sempty_sci1_release_749500_91a87ed_t40_32k.json (aggregates, 360 rows omitted)
+=== REACH32K DONE 2026-11-24T05:50:20Z
