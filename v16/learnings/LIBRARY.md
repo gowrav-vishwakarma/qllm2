@@ -357,3 +357,8 @@ Process lessons added:
   is still the mind's open gap.
 - **Release-checkpoint reads queued** (amendment 10:32 IST): NATURAL RECALL lure + no-lure and the SCOPE 4-tuple at 2k / 8k on
   final_step_749500.pt, after the release CHECK.
+- **Release checkpoint (49.12B) reads, 11-24 (6000, 40400d2), descriptive:**
+  - NATURAL RECALL with a lure: D 64 acc 0.320 vs lure 0.335, so no name -> value binding, as at 100M.
+  - Without a lure: 0.465 at D 64, then 0.21 / 0.13 / 0.145 at 2k / 8k / 16k (chance 0.125).
+  - SCOPE: 2k scope_fu 0.67, C 8k 0.47.
+  - Card line: exact literal-cue recall far past the window, yes; prose facts asked in other words, only at short range.
