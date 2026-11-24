@@ -1,0 +1,355 @@
+{
+ "votes": [
+  [
+   "chat1",
+   "B",
+   "base"
+  ],
+  [
+   "chat2",
+   "B",
+   "base"
+  ],
+  [
+   "chat3",
+   "A",
+   "sft"
+  ],
+  [
+   "chat4",
+   "B",
+   "base"
+  ],
+  [
+   "chat5",
+   "A",
+   "base"
+  ],
+  [
+   "chat6",
+   "B",
+   "sft"
+  ],
+  [
+   "mt1",
+   "bad",
+   "bad"
+  ],
+  [
+   "mt2",
+   "A",
+   "base"
+  ],
+  [
+   "mt3",
+   "bad",
+   "bad"
+  ],
+  [
+   "tool_call1",
+   "tie",
+   "tie"
+  ],
+  [
+   "tool_call2",
+   "tie",
+   "tie"
+  ],
+  [
+   "tool_read1",
+   "tie",
+   "tie"
+  ],
+  [
+   "tool_read2",
+   "A",
+   "sft"
+  ],
+  [
+   "py1",
+   "bad",
+   "bad"
+  ],
+  [
+   "py2",
+   "B",
+   "sft"
+  ],
+  [
+   "proto3",
+   "B",
+   "sft"
+  ],
+  [
+   "q1",
+   "bad",
+   "bad"
+  ],
+  [
+   "q2",
+   "A",
+   "base"
+  ],
+  [
+   "q3",
+   "bad",
+   "bad"
+  ],
+  [
+   "q4",
+   "bad",
+   "bad"
+  ],
+  [
+   "nat1",
+   "B",
+   "base"
+  ],
+  [
+   "nat2",
+   "B",
+   "sft"
+  ],
+  [
+   "nat3",
+   "A",
+   "sft"
+  ],
+  [
+   "nat4",
+   "bad",
+   "bad"
+  ],
+  [
+   "nat5",
+   "bad",
+   "bad"
+  ],
+  [
+   "nat6",
+   "A",
+   "sft"
+  ],
+  [
+   "nat7",
+   "B",
+   "sft"
+  ],
+  [
+   "nat8",
+   "B",
+   "sft"
+  ],
+  [
+   "nat9",
+   "B",
+   "sft"
+  ],
+  [
+   "nat10",
+   "B",
+   "sft"
+  ],
+  [
+   "nat11",
+   "tie",
+   "tie"
+  ],
+  [
+   "nat12",
+   "bad",
+   "bad"
+  ],
+  [
+   "nat13",
+   "A",
+   "sft"
+  ],
+  [
+   "nat14",
+   "bad",
+   "bad"
+  ],
+  [
+   "nat15",
+   "tie",
+   "tie"
+  ],
+  [
+   "nat16",
+   "tie",
+   "tie"
+  ],
+  [
+   "nat17",
+   "tie",
+   "tie"
+  ],
+  [
+   "nat18",
+   "tie",
+   "tie"
+  ],
+  [
+   "nat19",
+   "B",
+   "sft"
+  ],
+  [
+   "nat20",
+   "tie",
+   "tie"
+  ],
+  [
+   "nat21",
+   "tie",
+   "tie"
+  ],
+  [
+   "nat22",
+   "B",
+   "sft"
+  ],
+  [
+   "nat23",
+   "B",
+   "sft"
+  ],
+  [
+   "nat24",
+   "bad",
+   "bad"
+  ],
+  [
+   "nat25",
+   "bad",
+   "bad"
+  ],
+  [
+   "nat26",
+   "tie",
+   "tie"
+  ],
+  [
+   "nat27",
+   "A",
+   "sft"
+  ],
+  [
+   "nat28",
+   "A",
+   "sft"
+  ],
+  [
+   "nat29",
+   "bad",
+   "bad"
+  ],
+  [
+   "nat30",
+   "A",
+   "base"
+  ],
+  [
+   "nat31",
+   "B",
+   "sft"
+  ],
+  [
+   "nat32",
+   "tie",
+   "tie"
+  ],
+  [
+   "nat33",
+   "bad",
+   "bad"
+  ],
+  [
+   "nat34",
+   "B",
+   "sft"
+  ],
+  [
+   "nat35",
+   "A",
+   "sft"
+  ],
+  [
+   "nat36",
+   "B",
+   "sft"
+  ],
+  [
+   "nat37",
+   "B",
+   "sft"
+  ],
+  [
+   "nat38",
+   "tie",
+   "tie"
+  ],
+  [
+   "nat39",
+   "A",
+   "sft"
+  ],
+  [
+   "nat40",
+   "tie",
+   "tie"
+  ]
+ ],
+ "tally": {
+  "sft": 24,
+  "base": 8,
+  "tie": 14,
+  "bad": 14
+ },
+ "by_group": {
+  "Chat Q&A": {
+   "sft": 2,
+   "base": 4,
+   "tie": 0,
+   "bad": 0
+  },
+  "Multi-turn chat": {
+   "sft": 0,
+   "base": 1,
+   "tie": 0,
+   "bad": 2
+  },
+  "Tool use": {
+   "sft": 1,
+   "base": 0,
+   "tie": 3,
+   "bad": 0
+  },
+  "Python for science": {
+   "sft": 1,
+   "base": 0,
+   "tie": 0,
+   "bad": 1
+  },
+  "Rules & protocols": {
+   "sft": 1,
+   "base": 0,
+   "tie": 0,
+   "bad": 0
+  },
+  "Quantitative": {
+   "sft": 0,
+   "base": 1,
+   "tie": 0,
+   "bad": 3
+  },
+  "Natural chat": {
+   "sft": 19,
+   "base": 2,
+   "tie": 11,
+   "bad": 8
+  }
+ },
+ "judge": "Lead (Claude Opus 5.5), blind to key, at user request"
+}
