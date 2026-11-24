@@ -5841,7 +5841,7 @@ claim (there is no twin at 386M).
   (no-lure acc at 2k / 8k / 16k; SCI-1 trains at a longer context than the wio bodies, so the D values are reported as distances only)?
 - Reported per distance and style: acc, free, lure-win. It goes on the user's final readout page as "natural recall".
 Order in the window: pam, nochrono (no-lure), then 47B lure, 47B no-lure, then the other 100M no-lure bodies if the gate passed.
-AMENDMENT (2026-11-24 10:33 IST, before any number; Lead at the pause wrap-up): part (b) moves from 47B to the RELEASE checkpoint
+AMENDMENT (2026-11-24 10:32 IST, before any number; Lead at the pause wrap-up): part (b) moves from 47B to the RELEASE checkpoint
 final_step_749500.pt (SCI-1 386M, 3r, 49.119B tokens; sha b403ad63 per Lead), because these numbers go on the model card. It runs
 both the original (lure) and the no-lure probe, unchanged (same docs, D, n, scores), PLUS the standing SCOPE 4-tuple at 2k / 8k (n 100,
 the default package path). It is descriptive, with no bar. The 100M no-lure part (a) runs only if the window has time left after (b)
