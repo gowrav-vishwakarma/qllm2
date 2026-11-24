@@ -8163,3 +8163,13 @@ associations 1 / 4 / 8: 0.817 / 0.817 / 0.708.
 Reading (descriptive): the induced rule holds at 4x the trained window (0.79, margins positive on both tasks) and fades by 8x
 (affine still above chance with a small positive margin, shift near chance with a negative margin); exact recall of a fact holds
 better than the rule at 8x (0.78; 0.58 even with the needle at the very start, 32k tokens back).
+
+### SCI-1 base RELEASED (2026-11-24 11:38 IST, Lead)
+- HF: https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m — final_step_749500 (49.12B tokens; ckpt sha256 b403ad63…),
+  exported fp32 `sci1_386m_49b.pt` sha256 03254d70…; standalone `modeling_pam2.py` (parity max logit diff ≤ 2.4e-4, greedy identical).
+  Card source: `hf_release_sci1/` (weights not in git). The v11 card points to it; it points back.
+- Card numbers (release checkpoint): s8 spread 8k 0.94/0.99, 16k 0.69/0.89, 32k 0.20/0.58 (reach32k, c58aec8d);
+  t40 8k 0.98, 16k 0.94, 32k 0.78; HS/ARC-e/PIQA 0.320/0.559/0.638; Library's lure / prose / scope limits (660734ee).
+- Chat script fix before release: `run_chat.py` double-counted the pending `<|im_end|>\n` in its history / penalty context
+  (the model's input was always right); SAMPLES regenerated, text unchanged.
+- SFT (sft1) runs next on the 6000 as a separate release.
