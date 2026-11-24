@@ -8102,3 +8102,18 @@ guard holds and the human eval prefers SFT over base on a majority of the prompt
 chat sources), and ship the SFT checkpoint as a second card once it passes its guards. Reason: the SFT is a new training stage with
 a known risk (a decay erases carry), new code (packing + replay + filter) and ~8 h; tying the release to it delays a finished,
 checked artifact for an unmeasured one.
+
+## BUG (found 2026-11-24 by Lead's HF-port parity work; fixed 048a01ab): reset_at_eos was not applied in one-token decode
+`RealPAMLayer._stepwise_delta` (the T = 1 decode step) never read the separator mask `_keep`, so feeding <|endoftext|> one token at
+a time reset only the echo memory, not the notebooks; `_chunked_delta` (training, prefill, every full-sequence forward) did reset
+them. On SCI-1 weights the logits after a fed separator differed from the full forward by up to 52.7 (hf_release_sci1/PARITY.md, B).
+**Fix:** retention x the separator mask in the decode step, as in the chunked path. **Test:** v13_sempty/tmp/eos_decode_parity.py
+(CPU fp32, M2 body: delta, Chrono, echo, share_reads; EOS at three positions; prefill 40 then token-by-token): max|full - decode|
+after the EOS 8.3e-07 / 8.9e-07 = the before-EOS level (without the fix 2.3e-04 / 3.4e-04: the test fails); reset_parity.py PASS.
+**What it touched (audit):** no scored number. s8 / t40 / clk2 / skill pack / scope / MC / val run the parallel forward; Library's
+stepwise v14 probes never feed 50256; v16/package.py prefills in chunks and decodes answer tokens only. LM.generate prefills the
+prompt in chunks (correct), so only text generated AFTER a model-emitted <|endoftext|> was decoded without the notebook reset: the
+tails of the CHECK generation samples (scripts/sci_gen.py, no EOS stop: e.g. "...<|endoftext|><|im_start|>system ...") and of the
+human-eval dumps. Those are descriptive; the text before the first emitted <|endoftext|> is exact. The HF release's step() resets
+both memories (correct). Also noted (harmless): chunked vs per-token retention differ by the log(r + 1e-6) epsilon (~1e-3 / 1e-2 in
+logits).
