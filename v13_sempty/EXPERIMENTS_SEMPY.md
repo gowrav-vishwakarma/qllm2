@@ -8184,3 +8184,11 @@ better than the rule at 8x (0.78; 0.58 even with the needle at the very start, 3
 
 Harness: scripts/mc_eval.py (fp32; parity with lm-eval 0.4.9.1 to 4 decimals on Pythia-160M, 59e9197), full validation sets, zero-shot.
 t40 16k moves 0.92 -> 0.74 -> 0.94 over three saves 0.07B apart: single-save noise on this cell is ~0.1 at 386M too.
+**sft1 SMOKE + LAUNCH (6000; user GO via Lead; maya / nexus confirmed stopped, no compute apps, right before both):** smoke 11:36-12:55
+IST (exact launch path, 100 constant + 10 decay steps, throwaway dirs deleted after): [continue] from final_step_749500 (49.119B),
+lr 2e-4, decontam v2 a4b66d1b on, 624,211 probe 13-grams, kept-volume interleave; masked SFT loss 1.56 -> 1.15; val 2.978 / 2.977
+(base 2.9946), wiki 3.541 / 3.537; decay resume skipped 7,696 kept conversations correctly; **peak 79.4 GB** of 98; both segments
+exit 0. Each segment's stream warm-up is ~20-35 min (base streams re-open at exact cursors; known). **sft1 LAUNCHED 12:56 IST
+2026-11-24** (tmux sci1sft1, worktree ~/Development/qllm_sft @ 2094021 (>= 3b9b2156), log
+logs/v13_sempty_sci1_sft1_2094021_20261124_0726.log, dirs checkpoints_v13_sempty/sci1_sft1_2094021 then sci1_decay_2094021 = the
+release candidate).
