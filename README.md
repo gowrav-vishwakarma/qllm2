@@ -13,7 +13,9 @@ fixed-size state — there is **no KV cache** that grows with context length.
 
 **Paper:** [Phase-Associative Memory: Sequence Modeling in Complex Hilbert Space](https://arxiv.org/abs/2604.05030) (arXiv:2604.05030) — Vishwakarma & Agostino.
 
-**Model weights (Hugging Face):** [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)
+**Model weights (Hugging Face):**
+- [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) — **V11, the shipped hero**: ~100M complex-valued PAM, pretrain + chat SFT.
+- [gowravvishwakarma/qllm-pam2-sci1-386m](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m) — **SCI-1 (QLLM-2 / PAM-2), the newest research model**: 386M real-valued PAM-2, 49B tokens of a science-and-chat mix, a base model (no SFT). It applies a rule learned from examples spread over **twice its 4,096-token training window**, and recalls a fact at **four times** it. See [After V11](#after-v11--qllm-2--pam-2-v13_sempty--v16-what-the-newer-models-showed).
 
 > **Latest shipped (2026-07-09):** revision **`round-6b-gate`**, also promoted to **`main`** — the
 > v2 gate line at **~6B pretrain + smoltalk2 SFT** (content-aware phase gate, vocab 50261, blended
@@ -339,6 +341,58 @@ model. [v12/README.md](v12/README.md) · [v12/EXPERIMENTS_V12.md](v12/EXPERIMENT
 - **V13** — another experiment set: selective PAM (delta write, vault, phase addressing),
 fused-delta kernels, recall / reasoning levers. Useful engineering and negative results;
 still not the shipped line. [v13/EXPERIMENTS_V13.md](v13/EXPERIMENTS_V13.md).
+
+## After V11 — QLLM-2 / PAM-2 (`v13_sempty` … `v16`): what the newer models showed
+
+> Status: **paused 2026-11-20** (not stopped). Everything below is measured, dated and pre-registered in the notebooks;
+> numbers carry params and tokens; single-seed results are marked as such.
+
+**The body (PAM-2).** A real-valued successor of PAM, written on [sempyt](https://github.com/gowrav-vishwakarma/sempyt):
+per-head **d×d notebooks** updated by a gated **delta rule** (separate erase and write gates) in a sparse set of layers, with
+the other blocks **reading** the nearest notebook below; keys and queries rotated by **Chrono**, a learned *clock* (one
+positive content-dependent rate per head that warps the rotary frequency bank, exact RoPE at init); an **echo** succession
+memory at the head; state reset at document boundaries. Still **O(1) state per token** (no KV cache; ~1.15 MB of state for a
+128k-token session at 103M). Code: [`v13_sempty/`](v13_sempty/README.md); architecture in pseudocode:
+[`v16/SCI1_ARCHITECTURE_PSEUDOCODE.md`](v16/SCI1_ARCHITECTURE_PSEUDOCODE.md).
+
+**The product-size model, SCI-1 386M** (weights: [qllm-pam2-sci1-386m](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m)).
+24 blocks, d 1024, notebooks in 6 of them; trained at a **4,096-token window** to **49.1B tokens** of filtered public data
+(DCLM, FineWeb-Edu, arXiv / PubMed / peS2o, Cosmopedia, FineMath, SmolTalk chat, tool dialogues, science Python, plus ~2–4 %
+synthetic rule documents), decontaminated with 13-grams against every reported benchmark. At 43–47B tokens:
+- **A rule learned beyond the training context.** Eight examples of an unseen rule spread over **8,192 tokens (2× the window)**,
+  then a new case: **0.94–0.98** (chance 0.125). This appeared once a small share of documents spread a rule's examples over
+  1.8–3.2k tokens: the model was never shown 8k, nor the gap between its examples (before those documents: 0.19).
+- **Recall beyond the training context:** a fact 16k tokens back (4× the window): **0.81–0.98**.
+- Knowledge benchmarks (HellaSwag / ARC-e / PIQA): **0.32 / 0.56 / 0.65** at 47B. Reference only (different data, no claim):
+  Pythia-410M at 10.5B tokens reads 0.30 / 0.43 / 0.61 on the same harness.
+
+**Equal-data controls (~103M bodies, identical tokens and code).**
+- Without far documents (1.0B tokens): rules at 2k–4k **0.52** vs **0.15 (Mamba-2)** and **0.07 (Transformer++)**.
+- With far documents in every body's data (five bodies): the transformer still collapses past its window (rules 0.08 at 8k;
+  recall 0.08 at 16k) and Mamba-2 cannot learn the letter-shift rule at all. **But Gated DeltaNet**, the closest published body,
+  carries rules as well as PAM-2, has a lower loss (3.385 vs 3.425) and trains faster. Our pre-registered claim over it was
+  **not established**: the rule score moves by up to 0.3 between seeds at this scale, so the gap is undetermined.
+- **What replicates is the clock's recall:** with Chrono, a fact 16k tokens back is found at **0.80 / 0.79 / 0.87** over three
+  seeds, against **0.35 / 0.49** with the clock off and **0.25–0.33** for Gated DeltaNet. The closest prior work for a
+  content-driven rotary clock is *Selective RoPE* (Movahedi et al., ICLR 2026, arXiv:2511.17388); ours differs in form
+  (one monotone rate per head, shared by reader layers, dilatable at test time), and a head-to-head was pre-registered, not run.
+
+**What did not work (kept, with the numbers):** a learning-rate decay erases the far rule's carry itself (paired: −0.37 nats);
+the model learns *that* a rule was told, not *what it is about* (SCI-1 applies a told unit to the wrong quantity in ~50 % of
+cases at 2k; at 100M a value is bound to the wrong name as often as to the right one); several data-mix changes during the long run caused ~1B-token excursions at a constant
+learning rate; a half-clocked notebook did not replicate across seeds; at 100M every PAM-2 variant is a slightly worse plain
+language model than Mamba-2 and Gated DeltaNet.
+
+**The mind + library package** (`v14`, `v16`): the O(1) state as the *mind* (rules, instructions) plus an outside *library*
+(exact text, fetched rows) read at query time. On SCI-1, a rule held only in the state applied to a fetched fact goes from
+0.01 alone to 0.67 with the library; recall at 32k from 0.05–0.30 to 0.85–1.00, at ~4 MB per session. BABILong single-fact
+and relation questions to 32k with no tuning on the benchmark.
+
+**Paper (draft):** [`v16/paper/main.pdf`](v16/paper/main.pdf) — *every* number above with its run hash, the failed bars stated
+as failed. Notebooks: [`v13_sempty/EXPERIMENTS_SEMPY.md`](v13_sempty/EXPERIMENTS_SEMPY.md) (body, long run, controls; see
+"PAUSE RECORD" for the final state), [`v14/EXPERIMENTS_V14.md`](v14/EXPERIMENTS_V14.md) (library, probes),
+[`v16/`](v16/README.md) (package, paper, board), the lineage tree [`EXPERIMENT_TREE.md`](EXPERIMENT_TREE.md). Other lanes:
+[`v15/`](v15/README.md) (Grove, a from-the-unit-up experiment), `v17/` (in progress at the pause).
 
 ---
 
