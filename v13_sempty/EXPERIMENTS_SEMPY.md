@@ -8062,3 +8062,43 @@ BIND-LURE Step 0 / dual-phase binding (v14). Rerun commands are in their section
   s45 +0.53 / -0.95 / -1.64. The seed spread sits at distance 0 already: circuit strength at 1B (acquisition), not survival over
   filler. nochrono s43 / s45: +2.20 / +1.75 at M0. split s43 / s45: +1.91 / **+10.53** (s45's split formed a very strong shift circuit,
   M8k +3.99, while its needles fell to 0.41: one body can land in either regime per seed).
+
+## sft1: a chat SFT stage on SCI-1 386M (PRE-REGISTRATION DRAFT, Mind 2026-11-24 10:4x IST; NOT launched; Lead takes it to the user)
+
+**Why.** The user offers "a bit SFT for smoltalk or chat" so that the released model chats better, consistent with the standing rule
+(base with chat, then a separate SFT stage; smoltalk2's SFT config kept UNSEEN by the base: the base saw smoltalk2_mid, chatmt2,
+chatsr, tuluif). **Closest prior work:** SmolLM2's SFT on smoltalk (Allal et al. 2025); our difference is only that the base is a
+PAM O(1)-state body whose in-state rule and recall skills we guard through the stage (no novelty claim; a release step).
+**Data.** HuggingFaceTB/smoltalk2, config SFT (cached locally), with the v7 policy already in v7/data.py: block multilingual /
+longalign / aya / function_calling / toolcalling / smolagents splits; caps openthoughts3 0.05, mixture_of_thoughts 0.10, table_gpt
+0.20; think-traces dropped (the base answers directly; the Reasoning on/off switch was removed at cont1). ChatML with the 4 added
+specials as in the base, the default system prompt as v7. **Loss on assistant content + its closing <|im_end|> only**
+(v7 _encode_sft_example: system / user / role headers masked). **Packing:** conversations concatenated into 4096 windows with
+RESET_AT_EOS (state reset between conversations, as the base trained), no cross-conversation attention leak by construction of the
+O(1) state reset. **Replay:** 20 % of tokens from the 3r base mix (incl. the far rule docs b2s_far / proto_far and recall docs) so the
+in-state skills keep being exercised. **Decontamination:** the v2 13-gram index (a4b66d1b, HS / ARC / PIQA / GSM8K / MMLU ...) applied
+to SFT conversations (drop on any hit), PLUS a probe-template filter: drop conversations that contain our probe surface forms
+(protocol docs "report every mass in grams", b2s / shift_wide / affine_map prompt shells, t40 key-value shells, the chat-probe prompts
+of v16/humaneval). Counts (kept / dropped per split, tokens) go into the run header.
+**Size.** ~150M assistant-target tokens (~250M total window tokens incl. context and 20 % replay), one pass, no repeats.
+**Recipe.** From final_step_749500.pt (49.119B, full, resumable; weights + optimizer). AdamW moments kept. LR: warm-up 200 steps to
+**2e-4**, constant to 80 % of the budget, then linear to 0 over the last 20 % (a short decay). Tokens per step 65,536 (16 x 4096,
+grad-accum as the base), seed 43. **Expectation stated now:** the closing decay will cost told-rule carry (decay_M9 - M9 dC(2k) -0.37
+at 1B of decay; this decay is ~0.05B, so a smaller loss, but the SFT data itself has no long-range rule supervision; replay is there
+to limit it). **Box / cost:** the 4090 fits 386M at SEQ 4096 with micro-batch 4 + gradient checkpointing (to be measured in the smoke;
+the 6000 ran 37k tok/s at 77 GB). Estimate 4090 ~20-25k tok/s -> 250M tokens ~3-3.5 h; code + tests ~2-3 h; smoke 0.5 h; CHECK +
+chat eval ~1.5 h: **~8 h** total on the 4090 (or ~5 h with the 6000 if it is back).
+**Code needed (not written):** a v13_sempty train.py --dataset sft_mix path that streams v7's assistant-only SFT encoder packed into
+windows with a 20 % base-mix replay and the probe-template filter; parity: with SFT share 0 it reproduces the base loader's sha
+(--dump_batches), and an SFT window's loss_mask is 0 on every non-assistant token (unit test).
+**Guards vs the 49B CHECK (stated before the run; break = report and do not release the SFT checkpoint):** s8 @8k >= 49B - 0.10 (seed
+noise is large on this probe); t40 16k >= 49B - 0.05; clk2 8k >= 49B - 0.05; HS / ARC-e / PIQA each >= 49B - 0.01; told-rule four-cell
+tuple at 2k + 8k: P_fu 8k <= 0.20 and scope_fu 8k <= 0.30 (the 3f / 3r guard), C 8k reported (expected to drop; no bar), unit_acc
+reported. **Chat judgment (the point of the stage):** our chat probes (v16 prompts) + the human-eval page (v16/humaneval), greedy
+and sampled, prompt + decoded output + checkpoint shown; stop-on-<|im_end|> rate on the chat probes >= 0.95 (base: measure at 49B);
+answers stay in English, no think traces, no tool-schema leakage; no v11 comparison (user rule). **Verdict:** RELEASE-SFT if every
+guard holds and the human eval prefers SFT over base on a majority of the prompts; else the base is the release.
+**Recommendation (Mind):** release the BASE first (49B, measured, the artifact the paper describes; it already chats from 40.5B of
+chat sources), and ship the SFT checkpoint as a second card once it passes its guards. Reason: the SFT is a new training stage with
+a known risk (a decay erases carry), new code (packing + replay + filter) and ~8 h; tying the release to it delays a finished,
+checked artifact for an unmeasured one.
