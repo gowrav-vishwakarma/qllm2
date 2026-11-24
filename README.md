@@ -364,7 +364,8 @@ synthetic rule documents), decontaminated with 13-grams against every reported b
   spread over **8,192 tokens (2× the window)**, then a new case: **0.94 / 0.99**; over **16,384 (4×): 0.69 / 0.89**; over
   32,768 (8×): 0.20 / 0.58 (chance 0.125). This appeared once a small share of documents spread a rule's examples over
   1.8–3.2k tokens: the model was never shown 8k, nor the gap between its examples (before those documents: 0.19).
-- **Recall beyond the training context:** a fact 8k back **0.98**, 16k back (4× the window) **0.94**.
+- **Recall beyond the training context:** a fact 8k back **0.98**, 16k back (4× the window) **0.94**, 32k back (8×) **0.78**
+  (0.58 when the fact is at the very start of the 32k context).
 - What does not reach that far: a fact written in prose and asked in natural words (0.47 at 64 tokens, near chance from 2k),
   and binding a fact to its owner against a same-type distractor (lure wins as often as the answer).
 
