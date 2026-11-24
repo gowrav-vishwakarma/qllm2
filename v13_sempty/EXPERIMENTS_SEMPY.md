@@ -8200,3 +8200,24 @@ forks), interleave per kept conversation by kept volume, cursor = draws + per-sp
 one hash for both indexes, network errors retried from the current row. Verified on real smoltalk2 (with HF rate-limit and timeout
 retries occurring): deterministic order, exact mid-stream resume. Recipe, data policy, filters and guards unchanged; only the order of
 the SFT conversations differs from the first launch. New log logs/v13_sempty_sci1_sft1_431eabe_20261124_0826.log (6000).
+
+**sft1 main segment DONE, decay start FAILED, decay RELAUNCHED (Mind, 16:3x IST 11-24):** the main (constant-LR) segment finished
+cleanly at 15:55 IST: steps 749,500 -> 752,552 (3,052 x 65,536 = 0.20B tokens; total 49.319B), exit 0, steady 37.6k tok/s, last
+val_loss 2.983 (best ppl 19.44), mix since start smoltalk2_sft 71.2 % (share 0.8 of windows; SFT windows are shorter in targets).
+The decay branch then died 20x in a row (15:55-16:20 IST) with CUDA OOM at optimizer load: "Process 4056103 has 89.83 GiB". Cause
+(BUG, ours): train.py leaves a streaming run via os._exit(0), which skips multiprocessing's atexit, so the 12 sft_mix producers
+(daemon, but forked AFTER CUDA init, so they hold the trainer's CUDA device handles) outlived the trainer, blocked on full queues,
+and the driver kept the trainer's 89.8 GiB allocated until the chain's tmux closed (16:20 IST). The smoke never showed it: it used
+the sequential stream. The armed eval then ran on a missing decay checkpoint (its SFT half failed; its base half, scope at 2k / 8k
+and the human-eval dump of final_step_749500, is valid and kept: logs/v14_scope_sft1eval_sci1_release_749500_91a87ed_431eabe.*,
+logs/sci1/v13_sempty_humaneval_sci1_release_749500_91a87ed.json). Failed-decay log kept as evidence:
+logs/v13_sempty_sci1_decay_431eabe_20261124_1025.log (6000).
+Fix fe01c6cd: each producer asks the kernel for SIGKILL on parent death (prctl PR_SET_PDEATHSIG), and train.py terminates the
+multiprocessing children before its os._exit. Test v13_sempty/tmp/test_producer_orphan.py (4090): control (no fix) child alive,
+2453 MiB held after the parent's os._exit; pdeathsig child dead, 32 MiB; terminate child dead, -73 MiB; ALL PASS. 6e2a5f5 adds
+DECAY_ONLY=1 MAIN_DIR=<dir> to sci1_cont_chain.sh (the decay line unchanged). **Decay relaunched 16:32 IST** from
+checkpoints_v13_sempty/sci1_sft1_431eabe/stable_final.pt (= step 752,552; maya / nexus off, GPU empty), tmux sft1dec, code
+6e2a5f5, log logs/v13_sempty_sci1_decay_6e2a5f5_20261124_1102.log, dir sci1_decay_6e2a5f5 (the release candidate = its
+best_model.pt). The SFT half of the eval is re-armed (tmux sft1eval2, logs/sft1_eval2.sh, log
+logs/v13_sempty_sci1_sft1_eval2_6e2a5f5_20261124_1112.log). Disk: deleted the superseded resume-only step_750029 / step_750792
+of the main dir (kept best, latest, stable_final, step_751555, step_752318).
