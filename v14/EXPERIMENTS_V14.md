@@ -6126,8 +6126,12 @@ whose demos the O(1) mind compiled itself.
   - **Held rules rose a lot from 10B to 49B.** R×K 2k / 8k went 0.62 / 0.27 (M10) → 0.97 / 0.78 (base) and 0.97 / 0.85 (Chat).
     Told-in-state went 0.80 / 0.21 → 0.77 / 0.25 (base). Rewrite stays at 0.93-0.96; recall at 32k stays at 1.00 (two-hop
     0.95 / 0.90).
-  - **SFT kept the package cells.** Chat vs base differs by ≤ 0.07 on every suite cell. R×K 8k is higher (0.85 vs 0.78);
+  - **SFT kept the package SUITE cells (not RULER, see the next line).** Chat vs base differs by ≤ 0.07 on every suite cell. R×K 8k is higher (0.85 vs 0.78);
     told 8k is lower (0.22 vs 0.25).
+  - **SFT cost raw-value lookup (RULER niah): Chat is below the base in all 8 niah cells, by 0.06-0.22.** Single 4k-32k
+    0.54 / 0.44 / 0.50 / 0.32 → 0.40 / 0.38 / 0.34 / 0.20; multikey 0.46 / 0.62 / 0.36 / 0.40 → 0.30 / 0.40 / 0.18 / 0.30.
+    The Chat model ends more word needles at `:\n`. (Lead caught my over-broad "within 0.07" card line, 11-24; the card
+    now says the base reads raw values better for pure lookup.)
   - **RULER niah: the fetch is right; the read loses long or odd values.** The path is text2 on all 400 niah docs per
     model. Package by needle kind, base / Chat: number 0.85 / 0.75, word 0.48 / 0.18, uuid 0.12 / 0.09. The misses:
     - uuids are garbled: `3b9d1caa-3ba9-1f050-...`;
