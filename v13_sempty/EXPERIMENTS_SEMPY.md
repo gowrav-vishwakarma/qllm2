@@ -8221,3 +8221,37 @@ checkpoints_v13_sempty/sci1_sft1_431eabe/stable_final.pt (= step 752,552; maya /
 best_model.pt). The SFT half of the eval is re-armed (tmux sft1eval2, logs/sft1_eval2.sh, log
 logs/v13_sempty_sci1_sft1_eval2_6e2a5f5_20261124_1112.log). Disk: deleted the superseded resume-only step_750029 / step_750792
 of the main dir (kept best, latest, stable_final, step_751555, step_752318).
+
+**sft1 decay DONE 17:25 IST** (step 753,315, 49.369B; exit 0, attempts 1). The eval started 42 s later on a freed GPU (the
+fe01c6cd fix holding in the real run). Candidate = checkpoints_v13_sempty/sci1_decay_6e2a5f5/best_model.pt (step 753,315).
+
+**sft1 GUARDS (Mind 18:2x IST 11-24; vs the release CHECK row = step 749,500, the SFT's own start, the strict reading of "49B").**
+Same scoring code for both rows (release values reproduce the table; clk2 = free_s at 8.0+c4, as the table). MC = scripts/mc_eval.py
+fp32 on both (the 6000 CHECK's MC ran bf16, 0.3781 / 0.5745 / 0.6545, superseded by the fp32 rerun
+logs/sci1/v13_sempty_mc_sci1_sft1_753315_6e2a5f5_fp32.json). Told tuple: same box (the 6000), same command, both checkpoints.
+
+| guard | release (749,500) | sft1 (753,315) | bar | holds |
+|---|---|---|---|---|
+| s8 @8k (shift / affine) | 0.964 (0.938 / 0.990) | **0.995** (0.993 / 0.998) | >= 0.864 | yes |
+| t40 16k | 0.942 | 0.908 | >= 0.892 | yes (margin 0.016) |
+| clk2 8k | 0.90 | 0.93 | >= 0.85 | yes |
+| HellaSwag acc_norm | 0.3719 | 0.3802 | >= 0.3619 | yes |
+| ARC-e acc | 0.5593 | 0.5745 | >= 0.5493 | yes |
+| PIQA acc_norm | 0.6355 | 0.6513 | >= 0.6255 | yes |
+| told P_fu 8k | 0.03 | 0.01 | <= 0.20 | yes |
+| told scope_fu 8k | 0.08 | 0.01 | <= 0.30 | yes |
+| told C 8k (no bar) | +0.474 | +0.642 | reported | - |
+| told unit_acc 8k (no bar) | 0.74 | 0.84 | reported | - |
+
+Reported, no bar: skill @8k 0.645 -> 0.905; clk2 32k-run @16k 0.40 -> 0.64; t40 by context 4k 0.994 -> 0.969, 8k 0.978 -> 0.925
+(the needle cells are the only ones that went down; 16k is 0.016 above its bar); told at 2k: C +1.913 -> +2.257, scope_fu 0.68 ->
+0.77, P_fu 0.02 -> 0.01. Caveat: one save, one seed; the stage ends with an LR decay (2e-4 -> 0), which alone lifts the in-context
+probes at every earlier SCI-1 decay, so the rises are NOT attributed to the SFT data.
+
+**Chat judgment, measurement detail (fixed BEFORE the numbers, 18:2x IST):** the human-eval dump caps answers at 60-120 tokens, so
+its stop rate (base 0.60 / 0.55, SFT 0.55 / 0.50, greedy / sampled) counts truncations of answers still going, not failures to stop;
+it cannot judge the >= 0.95 bar. The bar is read from v13_sempty/tmp/sft1_stoprate.py (be58fac2): stop = <|im_end|> within 768 new
+tokens with no <|endoftext|> / <|im_start|> before it; 60 prompts (the dump's 20 chat-format prompts + 40 natural chat questions in
+varied styles), greedy + 2 sampled seeds; the bar applies to all 180 generations of the SFT; leakage counted only on prompts that
+offer no tools (the tool prompts' <tool_call> answers are the asked-for behaviour, not leakage); non-English = < 90 % ASCII letters.
+Base measured the same way. Log logs/v13_sempty_sft1_stoprate_be58fac_20261124_1225.log (6000).
