@@ -7979,3 +7979,64 @@ as the switcher would (tmux `sci1`, 59d098d, 21:17 IST); the switcher now moves 
 6,499,991,552, wsd_stable, warmup 500, new 15-source mix (think out, protoc in), decontam sha 08766210…, exact stream cursors; step
 61,150 at 37.7k tok/s (same as before). ETA: main to global 160,218 ~Nov 5 21:30 IST, then the 1B decay (~7.5 h). Next milestones
 76,295 (~Nov 4 04:40 IST) and 91,554 (~Nov 4 12:00 IST).
+
+## PAUSE RECORD (Lead, 2026-11-24 10:25 IST): every result that landed after the sessions stopped, and the state at the pause
+
+The user paused the project on 2026-11-19 ~16:50 IST (hold) and stopped the 6000 on 2026-11-20 ~11:10 IST. Mind and Library were
+not alive when the last results landed, so Lead read them from the committed result files (logs/wio, logs/v14_scope_c_*) and
+writes them here. All s8 numbers are 3-save means (14,500 / 15,000 / end); t40 = weighted accuracy over positions x associations.
+
+### Seed trios (far mix, ~103M, 1.0B tokens; within-box by construction)
+
+| arm | box / seed | s8 @8k | s8 D (2k+4k) | shift 0/2k/4k/8k | affine 0/2k/4k/8k | t40 2k / 8k / 16k | HS / ARC-e / PIQA | val |
+|---|---|---|---|---|---|---|---|---|
+| pam | 4090 / 43 | 0.343 | 0.537 | .80/.61/.44/.23 | .66/.57/.53/.45 | .900/.817/.803 | .274/.451/.597 | 3.4248 |
+| nochrono | 4090 / 43 | 0.427 | 0.639 | .87/.71/.56/.34 | .71/.66/.63/.51 | .478/.408/.353 | .273/.464/.592 | 3.4267 |
+| split (3 of 6 heads clocked) | 4090 / 43 | 0.473 | 0.695 | .87/.77/.63/.38 | .71/.70/.68/.57 | .844/.742/.692 | .271/.466/.610 | 3.4248 |
+| gdn | 4090 / 43 | 0.408 | 0.638 | .90/.51/.33/.14 | .97/.89/.82/.68 | .681/.458/.325 | .275/.440/.594 | 3.385 |
+| pam | 4090 / 44 | 0.620 | 0.817 | 1.0/.98/.92/.69 | .72/.71/.66/.55 | .867/.839/.786 | .274/.466/.591 | 3.4397 |
+| pam | 6000 / 45 | 0.284 | 0.474 | .56/.42/.27/.13 | .62/.63/.57/.44 | .992/.947/.872 | .272/.461/.592 | 3.4206 |
+| nochrono | 6000 / 45 | 0.414 | 0.608 | .80/.65/.49/.25 | .73/.66/.63/.57 | .622/.536/.492 | .275/.459/.601 | 3.4253 |
+| split | 6000 / 45 | 0.842 | 0.950 | 1.0/1.0/.99/.92 | .97/.92/.89/.76 | .489/.428/.408 | .274/.465/.589 | 3.4264 |
+
+split_s44 is INCOMPLETE (stopped at step 8,350 / 13,733 by the 11-19 reboot and the pause; latest.pt kept, no readouts);
+nochrono_s44 and gdn_s44 never started. So two complete trios exist (4090-s43, 6000-s45). Counts by the rule at 5c1b374f:
+- (a) the clock's recall edge, t40 16k pam - nochrono >= +0.22: s43 +0.450, s45 +0.380 -> **2 of 2. REPLICATED.**
+  pam's t40 16k over three seeds: 0.803 / 0.786 / 0.872 (spread 0.09); nochrono 0.353 / 0.492.
+- (b) the half-clocked body keeps recall (t40 16k >= 0.60 and >= pam - 0.20): s43 yes (0.692), s45 NO (0.408) -> **1 of 2. NOT replicated.**
+- (c) the half-clocked body keeps rules (s8 @8k >= nochrono - 0.02): s43 yes (0.473 vs 0.427), s45 yes (0.842 vs 0.414) -> 2 of 2,
+  but s8 is inside the seed noise (pam alone: 0.343 / 0.620 / 0.284 over three seeds, a 0.34 range), so this carries no claim.
+Reading: the one result that replicates is the clock's exact recall beyond the trained length. The half-clocked body is unstable
+across seeds on BOTH probes (s43 kept needles, s45 lost them and gained rules): the split does not fix the trade, it flips it per
+seed. The rule probe at 100M / 1B measures acquisition timing (Mind's margin read: seeds differ already at distance 0).
+
+### Set B: far-protocol share x LR (4 x 0.4B continuations of wio pam stable_final, 6000; pre-registered 2331bcd0)
+
+2k scope tuple per +0.1B save (P_fu = any unit with no protocol; scope_fu = unit for a protocol about the other quantity; C = carry, nats).
+Swing bar = parent + 0.25: P_fu >= 0.32 or scope_fu >= 0.94. Parent (step 13,734): P_fu 0.07, scope_fu 0.69-0.71, C 1.71-1.76.
+
+| arm | P_fu at +0.1 / +0.2 / +0.3 / +0.4B | scope_fu | C | swung? |
+|---|---|---|---|---|
+| f08_lr12 (0.8 %, 1.2e-3) | .05 / .01 / .00 / **.53** | .54 / .48 / .24 / .76 | 1.60 / 1.33 / 1.26 / 1.02 | YES (+0.4B) |
+| f16_lr12 (1.6 %, 1.2e-3) | .23 / .13 / .00 / .29 | .67 / .62 / .15 / .82 | 1.92 / 1.76 / 1.00 / 1.93 | no (0.29, just under) |
+| f08_lr06 (0.8 %, 6e-4) | .06 / .06 / .00 / .03 | .47 / .54 / .10 / .27 | 1.21 / 1.50 / 0.89 / 0.93 | no |
+| f16_lr06 (1.6 %, 6e-4) | .03 / .00 / .18 / .04 | .54 / .34 / .77 / .44 | 1.28 / 1.32 / 1.72 / 1.21 | no |
+
+**Verdict by the letter: UNCLEAR** (LR-DRIVEN needed both lr06 arms' max P_fu <= 0.15; f16_lr06 reached 0.18, without swinging).
+Reading: at half the LR neither arm swings and the scope error ends lower (0.27 / 0.44 vs 0.76 / 0.82 at +0.4B); at the full LR the
+smaller far share swung more, so "share-driven" is not supported. Leaning LR-driven; one continuation per arm, no seeds. If the
+project resumes: test a lower constant LR on the release body before changing the mix again.
+
+### The main run (SCI-1 386M) at the pause
+
+Segment 3r (= 3c's mix) ran from 45.875B to **step 749,500 = 49.119B tokens**, stopped at its own save on 2026-11-20 11:11 IST.
+Guard on 3r: 46.0B break (the 3f residue, 0.13B in) -> 46.14B pass -> 46.40B pass -> 46.86B clear -> 47B clear (8k P_fu 0.00,
+scope_fu 0.01; 2k scope_fu 0.50). Val (trainer set) 2.9946 @ 748,000 (wiki 3.533; best 19.48 ppl earlier). No dry source, no traceback.
+Backups (4090 d_drive, from_6000/checkpoints_v13_sempty/sci1_long3r_91a87ed/): final_step_749500.pt FULL (resumable; sha b403ad63),
+step_732432_weights.pt (48B; b821d45e), step_747691_weights.pt (49B; 763555ba), step_701914.pt / step_717173.pt (46B / 47B weights).
+The 48B and 49B milestone CHECKs never ran (the 4090 sessions were down); they run now as the release CHECK (below).
+Not backed up: the 100M arm checkpoints of qllm_twins on the 6000 (scores are in git).
+
+### Pre-registered but NOT run (paused): gfd (gate-frozen decay), plavg (plateau average), gdn_srope (GDN + Selective RoPE, the
+closest prior work to the clock, arXiv:2511.17388; required before any novelty claim for the clock), b386 (386M baselines),
+BIND-LURE Step 0 / dual-phase binding (v14). Rerun commands are in their sections and in EXPERIMENT_INDEX.md.

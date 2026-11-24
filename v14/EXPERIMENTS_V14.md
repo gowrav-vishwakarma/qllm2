@@ -6013,3 +6013,10 @@ right (value / unit). The twin and a32b arms reproduce A32b exactly (same docs),
   release body before PACKAGE.md changes.
 Closest prior work as pre-registered (CAD / AdaCAD, SG-ICL). Difference: a token-type-switched contrast inside a state-fork read
 whose demos the O(1) mind compiled itself.
+
+## At the PAUSE (Lead, 2026-11-24): Set B scope reads and what is open in this lane
+- The Set B (far share x LR) 2k scope tuples were read on the 6000 by the twins reaper with this lane's scope probe (57ad8435);
+  the results table and verdict (UNCLEAR, leaning LR-driven) are in v13_sempty/EXPERIMENTS_SEMPY.md "PAUSE RECORD"; raw logs
+  logs/v14_scope_c_f{08,16}_lr{06,12}_*.jsonl.
+- Open, not run: NATURAL RECALL follow-ups (55f4e9ae: no-lure 100M + both probes on SCI-1 47B), BIND-LURE Step 0 (7d20317b), the
+  dual-phase synchrony binding proposal (3caae6d0). Package stays v0.3.1; A32c / contrast gate not adoptable (scope guard).

@@ -162,3 +162,15 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 | sci1_cont4_8284510 | SCI-1 cont4 (M10-worked, failed segment) | FAILED on reach (row above) | c4a_best_weights.pt (step 154,000 = best = latest), step_152590.pt full + c4a_step_152590_weights.pt | 8284510 (sci1_cont4_env.sh + sci1_cont_chain.sh) |
 | sci1_long3d_cf9dee1 / seg3d_end.pt | segment 3d end (673,500, 44.14B) | 3d closed (superseded by 3f) | seg3d_end_weights.pt (sha a250348d) | cf9dee1 |
 | sci1_long3f_91a87ed / seg3f_end.pt | segment 3f end (700,000, 45.875B) = 3r's parent | 3f NO EFFECT, superseded by 3r | seg3f_end.pt FULL (sha 8212ceb1) | 91a87ed |
+| sci1_long3r_91a87ed / final_step_749500.pt | segment 3r end at the PAUSE (749,500, 49.119B) | stopped 2026-11-20 at its save; resume target | final_step_749500.pt FULL (sha b403ad63) + step_732432 / step_747691 weights (48B / 49B) on d_drive | 91a87ed (`sci1_cont_chain.sh` + `sci1_long3r_env.sh`, resume=auto) |
+
+## Late rows (Lead, at the pause): 100M twins and Set B, with verdicts (EXPERIMENTS_SEMPY "PAUSE RECORD")
+
+| id | what | verdict | weights | code / rerun |
+|---|---|---|---|---|
+| seed45_trio (6000) | pam / nochrono / split, seed 45, far mix, 1.0B | clock recall edge replicated 2 of 2 trios; split's recall NOT replicated (t40 16k 0.408) | 6000 only (qllm_twins, not backed up) | d75a27c `twins_chain.sh BOX=6000` + `seed45_6000.sh` |
+| pam_s44 (4090) | pam seed 44, far mix | s8 @8k 0.620 vs seed 43's 0.343: the seed-noise finding; t40 16k 0.786 | checkpoints_v13_sempty/nt_pam_s44_* (d_drive) | 0e76eac5 `mind_seeds_after_night.sh` |
+| split_s44 (4090) | split seed 44 | INCOMPLETE at 61 % (reboot + pause) | nt_split_s44_main latest.pt (step 8,350) | 0e76eac5, resume with the same chain |
+| setb_* (6000) | far share 0.8 / 1.6 % x LR 1.2e-3 / 6e-4, 0.4B each from wio pam stable_final | UNCLEAR by the letter, leaning LR-driven; share-driven not supported | 6000 only (not backed up) | d75a27c `setb_chain.sh` |
+| nofar set A (6000) | pam / nochrono / gdn on the ctl mix (no far docs) | OURS not met, FAMILY met, CLOCK +0.155 (all s8: single seed, UNDETERMINED); t40 16k 0.853 / 0.633 / 0.247 | 6000 only (not backed up) | a3ffb14b `twins_chain.sh BOX=6000` |
+| wio (4090) | pam / nochrono / gdn / mamba2 / tpp + split, far mix, 1.0B | claim vs GDN UNDETERMINED (s8 seed noise); T++ collapses past 4k; clock recall edge | checkpoints_v13_sempty/wio_* (d_drive) | 227f3eb `wio_chain.sh` |
