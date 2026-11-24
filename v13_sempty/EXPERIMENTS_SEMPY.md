@@ -8125,3 +8125,25 @@ filler) with the examples spread over **8,192 (anchor, 2x the 4,096 training win
 t40 (needles, 40 trials x positions 0 / 0.5 / 1 x associations 1 / 4 / 8) at 32,768 if VRAM / time allow. Reported: accuracy and mean
 target margin per task and distance; no verdict. Code: the CHECK's probe path (scripts/run_learning_probe.py, memory_probes/spread.py;
 the v13_sempty path is unchanged since 59c3cf5), run from the 6000 worktree qllm_sci1e @ 91a87ed.
+
+### sft1 FINAL (Mind 2026-11-24 11:3x IST; code 3b9b2156; supersedes the draft where they differ; user approved SFT as a separate release, Lead gives the GO)
+- **Box: the 6000** (user, 10:4x: "release base model and keep plan sft for later tonight (when 6000 will be free)"; free now).
+- **Code:** train.py --sft_share 0.8 / --sft_think_fraction 0 + v13_sempty/sft_mix.py (packed, assistant-only, EOS-separated,
+  interleaved by kept volume, decontam v2 + probe-template 13-grams, base replay). Verified: test_sft_mix.py ALL PASS; share 0 =
+  the base loader bit for bit (wio far mix sha 72e954b7); real-data smoke OK; deterministic order + exact resume skip.
+- **Data as measured (first 2,000 kept conversations):** smol_magpie_ultra 41 %, OpenHermes 2.5 34 %, smol_summarize 12 %,
+  systemchats_30k 6 %, smol_rewrite 4 %, tulu-3 personas IF 3 %, rest < 1 %; no think traces, no tool / function schemas, English only.
+  74 % of SFT window tokens are targets -> ~148M target tokens over the run (0.8 x 250M x 0.74). Decontam / probe drop counts are
+  logged in the cursor (#decon / #probe) and reported with the result.
+- **Recipe (unchanged):** from final_step_749500 (49.119B; optimizer kept), 65,536 tokens / step, warm-up 200 steps to 2e-4,
+  constant to 0.20B, then a separate linear decay to 0 over 0.05B (sci1_cont_chain's main + decay segments); saves every 0.05B.
+  Note: 2e-4 is a quarter of the base's 8e-4, so the LR drop itself acts like part of a decay; the guards below are the protection.
+- **Before the GO, on the 6000:** a 100-step smoke of the exact command (same env) to check peak VRAM, tok/s and the loss with masks;
+  it is deleted, not a result.
+- **Guards, chat judgment, verdict:** as in the draft above (vs the 49B CHECK; P_fu 8k <= 0.20 and scope_fu 8k <= 0.30; human eval).
+- **Launch (one command, 6000, from a worktree at >= 3b9b2156 with the base at checkpoints_v13_sempty/sci1_long3r_91a87ed/
+  final_step_749500.pt, sha b403ad63; the 6000's latest.pt in that dir IS that file, sha-verified 11-24):**
+  `tmux new-session -d -s sci1sft1 "bash v13_sempty/tmp/sft1_launch.sh 2>&1 | tee -a logs/v13_sempty_sci1_sft1_launch_<hash>_<stamp>.log"`
+  (sft1_launch.sh sources sci1_env.sh + sci1_long3r_env.sh + sft1_env.sh and runs sci1_cont_chain.sh; outputs
+  checkpoints_v13_sempty/sci1_sft1_<hash> (constant) and sci1_decay_<hash> (the release candidate = its best_model.pt)).
+- **Cost on the 6000:** ~2 h train (37k tok/s solo) + CHECK + chat eval ~1.5 h.
