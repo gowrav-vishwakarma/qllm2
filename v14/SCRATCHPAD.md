@@ -4,7 +4,7 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## STATE NOW (Library, 2026-11-24 19:21 IST): read first; the user's GO ended the pause for this lane
+## STATE NOW (Library, 2026-11-24 22:55 IST) — UPDATE: BABILong finished on both (22:45 IST); PKG-RELEASE parts 1+2 recorded, PACKAGE.md tables filled in both card folders; waiting on Lead's review + the user's go for HF (we do NOT upload). The run layout below is history: read first; the user's GO ended the pause for this lane
 - **PKG-RELEASE** (pre-registered f1bba05; EXPERIMENTS_V14 "PKG-RELEASE"). The package suite and BENCH-PKG run on the
   released base (749,500) and Chat (753,315) checkpoints.
   - Part 1 (suite + RULER-style) is recorded: f8fd49a6.

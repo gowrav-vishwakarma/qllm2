@@ -157,7 +157,21 @@ numbers cut; a word after "is:" is often lost because the model writes ":" and a
 - Package = fetch + read, with the repo's multi-sentence hops.
 - Planner = a TEXT chain.
 
-BABILONG_TABLE
+Each cell: bare → package (planner), 100 documents. Bare = the model as is on the whole input. Package = fetch + read, with the repo's multi-sentence hops (not in this port). Planner = a TEXT chain of package answers. Mind state 3.67 MB at every length; library text 0.06 MB at 32k (no F2 address is used here).
+
+| task | 0k | 2k | 4k | 8k | 16k | 32k |
+|---|---|---|---|---|---|---|
+| qa1 | 0.13 → 0.16 (0.16) | 0.07 → 0.38 (0.38) | 0.04 → 0.28 (0.28) | 0.02 → 0.18 (0.18) | 0.02 → 0.12 (0.12) | 0.00 → 0.10 (0.10) |
+| qa2 | 0.00 → 0.00 (0.10) | 0.07 → 0.23 (0.20) | 0.06 → 0.23 (0.15) | 0.03 → 0.19 (0.09) | 0.03 → 0.16 (0.09) | 0.03 → 0.13 (0.09) |
+| qa3 | 0.02 → 0.01 (0.02) | 0.07 → 0.06 (0.15) | 0.05 → 0.11 (0.13) | 0.05 → 0.08 (0.10) | 0.02 → 0.07 (0.13) | 0.02 → 0.06 (0.05) |
+| qa4 | 0.03 → 0.01 (0.15) | 0.01 → 0.16 (0.14) | 0.01 → 0.12 (0.10) | 0.00 → 0.10 (0.10) | 0.01 → 0.07 (0.07) | 0.00 → 0.01 (0.02) |
+| qa5 | 0.20 → 0.12 (0.09) | 0.25 → 0.34 (0.34) | 0.13 → 0.26 (0.24) | 0.07 → 0.34 (0.26) | 0.03 → 0.22 (0.17) | 0.00 → 0.18 (0.18) |
+
+- From 2k on, the package beats the model alone in every cell but qa3 at 2k (0.07 → 0.06). qa1 (one supporting fact) drops from 0.38 at 2k to 0.10 at 32k; qa5 holds 0.18-0.34. qa3 (three facts) and qa4 stay at or below 0.16.
+- The fetch is not the main loss. On 2k-32k the answer word is in the fetched rows on 0.91 of qa1 docs and 0.79 of qa5 docs, yet the package is right on 0.21 and 0.27. (That is an upper bound for the fetch: the word may sit in the wrong row.) The 386M model often misreads several fetched rows.
+- At 0k (the facts only, no haystack) the package does not help: 0.00-0.16 vs bare 0.00-0.20.
+
+Runs: `logs/v14_babilong_pkg_rel_*` in the research repo (code f1bba05; the Chat 32k cell ran on code e337eacc, same runner).
 
 
 ## The background word counts

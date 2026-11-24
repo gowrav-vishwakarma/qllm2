@@ -149,7 +149,21 @@ numbers cut; a word after "is:" is often lost because the model writes ":" and a
 - Package = fetch + read, with the repo's multi-sentence hops.
 - Planner = a TEXT chain.
 
-BABILONG_TABLE
+Each cell: bare → package (planner), 100 documents. Bare = the model as is on the whole input. Package = fetch + read, with the repo's multi-sentence hops (not in this port). Planner = a TEXT chain of package answers. Mind state 3.67 MB at every length; library text 0.06 MB at 32k (no F2 address is used here).
+
+| task | 0k | 2k | 4k | 8k | 16k | 32k |
+|---|---|---|---|---|---|---|
+| qa1 | 0.40 → 0.47 (0.47) | 0.10 → 0.52 (0.52) | 0.04 → 0.40 (0.40) | 0.05 → 0.29 (0.29) | 0.01 → 0.22 (0.22) | 0.00 → 0.12 (0.12) |
+| qa2 | 0.33 → 0.34 (0.39) | 0.05 → 0.26 (0.25) | 0.08 → 0.25 (0.25) | 0.04 → 0.18 (0.12) | 0.04 → 0.14 (0.12) | 0.03 → 0.09 (0.08) |
+| qa3 | 0.19 → 0.15 (0.16) | 0.06 → 0.10 (0.12) | 0.05 → 0.06 (0.13) | 0.04 → 0.06 (0.12) | 0.04 → 0.05 (0.09) | 0.01 → 0.01 (0.04) |
+| qa4 | 0.18 → 0.12 (0.12) | 0.05 → 0.11 (0.09) | 0.01 → 0.09 (0.08) | 0.01 → 0.07 (0.05) | 0.00 → 0.03 (0.03) | 0.00 → 0.01 (0.02) |
+| qa5 | 0.62 → 0.63 (0.69) | 0.22 → 0.44 (0.42) | 0.22 → 0.36 (0.33) | 0.15 → 0.44 (0.39) | 0.06 → 0.25 (0.24) | 0.06 → 0.29 (0.26) |
+
+- The Chat model answers the short task far better alone: at 0k, bare 0.18-0.62 vs 0.00-0.20 for the base. With a haystack, bare falls to 0.00-0.06 at 32k.
+- From 2k on, the package beats the model alone in every cell but qa3 at 32k (0.01 both). qa1 0.52 at 2k → 0.12 at 32k; qa5 0.44 at 2k and 8k, 0.29 at 32k. Chat is above the base on qa1 and qa5 at most lengths; qa3 / qa4 stay ≤ 0.12.
+- As for the base, the answer word is in the fetched rows on 0.91 (qa1) and 0.79 (qa5) of 2k-32k docs; the read of several rows is the loss.
+
+Runs: `logs/v14_babilong_pkg_sft_*` in the research repo (code f1bba05; the Chat 32k cell ran on code e337eacc, same runner).
 
 
 ## The background word counts

@@ -6142,6 +6142,73 @@ whose demos the O(1) mind compiled itself.
     answer must be copied exactly (uuid, a 7-digit number, a rare word after "is:") fail most. A copy read is the obvious
     next idea: a pointer to the fetched row's tokens, so the model chooses WHERE to copy from, not WHAT to spell.
     It is a mechanism, so it belongs to a new pre-registration, not to this descriptive run.
+- **RESULT part 2: BABILong (2026-11-24 22:45 IST; 100 docs per cell, BABILong's scoring).**
+  - **Where it ran:**
+    - Base: the 6000, code f1bba05, split into 0k-4k / 8k / 16k / 32k qa1-2 / 32k qa3-5.
+    - Chat: the 6000 for 0k-16k; 32k on the 4090 at code e337eacc (same runner).
+    - The split watchers stopped the long jobs at a cell boundary; no (L, task) cell appears twice in the jsonl.
+  - **Logs:** `logs/v14_babilong_pkg_{rel,sft}_*_{f1bba05,e337eacc}_20261124_*.{log,jsonl}`.
+  - **Table:** `python3 v14/pkg_release_tables.py --babilong rel=... sft=...`. Columns: bare (the model as is) /
+    package / planner (TEXT chain); rel = base, sft = Chat.
+
+    | L | task | n | rel bare | rel package | rel planner | sft bare | sft package | sft planner | mind MB | library MB |
+    |---|---|---|---|---|---|---|---|---|---|---|
+    | 0k | qa1 | 100 | 0.13 | 0.16 | 0.16 | 0.40 | 0.47 | 0.47 | 3.67 | 0.00 |
+    | 0k | qa2 | 100 | 0.00 | 0.00 | 0.10 | 0.33 | 0.34 | 0.39 | 3.67 | 0.00 |
+    | 0k | qa3 | 100 | 0.02 | 0.01 | 0.02 | 0.19 | 0.15 | 0.16 | 3.67 | 0.00 |
+    | 0k | qa4 | 100 | 0.03 | 0.01 | 0.15 | 0.18 | 0.12 | 0.12 | 3.67 | 0.00 |
+    | 0k | qa5 | 100 | 0.20 | 0.12 | 0.09 | 0.62 | 0.63 | 0.69 | 3.67 | 0.00 |
+    | 2k | qa1 | 100 | 0.07 | 0.38 | 0.38 | 0.10 | 0.52 | 0.52 | 3.67 | 0.00 |
+    | 2k | qa2 | 100 | 0.07 | 0.23 | 0.20 | 0.05 | 0.26 | 0.25 | 3.67 | 0.00 |
+    | 2k | qa3 | 100 | 0.07 | 0.06 | 0.15 | 0.06 | 0.10 | 0.12 | 3.67 | 0.00 |
+    | 2k | qa4 | 100 | 0.01 | 0.16 | 0.14 | 0.05 | 0.11 | 0.09 | 3.67 | 0.00 |
+    | 2k | qa5 | 100 | 0.25 | 0.34 | 0.34 | 0.22 | 0.44 | 0.42 | 3.67 | 0.00 |
+    | 4k | qa1 | 100 | 0.04 | 0.28 | 0.28 | 0.04 | 0.40 | 0.40 | 3.67 | 0.01 |
+    | 4k | qa2 | 100 | 0.06 | 0.23 | 0.15 | 0.08 | 0.25 | 0.25 | 3.67 | 0.01 |
+    | 4k | qa3 | 100 | 0.05 | 0.11 | 0.13 | 0.05 | 0.06 | 0.13 | 3.67 | 0.01 |
+    | 4k | qa4 | 100 | 0.01 | 0.12 | 0.10 | 0.01 | 0.09 | 0.08 | 3.67 | 0.01 |
+    | 4k | qa5 | 100 | 0.13 | 0.26 | 0.24 | 0.22 | 0.36 | 0.33 | 3.67 | 0.01 |
+    | 8k | qa1 | 100 | 0.02 | 0.18 | 0.18 | 0.05 | 0.29 | 0.29 | 3.67 | 0.02 |
+    | 8k | qa2 | 100 | 0.03 | 0.19 | 0.09 | 0.04 | 0.18 | 0.12 | 3.67 | 0.02 |
+    | 8k | qa3 | 100 | 0.05 | 0.08 | 0.10 | 0.04 | 0.06 | 0.12 | 3.67 | 0.02 |
+    | 8k | qa4 | 100 | 0.00 | 0.10 | 0.10 | 0.01 | 0.07 | 0.05 | 3.67 | 0.02 |
+    | 8k | qa5 | 100 | 0.07 | 0.34 | 0.26 | 0.15 | 0.44 | 0.39 | 3.67 | 0.02 |
+    | 16k | qa1 | 100 | 0.02 | 0.12 | 0.12 | 0.01 | 0.22 | 0.22 | 3.67 | 0.03 |
+    | 16k | qa2 | 100 | 0.03 | 0.16 | 0.09 | 0.04 | 0.14 | 0.12 | 3.67 | 0.03 |
+    | 16k | qa3 | 100 | 0.02 | 0.07 | 0.13 | 0.04 | 0.05 | 0.09 | 3.67 | 0.03 |
+    | 16k | qa4 | 100 | 0.01 | 0.07 | 0.07 | 0.00 | 0.03 | 0.03 | 3.67 | 0.03 |
+    | 16k | qa5 | 100 | 0.03 | 0.22 | 0.17 | 0.06 | 0.25 | 0.24 | 3.67 | 0.03 |
+    | 32k | qa1 | 100 | 0.00 | 0.10 | 0.10 | 0.00 | 0.12 | 0.12 | 3.67 | 0.06 |
+    | 32k | qa2 | 100 | 0.03 | 0.13 | 0.09 | 0.03 | 0.09 | 0.08 | 3.67 | 0.06 |
+    | 32k | qa3 | 100 | 0.02 | 0.06 | 0.05 | 0.01 | 0.01 | 0.04 | 3.67 | 0.06 |
+    | 32k | qa4 | 100 | 0.00 | 0.01 | 0.02 | 0.00 | 0.01 | 0.02 | 3.67 | 0.06 |
+    | 32k | qa5 | 100 | 0.00 | 0.18 | 0.18 | 0.06 | 0.29 | 0.26 | 3.67 | 0.06 |
+
+  - **Reading:**
+    - From 2k on, the package beats the model alone in every cell except base qa3 2k (0.07 → 0.06) and Chat qa3 32k
+      (0.01 both).
+    - It decays with length. qa1: base 0.38 → 0.10, Chat 0.52 → 0.12 from 2k to 32k. qa5: base 0.34 → 0.18, Chat
+      0.44 → 0.29.
+    - qa3 / qa4 stay ≤ 0.16 at every length.
+    - The planner chain is ≈ the package (±0.1); it helps only on qa3.
+  - **SFT taught the short QA format.** At 0k, Chat bare is 0.18-0.62 and base bare 0.00-0.20. With a haystack both are
+    ≤ 0.08 bare from 8k on.
+  - **The fetch is not the main loss.** On 2k-32k docs, the answer word is in the fetched rows (an upper bound: maybe the
+    wrong row) on:
+    - qa1 0.91, qa2 0.46, qa3 0.23, qa4 0.84, qa5 0.79 (both models; the fetch is text only).
+    - Package right: base 0.21 / 0.19 / 0.08 / 0.09 / 0.27, Chat 0.31 / 0.18 / 0.06 / 0.06 / 0.36.
+    - So, as in RULER, the 386M READ of several fetched rows is the weak link. qa2 / qa3 also lose at the fetch: the hop
+      rows miss the object's carrier.
+  - **MB:** mind 3.67 at every length; library text 0.06 at 32k. These cells use no F2 address.
+  - **Reference block:** none entered. Any BABILong leaderboard number would need its model's training tokens stated
+    next to it; ours are 49.12B (base) / 49.37B (Chat).
+  - **Think in the void:** RULER and BABILong say the same thing. The library finds the evidence; a 386M mind reading 2-3
+    fetched rows plus a question cannot compose them. Two bolder angles, both new pre-registrations:
+    - (a) the copy/pointer read noted in part 1;
+    - (b) make the planner do the composition in TEXT (qa2: whose hands hold X → where that person went last), so the mind
+      reads ONE fact row, the case where it is strongest (qa1 2k 0.52).
+- **VERDICT PKG-RELEASE (descriptive):** recorded. Package > bare at every length on R×K, rewrite, recall,
+  RULER niah and BABILong (2k+); the read is the weak link.
 
 ## PKG-PORT: the package as a standalone runner on the SCI-1 HF cards (Lead 2026-11-24, part (3) of the user's GO; plumbing, no claim)
 - **What:** `hf_release_sci1{,_chat}/package_lite.py` + `run_package.py`. It needs only torch, transformers and the card's

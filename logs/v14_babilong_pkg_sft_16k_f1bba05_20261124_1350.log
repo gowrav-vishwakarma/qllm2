@@ -1,0 +1,27 @@
+/home/ubuntu/Development/qllm-private/.venv/lib/python3.11/site-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.5.0) or chardet (7.7.0)/charset_normalizer (3.4.3) doesn't match a supported version!
+  warnings.warn(
+Generating qa1 split: 0 examples [00:00, ? examples/s]Generating qa1 split: 100 examples [00:00, 2096.46 examples/s]
+Generating qa2 split: 0 examples [00:00, ? examples/s]Generating qa2 split: 100 examples [00:00, 2237.99 examples/s]
+Generating qa3 split: 0 examples [00:00, ? examples/s]Generating qa3 split: 100 examples [00:00, 2440.69 examples/s]
+Generating qa4 split: 0 examples [00:00, ? examples/s]Generating qa4 split: 100 examples [00:00, 2466.40 examples/s]
+Generating qa5 split: 0 examples [00:00, ? examples/s]Generating qa5 split: 100 examples [00:00, 2310.66 examples/s]
+Generating qa6 split: 0 examples [00:00, ? examples/s]Generating qa6 split: 100 examples [00:00, 2385.91 examples/s]
+Generating qa7 split: 0 examples [00:00, ? examples/s]Generating qa7 split: 100 examples [00:00, 2428.38 examples/s]
+Generating qa8 split: 0 examples [00:00, ? examples/s]Generating qa8 split: 100 examples [00:00, 2437.97 examples/s]
+Generating qa9 split: 0 examples [00:00, ? examples/s]Generating qa9 split: 100 examples [00:00, 2303.55 examples/s]
+Generating qa10 split: 0 examples [00:00, ? examples/s]Generating qa10 split: 100 examples [00:00, 2321.87 examples/s]
+Token indices sequence length is longer than the specified maximum sequence length for this model (15710 > 1024). Running this sequence through the model will result in indexing errors
+/home/ubuntu/Development/qllm-private/.venv/lib/python3.11/site-packages/torch/_inductor/compile_fx.py:282: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+  warnings.warn(
+W1124 13:51:45.375000 1601888 torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1124 13:51:47.473000 1601888 torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1124 13:51:52.504000 1601888 torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1124 13:51:56.591000 1601888 torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1124 14:21:06.851000 1601888 torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+16k   qa1  n=100 as_is=0.01 package=0.22 (37.1 s/doc)
+16k   qa2  n=100 as_is=0.04 package=0.14 (25.4 s/doc)
+16k   qa3  n=100 as_is=0.04 package=0.05 (18.4 s/doc)
+16k   qa4  n=100 as_is=0.00 package=0.03 (16.8 s/doc)
+16k   qa5  n=100 as_is=0.06 package=0.25 (13.6 s/doc)
+out logs/v14_babilong_pkg_sft_16k_f1bba05_20261124_1350.jsonl
+EXIT 0
