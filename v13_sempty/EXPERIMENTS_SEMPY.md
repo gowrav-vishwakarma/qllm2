@@ -8013,13 +8013,17 @@ seed. The rule probe at 100M / 1B measures acquisition timing (Mind's margin rea
 ### Set B: far-protocol share x LR (4 x 0.4B continuations of wio pam stable_final, 6000; pre-registered 2331bcd0)
 
 2k scope tuple per +0.1B save (P_fu = any unit with no protocol; scope_fu = unit for a protocol about the other quantity; C = carry, nats).
-Swing bar = parent + 0.25: P_fu >= 0.32 or scope_fu >= 0.94. Parent (step 13,734): P_fu 0.07, scope_fu 0.69-0.71, C 1.71-1.76.
+Swing bar = parent + 0.25: P_fu >= 0.32 or scope_fu >= 0.94. Parent (wio pam stable_final, step 13,733): P_fu 0.07, scope_fu 0.69,
+C 1.66 (validity C >= 0.5 met); the arms' first saves (step 13,734) read P_fu 0.07, scope_fu 0.68-0.71, C 1.71-1.76.
+Cross-box check (Library, 11-24): the 6000 calibration read of wio pam decay (logs/v14_scope_c_calib_wiopamdecay_a3ffb14b_*) gives
+C 1.50 / scope_fu 0.50 / P_fu 0.01, equal to the 4090 WIO SCOPE read (1.496 / 0.50 / 0.01). Table cells re-derived from the jsonls
+(n 100 each) by Library: all match except f08_lr06 +0.1B C (1.20, fixed).
 
 | arm | P_fu at +0.1 / +0.2 / +0.3 / +0.4B | scope_fu | C | swung? |
 |---|---|---|---|---|
 | f08_lr12 (0.8 %, 1.2e-3) | .05 / .01 / .00 / **.53** | .54 / .48 / .24 / .76 | 1.60 / 1.33 / 1.26 / 1.02 | YES (+0.4B) |
 | f16_lr12 (1.6 %, 1.2e-3) | .23 / .13 / .00 / .29 | .67 / .62 / .15 / .82 | 1.92 / 1.76 / 1.00 / 1.93 | no (0.29, just under) |
-| f08_lr06 (0.8 %, 6e-4) | .06 / .06 / .00 / .03 | .47 / .54 / .10 / .27 | 1.21 / 1.50 / 0.89 / 0.93 | no |
+| f08_lr06 (0.8 %, 6e-4) | .06 / .06 / .00 / .03 | .47 / .54 / .10 / .27 | 1.20 / 1.50 / 0.89 / 0.93 | no |
 | f16_lr06 (1.6 %, 6e-4) | .03 / .00 / .18 / .04 | .54 / .34 / .77 / .44 | 1.28 / 1.32 / 1.72 / 1.21 | no |
 
 **Verdict by the letter: UNCLEAR** (LR-DRIVEN needed both lr06 arms' max P_fu <= 0.15; f16_lr06 reached 0.18, without swinging).
