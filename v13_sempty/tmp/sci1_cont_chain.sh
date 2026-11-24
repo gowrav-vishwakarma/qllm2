@@ -12,12 +12,18 @@ disk_gb() { df -BG / | awk 'NR==2{gsub("G","",$4); print $4}'; }
 [ -s "$CONT_FROM" ] || { echo "sci1 cont: no $CONT_FROM"; exit 1; }
 echo "sci1 continuation chain: code $H in $PWD, $(date -u +%FT%TZ); from $CONT_FROM; tokens $CONT_TOKENS; SOURCES=$SOURCES WEIGHTS=$WEIGHTS"
 COMMON="ECHO=1 CHRONO=1 OUT_GATE=1 DELTA=1 ANSWER_W=100 SEED=43 SEQ=${SEQ:-4096} BLEND_WARMUP=0 FINEWEB_LOCAL_DIR=data/fineweb-edu GEN_EVERY=0 VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,chatmt MAX_RETRIES=20 ANSWER_IN_WINDOW=1 RESET_AT_EOS=1 DECONTAM_INDEX=${DECONTAM_INDEX_C:-.cache/decontam/v1.npy}"
-MAIN=$C/${CONT_TAG}_$H; DEC=$C/sci1_decay_$H
+MAIN=${MAIN_DIR:-$C/${CONT_TAG}_$H}; DEC=$C/sci1_decay_$H
+# DECAY_ONLY=1 MAIN_DIR=<finished main dir>: run only the decay branch from $MAIN/stable_final.pt (main already done, e.g. after a
+# failed decay start: sft1 2026-11-24, orphan producers held the GPU).
+if [ -z "${DECAY_ONLY:-}" ]; then
 env $COMMON $GEOM SOURCES=$SOURCES WEIGHTS=$WEIGHTS TAG=$CONT_TAG CKPT_DIR=$MAIN PIN_HASH=$H LR=$LR WARMUP=${WARMUP_C:-500} LR_SCHEDULE=wsd_stable \
   CONTINUE_FROM=$CONT_FROM TARGET_TOKENS=$CONT_TOKENS BATCH=$BATCH GRAD_ACCUM=$GRAD_ACCUM SAVE_EVERY=500 KEEP_EVERY=$KEEP_EVERY KEEP_LAST=${KEEP_LAST:-4} \
   bash v13_sempty/tmp_pretrain_mix.sh
 RC=$?; echo "=== sci1 continuation main exit=$RC $(date -u +%FT%TZ)"; [ "$RC" -eq 0 ] || exit $RC
 cp $MAIN/latest.pt $MAIN/stable_final.pt
+else
+  [ -s $MAIN/stable_final.pt ] || { echo "sci1: DECAY_ONLY but no $MAIN/stable_final.pt"; exit 1; }
+fi
 echo "=== sci1 decay branch start (from $MAIN/stable_final.pt) $(date -u +%FT%TZ)"
 [ "$(disk_gb)" -ge 12 ] || { echo "sci1: disk $(disk_gb)G < 12 before decay, STOP"; exit 1; }
 env $COMMON $GEOM SOURCES=$SOURCES WEIGHTS=$WEIGHTS TAG=sci1_decay CKPT_DIR=$DEC PIN_HASH=$H LR=$LR LR_SCHEDULE=decay CONTINUE_FROM=$MAIN/stable_final.pt \
