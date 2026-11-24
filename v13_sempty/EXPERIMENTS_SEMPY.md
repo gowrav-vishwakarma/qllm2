@@ -8102,3 +8102,26 @@ guard holds and the human eval prefers SFT over base on a majority of the prompt
 chat sources), and ship the SFT checkpoint as a second card once it passes its guards. Reason: the SFT is a new training stage with
 a known risk (a decay erases carry), new code (packing + replay + filter) and ~8 h; tying the release to it delays a finished,
 checked artifact for an unmeasured one.
+
+## BUG (found 2026-11-24 by Lead's HF-port parity work; fixed 048a01ab): reset_at_eos was not applied in one-token decode
+`RealPAMLayer._stepwise_delta` (the T = 1 decode step) never read the separator mask `_keep`, so feeding <|endoftext|> one token at
+a time reset only the echo memory, not the notebooks; `_chunked_delta` (training, prefill, every full-sequence forward) did reset
+them. On SCI-1 weights the logits after a fed separator differed from the full forward by up to 52.7 (hf_release_sci1/PARITY.md, B).
+**Fix:** retention x the separator mask in the decode step, as in the chunked path. **Test:** v13_sempty/tmp/eos_decode_parity.py
+(CPU fp32, M2 body: delta, Chrono, echo, share_reads; EOS at three positions; prefill 40 then token-by-token): max|full - decode|
+after the EOS 8.3e-07 / 8.9e-07 = the before-EOS level (without the fix 2.3e-04 / 3.4e-04: the test fails); reset_parity.py PASS.
+**What it touched (audit):** no scored number. s8 / t40 / clk2 / skill pack / scope / MC / val run the parallel forward; Library's
+stepwise v14 probes never feed 50256; v16/package.py prefills in chunks and decodes answer tokens only. LM.generate prefills the
+prompt in chunks (correct), so only text generated AFTER a model-emitted <|endoftext|> was decoded without the notebook reset: the
+tails of the CHECK generation samples (scripts/sci_gen.py, no EOS stop: e.g. "...<|endoftext|><|im_start|>system ...") and of the
+human-eval dumps. Those are descriptive; the text before the first emitted <|endoftext|> is exact. The HF release's step() resets
+both memories (correct). Also noted (harmless): chunked vs per-token retention differ by the log(r + 1e-6) epsilon (~1e-3 / 1e-2 in
+logits).
+
+## reach32k: how far does the induced rule reach on the release model? (DESCRIPTIVE, no bar; recorded 2026-11-24 before any number; Lead, for the HF card)
+Release checkpoint = sci1_long3r_91a87ed latest.pt on the 6000 (= final_step_749500, 49.119B; sha256 checked against b403ad63 before
+the run). s8 exactly as the CHECK (b2 suite: shift_wide_new + affine_map_new, 8 shots, 400 trials, seed 7000, 8-way, held-out web
+filler) with the examples spread over **8,192 (anchor, 2x the 4,096 training window) / 16,384 (4x) / 32,768 (8x)** in ONE run; plus
+t40 (needles, 40 trials x positions 0 / 0.5 / 1 x associations 1 / 4 / 8) at 32,768 if VRAM / time allow. Reported: accuracy and mean
+target margin per task and distance; no verdict. Code: the CHECK's probe path (scripts/run_learning_probe.py, memory_probes/spread.py;
+the v13_sempty path is unchanged since 59c3cf5), run from the 6000 worktree qllm_sci1e @ 91a87ed.
