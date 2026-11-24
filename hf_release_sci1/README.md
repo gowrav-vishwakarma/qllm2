@@ -29,8 +29,8 @@ the same.
 
 It is a base model whose pretraining mix includes chat data (ChatML), so it
 completes plain text and holds a ChatML conversation. It is a research
-checkpoint, not a polished assistant. An instruction-tuned (SFT) version will
-be released separately.
+checkpoint, not a polished assistant. The chat-tuned (SFT) version is
+[qllm-pam2-sci1-386m-chat](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m-chat).
 
 | | |
 |--|--|

@@ -16,6 +16,7 @@ fixed-size state — there is **no KV cache** that grows with context length.
 **Model weights (Hugging Face):**
 - [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) — **V11, the shipped hero**: ~100M complex-valued PAM, pretrain + chat SFT.
 - [gowravvishwakarma/qllm-pam2-sci1-386m](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m) — **SCI-1 (QLLM-2 / PAM-2), the newest research model**: 386M real-valued PAM-2, 49B tokens of a science-and-chat mix, a base model (no SFT). It applies a rule learned from examples spread over **twice its 4,096-token training window**, and recalls a fact at **four times** it. See [After V11](#after-v11--qllm-2--pam-2-v13_sempty--v16-what-the-newer-models-showed).
+- [gowravvishwakarma/qllm-pam2-sci1-386m-chat](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m-chat) — **SCI-1 Chat**: the same model after a short chat SFT (+0.25B tokens of smoltalk2); keeps the long-context skills (rule at 2× the window 0.995, recall at 4× 0.91), with base-vs-SFT answers to 60 prompts.
 
 > **Latest shipped (2026-07-09):** revision **`round-6b-gate`**, also promoted to **`main`** — the
 > v2 gate line at **~6B pretrain + smoltalk2 SFT** (content-aware phase gate, vocab 50261, blended
@@ -355,7 +356,7 @@ memory at the head; state reset at document boundaries. Still **O(1) state per t
 128k-token session at 103M). Code: [`v13_sempty/`](v13_sempty/README.md); architecture in pseudocode:
 [`v16/SCI1_ARCHITECTURE_PSEUDOCODE.md`](v16/SCI1_ARCHITECTURE_PSEUDOCODE.md).
 
-**The product-size model, SCI-1 386M** (weights: [qllm-pam2-sci1-386m](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m)).
+**The product-size model, SCI-1 386M** (weights: [qllm-pam2-sci1-386m](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m); chat SFT: [qllm-pam2-sci1-386m-chat](https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m-chat)).
 24 blocks, d 1024, notebooks in 6 of them; trained at a **4,096-token window** to **49.1B tokens** of filtered public data
 (DCLM, FineWeb-Edu, arXiv / PubMed / peS2o, Cosmopedia, FineMath, SmolTalk chat, tool dialogues, science Python, plus ~2–4 %
 synthetic rule documents), decontaminated with 13-grams against every reported benchmark. On the released checkpoint

@@ -8290,3 +8290,9 @@ only on the user's A/B majority.**
   of Australia (both "Melbourne"), Celsius→Kelvin code (both use the Fahrenheit formula), YES/NO protocol, recalling the user's name
   in turn 2 (both answer as the user). Base beat SFT on 4 of 6 technical Q&A (SFT stated wrong p-value / hypothesis facts).
 - Votes: logs/v13_sempty_sft1_ab_lead_vote_6e2a5f5_20261124_1811.json.
+
+### SCI-1 Chat (sft1) RELEASED (2026-11-24, Lead)
+- HF: https://huggingface.co/gowravvishwakarma/qllm-pam2-sci1-386m-chat — sci1_decay_6e2a5f5/best_model.pt (step 753,315, 49.369B;
+  sha256 cd9eee84…), exported fp32 `sci1_chat_386m.pt` sha256 5d4b052d…; test_parity.py ALL PASS on the SFT weights (greedy 40/40
+  identical, 3 prompts); verify.sh all checks passed. Card source `hf_release_sci1_chat/` (weights not in git), incl. BASE_VS_SFT.md
+  (the 60 A/B prompts, base and SFT greedy answers verbatim, no votes, per the user). Base card and main README link to it.
