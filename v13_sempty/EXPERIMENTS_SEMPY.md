@@ -8117,3 +8117,11 @@ tails of the CHECK generation samples (scripts/sci_gen.py, no EOS stop: e.g. "..
 human-eval dumps. Those are descriptive; the text before the first emitted <|endoftext|> is exact. The HF release's step() resets
 both memories (correct). Also noted (harmless): chunked vs per-token retention differ by the log(r + 1e-6) epsilon (~1e-3 / 1e-2 in
 logits).
+
+## reach32k: how far does the induced rule reach on the release model? (DESCRIPTIVE, no bar; recorded 2026-11-24 before any number; Lead, for the HF card)
+Release checkpoint = sci1_long3r_91a87ed latest.pt on the 6000 (= final_step_749500, 49.119B; sha256 checked against b403ad63 before
+the run). s8 exactly as the CHECK (b2 suite: shift_wide_new + affine_map_new, 8 shots, 400 trials, seed 7000, 8-way, held-out web
+filler) with the examples spread over **8,192 (anchor, 2x the 4,096 training window) / 16,384 (4x) / 32,768 (8x)** in ONE run; plus
+t40 (needles, 40 trials x positions 0 / 0.5 / 1 x associations 1 / 4 / 8) at 32,768 if VRAM / time allow. Reported: accuracy and mean
+target margin per task and distance; no verdict. Code: the CHECK's probe path (scripts/run_learning_probe.py, memory_probes/spread.py;
+the v13_sempty path is unchanged since 59c3cf5), run from the 6000 worktree qllm_sci1e @ 91a87ed.
