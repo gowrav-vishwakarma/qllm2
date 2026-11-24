@@ -1,0 +1,22 @@
+{
+ "ckpt": "checkpoints_v13_sempty/sci1_decay_6e2a5f5/best_model.pt",
+ "results": {
+  "hellaswag": {
+   "acc": 0.32304321848237405,
+   "acc_norm": 0.38020314678350925,
+   "n": 10042
+  },
+  "arc_easy": {
+   "acc": 0.5744949494949495,
+   "acc_norm": 0.5185185185185185,
+   "n": 2376
+  },
+  "piqa": {
+   "acc": 0.6523394994559304,
+   "acc_norm": 0.6512513601741022,
+   "n": 1838
+  }
+ },
+ "sec": 141.9,
+ "fp32": true
+}

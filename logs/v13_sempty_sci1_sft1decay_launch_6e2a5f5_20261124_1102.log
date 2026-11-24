@@ -1,0 +1,6 @@
+sci1 continuation chain: code 6e2a5f5 in /home/ubuntu/Development/qllm_sft, 2026-11-24T11:02:10Z; from checkpoints_v13_sempty/sci1_long3r_91a87ed/final_step_749500.pt; tokens 200015872; SOURCES=dclm,fineweb100,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt2,tools,pysci,b2s,recall4k,proto4k,b2s_far,proto_far,chatsr,tuluif WEIGHTS=0.14997,0.15615,0.05043,0.07254,0.10145,0.11762,0.02232,0.12000,0.06000,0.03501,0.04631,0.01696,0.00377,0.00846,0.01200,0.00800,0.01500,0.00400
+=== sci1 decay branch start (from checkpoints_v13_sempty/sci1_sft1_431eabe/stable_final.pt) 2026-11-24T11:02:10Z
+=== sci1_decay start 2026-11-24T11:02:10Z commit=6e2a5f5 log=logs/v13_sempty_sci1_decay_6e2a5f5_20261124_1102.log ckpt=checkpoints_v13_sempty/sci1_decay_6e2a5f5 ===
+=== sci1_decay end 1795521358 exit=0 attempts=1 ===
+=== sci1 decay exit=0 2026-11-24T11:55:58Z
+=== sci1 continuation chain DONE 2026-11-24T11:55:58Z

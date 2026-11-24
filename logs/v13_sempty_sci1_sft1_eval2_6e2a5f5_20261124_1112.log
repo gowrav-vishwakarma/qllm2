@@ -1,0 +1,36 @@
+=== sft1 eval2: candidate checkpoints_v13_sempty/sci1_decay_6e2a5f5/best_model.pt (step 753315) as sci1_sft1_753315_6e2a5f5 2026-11-24T11:56:40Z
+=== CHECK sci1_sft1_753315_6e2a5f5 (checkpoints_v13_sempty/sci1_decay_6e2a5f5/best_model.pt) 2026-11-24T11:56:40Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.998, 'shift_wide_new@4096': 0.998, 'shift_wide_new@8192': 0.993, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 1.0, 'affine_map_new@4096': 1.0, 'affine_map_new@8192': 0.998}  mean 0.998
+free (A7): {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.995, 'shift_wide_new@4096': 0.998, 'shift_wide_new@8192': 0.993, 'affine_map_new@0': 0.995, 'affine_map_new@2048': 0.988, 'affine_map_new@4096': 0.988, 'affine_map_new@8192': 0.945}  mean 0.988
+saved logs/learning_probes/v13_sempty_sci1_sft1_753315_6e2a5f5_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+Results saved to logs/memory_probes/v13_sempty_sci1_sft1_753315_6e2a5f5_t40_behavioral.json (aggregates, 2520 rows omitted)
+hellaswag {'acc': 0.3229, 'acc_norm': 0.3781, 'n': 10042}
+arc_easy {'acc': 0.5745, 'acc_norm': 0.5198, 'n': 2376}
+piqa {'acc': 0.6534, 'acc_norm': 0.6545, 'n': 1838}
+  affine_map_new done
+Results saved to logs/memory_probes/v13_sempty_sci1_sft1_753315_6e2a5f5_t40_long_behavioral.json (aggregates, 360 rows omitted)
+=== generations: checkpoints_v13_sempty/sci1_decay_6e2a5f5/best_model.pt step 753315 tokens 49,369,251,840 code 6e2a5f5
+--- [science] prompt: 'Photosynthesis converts light energy into chemical energy. In the light-dependent reactions,'
+    sampled: ' photosynthetic pigments absorb sunlight and convert it to ATP (adenosine triphosphate) and NADPH (nicotinamide adenine dinucleotide phosphate). The glucose produced is used by the plant as a source of carbon and energy.\n\nHow does a cell store energy?\n\nThe cell stores its energy by transferring electrons between two molecules: an electron transport chain and'
+    greedy : ' photosynthesis uses sunlight to convert carbon dioxide and water into glucose and oxygen.\n\nThe light-dependent reactions take place in the thylakoid membranes of chloroplasts and are the most efficient'
+--- [protocol] prompt: 'Lab protocol: report every mass in grams, rounded to one decimal place.\nSample A weighed 12.347 g and sample B weighed 8.912 g.\nReport: sample A ='
+    sampled: ' 12.35; sample B = 8.32 g.\nQuestion: State the mass for sample A.\nAnswer: 12.34 g.\n<|endoftext|><|im_start|>system\nYou are a helpful assistant with access to the following functions. Use them if required -\n{\n    "name": "calculate_area",\n    "description": "Calculate the'
+    greedy : ' 12.347 g, sample B = 8.912 g.\nQuestion: Sample A: mass?\nAnswer: 12.34 g.\n<|endoftext|><|im_start|>system\nYou are a helpful assistant'
+--- [chat] prompt: '<|im_start|>user\nWhat is the difference between a hypothesis and a theory?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'A hypothesis is an educated guess or prediction about what a certain relationship may be, whereas a theory is a well-supported explanation for a set of observed phenomena. In other words, a hypothesis is a tentative idea that can change as new evidence emerges, while a theory is a well-substantiated explanation for a wide range of natural events.<|im_end|>\n<|endoftext|>import pandas as pd\nimport'
+    greedy : 'A hypothesis is a proposed explanation for a phenomenon or a set of observations. It is typically a tentative or educated guess that can be tested through experimentation or observation. A hypothesis is often used to generate questions'
+--- [tool] prompt: '<|im_start|>user\nLook up the boiling point recorded for sample Q7 in my notes.<|im_end|>\n<|im_start|>assistant\n<tool_call>\n{"name": "library.fetch", "arguments": {"query": "Q7 boiling point"}}\n</tool_call><|im_end|>\n<|im_start|>tool\n<tool_response>\n{"name": "library.fetch", "content": "Record: Q7 | boiling point: 78.4 C."}\n</tool_response><|im_end|>\n<|im_start|>assistant\n'
+    sampled: "The session record shows 78.4 C as the boiling point for Sample Q7.<|im_end|>\n<|endoftext|> Chapter 14: Understanding Antibiotic Resistance and How We Can Keep It Safe\n\nImagine you're at your favorite ice cream shop, enjoying a scoop of vanilla that just rolled off their shelves! You've been saving money on ingredients like chocolate chips to buy more treats this time around. But then something"
+    greedy : 'The session record shows 78.4 C as the boiling point for sample Q7.<|im_end|>\n<|endoftext|><|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\nSolve the following math problem'
+--- [quant] prompt: '<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'To find the concentration of a substance, you first need to convert it from grams per liter (g/l) to moles per liters (moles/L), then multiply by 1. \n\nGiven: 0.25 g/l = 0.00125 mol/L\n1 g/l = 1000 mL\n\nSo, 0.25 mol/L = 0.'
+    greedy : 'To find the concentration of the salt in the solution, we need to use the molarity formula:\n\nM = [M] (moles of solute per liter of solution)\n'
+=== CHECK sci1_sft1_753315_6e2a5f5 DONE 2026-11-24T12:16:20Z
+=== scope sci1_sft1_753315_6e2a5f5: 0 tracebacks
+L 2048: 4-tuple B -4.47 C +2.257 scope_fu 0.77 prec_u1 0.70 | P_fu 0.01 twin unit_acc 0.99 | S_fu_held 0.00 S_bound_fu 0.09 | R_u2 0.30
+L 8192: 4-tuple B -4.11 C +0.642 scope_fu 0.01 prec_u1 0.02 | P_fu 0.01 twin unit_acc 0.84 | S_fu_held 0.02 S_bound_fu 0.01 | R_u2 0.98
+gen icl4
+done 105 s
+=== SFT1 EVAL DONE 2026-11-24T12:19:24Z

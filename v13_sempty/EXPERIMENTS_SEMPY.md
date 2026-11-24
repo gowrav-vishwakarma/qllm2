@@ -8255,3 +8255,25 @@ tokens with no <|endoftext|> / <|im_start|> before it; 60 prompts (the dump's 20
 varied styles), greedy + 2 sampled seeds; the bar applies to all 180 generations of the SFT; leakage counted only on prompts that
 offer no tools (the tool prompts' <tool_call> answers are the asked-for behaviour, not leakage); non-English = < 90 % ASCII letters.
 Base measured the same way. Log logs/v13_sempty_sft1_stoprate_be58fac_20261124_1225.log (6000).
+
+**sft1 chat RESULT (18:07 IST 11-24; logs/sci1/v13_sempty_stoprate_{sci1_release_749500_91a87ed,sci1_sft1_753315_6e2a5f5}_be58fac.jsonl):**
+
+| | stop rate, all 180 | greedy (60) | sampled (120) | leakage (no-tool prompts) | non-English | mean answer tokens |
+|---|---|---|---|---|---|---|
+| base 749,500 | 0.978 | 0.950 | 0.992 | 2 (nat9 "translate good morning" answered with a <tool_call>) | 0 | 128 |
+| **sft1 753,315** | **0.978** | 0.983 | 0.975 | **0** | 0 | 119 |
+
+SFT misses (4/180): chat4 greedy loops a numbered list to 768 tokens; nat5 sampled x2 close with <|endoftext|> instead of
+<|im_end|> (the turn does end, then a new document starts); nat19 sampled once. Bar (>= 0.95, no leakage, English): HOLDS.
+Reading: the base already ends its turns (it saw 40.5B tokens with chat sources); the SFT does not change the stop rate, it removes the
+tool-call reflex on a plain request and shortens answers a little. Data seen (main segment cursor): 154,015 kept SFT conversations,
+99.2M SFT target tokens; decontam drops 65, probe-template drops 0. Train: main 749,500 -> 752,552 (val_loss 2.983), decay
+752,552 -> 753,315 (val_loss 2.960, best ppl 19.30; base release val ppl 19.44 at the main start).
+
+**Human preference (the last condition of RELEASE-SFT): handed to the user.** Blind A/B page (private, owner only):
+https://claude.ai/artifact/BQxLoT8dPP1eW7kdzQs7uE: the 60 stop-rate prompts, greedy answers up to the model's own end of turn
+(sampled folded below), sides drawn per prompt with seed 20261124 (SFT on A for 29 / 60), votes A / B / tie / both bad kept in the
+page's store; the tally is revealed only on request. Mind's own read of the capped human-eval dump (34 prompts, not the human eval;
+for orientation only): SFT better on 10 (sci1, sci3, sci6, chat3, chat6, tool_read2, py1, py4, proto3, icl3), base better on 4
+(sci5, mt2, q2, icl2), the rest ties or both wrong. Verdict status: **every pre-registered guard and chat bar HOLDS; RELEASE-SFT waits
+only on the user's A/B majority.**
