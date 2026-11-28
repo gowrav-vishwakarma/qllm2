@@ -1881,3 +1881,22 @@ auto --val_every 500 --save_every_steps 2500`, no `--gradient_checkpointing`.
   Test at 100M with the clock-off twin and a control, never on the release run.
 - State: 3r on the 6000 from 45.875B (3c mix); 4090 to the user 10:45-day end; next window: 0.8 vs 1.6 % x LR cell, split
   geometry, the no-far-docs GDN / nochrono cell (write-ups due).
+
+## 4090 d_drive checkpoint prune (Lead, 2026-11-28 16:50 IST, user: "d_drive almost full, discard what is really not needed")
+d_drive went from 4.9 GB to 348 GB free. Runs stay reproducible from their commit hashes (EXPERIMENT_INDEX); the 6000's own checkpoints_v13_sempty (111 GB) was not touched.
+
+**Kept on the d_drive (local):**
+- `qllm2/from_6000/checkpoints_v13_sempty/`:
+  - `sci1_long3r_91a87ed/final_step_749500.pt` = SCI-1 base release, full with optimizer;
+  - `sci1_decay_6e2a5f5/best_model.pt` = SCI-1 Chat release, step 753,315.
+- `qllm2/checkpoints_v13_sempty/`:
+  - bodies loaded by code: c1ctlb_main_7ae6f1f (v14/pack.py), cu2a_main_24b2969 (v14/a24_rules, a17_render, v16/rxk_package), tfc1b_main_b788731 (v14/a18_tpp_warm);
+  - 600M reference bodies: c1m2b_main_7ae6f1f, c2m2b_main_b788731;
+  - the wio baseline ends: wio_{gdn,mamba2,tpp,pam,nochrono}_decay_227f3eb.
+- Unchanged: qllm_ckpt/v14 package organ files + pack_check dirs, qllm_ckpts (v15), arc_lib, humaneval.
+
+**Removed:**
+- Every other SCI-1 snapshot in from_6000 (main / stageA / cont1-4 / long / long2 / long3* / decay_m9 / c2 / c3 / keep_snap / 46-47B weights) and the old 1.2 GB ablation dirs there.
+- 56 local checkpoints_v13_sempty dirs: nt_*, ctl_*, cx_m2_*, cu2b, t1loc, wikitext_*, w1*, tfs*, r600_ctl, r4screen*, mix3b*, wio_*_main, etc.
+- qllm_ckpt/v14/{l1_cache, l1_cache8, l3_cache} (the Oct-31 L1 / L3 vector caches).
+- qllm2/qllm_{g1c, e2, a4}_checkpoints_v13_sempty and sl0_smoke*.
